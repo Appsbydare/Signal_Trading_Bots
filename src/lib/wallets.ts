@@ -10,10 +10,21 @@ export interface Wallet {
 
 export const WALLET_POOLS: Record<string, Wallet[]> = {
   "USDT-TRC20": [
-    { address: "YOUR_BINANCE_USDT_TRC20_WALLET_1", coin: "USDT", network: "TRC20", index: 1 },
-    { address: "YOUR_BINANCE_USDT_TRC20_WALLET_2", coin: "USDT", network: "TRC20", index: 2 },
-    { address: "YOUR_BINANCE_USDT_TRC20_WALLET_3", coin: "USDT", network: "TRC20", index: 3 },
-    // Add 12 more wallets (4-15)
+    { address: "THk6NfkTxZPXmwPF4PUXZP2898Bip2Hacn", coin: "USDT", network: "TRC20", index: 1 },
+    { address: "TVtfaFPoNXhj2a3cuZKkLpNXD5oCs8PaDs", coin: "USDT", network: "TRC20", index: 2 },
+    { address: "TJayY25fBcDkVpBynvvxmAfXkgxTtH9TH1", coin: "USDT", network: "TRC20", index: 3 },
+    { address: "TQhdkkSb77pxaKyN2LauWvnMT2iLbh4pwZ", coin: "USDT", network: "TRC20", index: 4 },
+    { address: "TDxW6LzxRPUQDWuGJL8tWQiKWLLKDqNSfG", coin: "USDT", network: "TRC20", index: 5 },
+    { address: "TNDqDqgp27JHbsD9u7gPNYRhhRnkg5kLje", coin: "USDT", network: "TRC20", index: 6 },
+    { address: "TATBA9g8W1LpoQC3fdCUdS4EraB8nkPFbv", coin: "USDT", network: "TRC20", index: 7 },
+    { address: "TYxdPmYXwLJ2BjHPr3KYPL5EcEkZe7kb3x", coin: "USDT", network: "TRC20", index: 8 },
+    { address: "TP1EAyP1Qw1x3jjiM4rRduwtMQRKd9M7aJ", coin: "USDT", network: "TRC20", index: 9 },
+    { address: "TB2xB6rtnDJy2ffFu5K7rvSRMSTGaDdCfC", coin: "USDT", network: "TRC20", index: 10 },
+    { address: "TNRyf3FxwtBeZ44oT4NDWJZU4ra2eXmysE", coin: "USDT", network: "TRC20", index: 11 },
+    { address: "TXfbURzTCdZtx2HtBVP4PfP5TFbQEwnuR9", coin: "USDT", network: "TRC20", index: 12 },
+    { address: "TNa3r7bnmHkR8PZWJjfTNQbaJVZxPPLyBX", coin: "USDT", network: "TRC20", index: 13 },
+    { address: "TWNXbYf1a675aAt1RgdC1jnXQfTYMZqdDP", coin: "USDT", network: "TRC20", index: 14 },
+    { address: "TFMdDpHdqxJkPK5NVLkuTopxwLFXKGpvvB", coin: "USDT", network: "TRC20", index: 15 },
   ],
   "USDT-ERC20": [
     { address: "YOUR_BINANCE_USDT_ERC20_WALLET_1", coin: "USDT", network: "ERC20", index: 1 },
