@@ -27,8 +27,21 @@ export const WALLET_POOLS: Record<string, Wallet[]> = {
     { address: "TFMdDpHdqxJkPK5NVLkuTopxwLFXKGpvvB", coin: "USDT", network: "TRC20", index: 15 },
   ],
   "USDT-ERC20": [
-    { address: "YOUR_BINANCE_USDT_ERC20_WALLET_1", coin: "USDT", network: "ERC20", index: 1 },
-    // Add 14 more wallets
+    { address: "0xb96cbffa9c1463a863a83893e371176bda25e650", coin: "USDT", network: "ERC20", index: 1 },
+    { address: "0x75f5639f5250d2b8fb770d56656f3588d0e3308b", coin: "USDT", network: "ERC20", index: 2 },
+    { address: "0x9d0392b91bdb67b896fa3918359c53f07e921f8a", coin: "USDT", network: "ERC20", index: 3 },
+    { address: "0x519216ffecc001d87ac3f6164ed37231758db4e9", coin: "USDT", network: "ERC20", index: 4 },
+    { address: "0xd29d5f6c5c1ed84e650c8f69f28a70b73f6c0053", coin: "USDT", network: "ERC20", index: 5 },
+    { address: "0x1dc444de2dbb7f2c9576076a8a8982ada56bb461", coin: "USDT", network: "ERC20", index: 6 },
+    { address: "0xbf0afc054ed09104c3e887bb7e17c6c6f89067ea", coin: "USDT", network: "ERC20", index: 7 },
+    { address: "0xcff480b9a3bb817467a7332c37ef704509933a7d", coin: "USDT", network: "ERC20", index: 8 },
+    { address: "0x719033740201a2954af8ed786d1e57213c61e923", coin: "USDT", network: "ERC20", index: 9 },
+    { address: "0xecb597b91ef82673d2fc7332aaafb2b6c7266537", coin: "USDT", network: "ERC20", index: 10 },
+    { address: "0x133d89d5b4f7d30393b8e872f51f18f7e962fba4", coin: "USDT", network: "ERC20", index: 11 },
+    { address: "0x815ef0af49c9daa5672345ef824ce85a14a74031", coin: "USDT", network: "ERC20", index: 12 },
+    { address: "0xfa9dd540e36da6635c6d99557d0be22ac576b652", coin: "USDT", network: "ERC20", index: 13 },
+    { address: "0x4dc54d82e9ee0ba62ee34e513f9f7d2e2bb14998", coin: "USDT", network: "ERC20", index: 14 },
+    { address: "0x526b8375e72de2d88c57ec38012e239d379b7f1e", coin: "USDT", network: "ERC20", index: 15 },
   ],
   "BTC": [
     { address: "YOUR_BINANCE_BTC_WALLET_1", coin: "BTC", network: "BTC", index: 1 },
@@ -43,8 +56,21 @@ export const WALLET_POOLS: Record<string, Wallet[]> = {
     // Add 14 more wallets
   ],
   "USDC-ERC20": [
-    { address: "YOUR_BINANCE_USDC_ERC20_WALLET_1", coin: "USDC", network: "ERC20", index: 1 },
-    // Add 14 more wallets
+    { address: "0xb96cbffa9c1463a863a83893e371176bda25e650", coin: "USDC", network: "ERC20", index: 1 },
+    { address: "0x75f5639f5250d2b8fb770d56656f3588d0e3308b", coin: "USDC", network: "ERC20", index: 2 },
+    { address: "0x9d0392b91bdb67b896fa3918359c53f07e921f8a", coin: "USDC", network: "ERC20", index: 3 },
+    { address: "0x519216ffecc001d87ac3f6164ed37231758db4e9", coin: "USDC", network: "ERC20", index: 4 },
+    { address: "0xd29d5f6c5c1ed84e650c8f69f28a70b73f6c0053", coin: "USDC", network: "ERC20", index: 5 },
+    { address: "0x1dc444de2dbb7f2c9576076a8a8982ada56bb461", coin: "USDC", network: "ERC20", index: 6 },
+    { address: "0xbf0afc054ed09104c3e887bb7e17c6c6f89067ea", coin: "USDC", network: "ERC20", index: 7 },
+    { address: "0xcff480b9a3bb817467a7332c37ef704509933a7d", coin: "USDC", network: "ERC20", index: 8 },
+    { address: "0x719033740201a2954af8ed786d1e57213c61e923", coin: "USDC", network: "ERC20", index: 9 },
+    { address: "0xecb597b91ef82673d2fc7332aaafb2b6c7266537", coin: "USDC", network: "ERC20", index: 10 },
+    { address: "0x133d89d5b4f7d30393b8e872f51f18f7e962fba4", coin: "USDC", network: "ERC20", index: 11 },
+    { address: "0x815ef0af49c9daa5672345ef824ce85a14a74031", coin: "USDC", network: "ERC20", index: 12 },
+    { address: "0xfa9dd540e36da6635c6d99557d0be22ac576b652", coin: "USDC", network: "ERC20", index: 13 },
+    { address: "0x4dc54d82e9ee0ba62ee34e513f9f7d2e2bb14998", coin: "USDC", network: "ERC20", index: 14 },
+    { address: "0x526b8375e72de2d88c57ec38012e239d379b7f1e", coin: "USDC", network: "ERC20", index: 15 },
   ],
 };
 
