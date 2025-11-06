@@ -24,11 +24,10 @@ function PaymentForm() {
 
   const cryptoOptions = [
     { value: "USDT-TRC20", label: "USDT (TRC20)", coin: "USDT", network: "TRC20", description: "Tron Network - Fast & Low Fees" },
-    { value: "USDT-ERC20", label: "USDT (ERC20)", coin: "USDT", network: "ERC20", description: "Ethereum Network" },
+    { value: "USDT-ERC20", label: "USDT (ERC20)", coin: "USDT", network: "ERC20", description: "Ethereum Network - ERC20 Token" },
+    { value: "USDC-ERC20", label: "USDC (ERC20)", coin: "USDC", network: "ERC20", description: "Ethereum Network - ERC20 Token" },
     { value: "BTC", label: "Bitcoin (BTC)", coin: "BTC", network: "BTC", description: "Bitcoin Network" },
-    { value: "ETH", label: "Ethereum (ETH)", coin: "ETH", network: "ETH", description: "Ethereum Network" },
     { value: "BNB", label: "BNB (BSC)", coin: "BNB", network: "BSC", description: "Binance Smart Chain" },
-    { value: "USDC-ERC20", label: "USDC (ERC20)", coin: "USDC", network: "ERC20", description: "Ethereum Network" },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
