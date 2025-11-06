@@ -108,6 +108,16 @@ function CryptoPayment() {
     );
   }
 
+  // Calculate time left from expiresAt
+  useEffect(() => {
+    if (order.expiresAt) {
+      const expires = new Date(order.expiresAt).getTime();
+      const now = Date.now();
+      const remaining = Math.max(0, Math.floor((expires - now) / 1000));
+      setTimeLeft(remaining);
+    }
+  }, [order.expiresAt]);
+
   const qrValue = `${order.walletAddress}?amount=${order.embeddedPrice}`;
 
   return (

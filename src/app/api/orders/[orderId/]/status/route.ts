@@ -18,12 +18,10 @@ export async function GET(
     const isExpired = now > expiresAt;
 
     return NextResponse.json({
-      orderId: order.orderId,
+      ...order,
       status: isExpired && order.status === "waiting_for_payment" ? "expired" : order.status,
       paymentDetected: order.status === "paid" || order.status === "confirming",
       confirmations: order.confirmations || 0,
-      licenseKey: order.licenseKey,
-      expiresAt: order.expiresAt,
       isExpired,
     });
   } catch (error) {
