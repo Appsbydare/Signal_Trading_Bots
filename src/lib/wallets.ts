@@ -83,19 +83,29 @@ export function getEmbeddedPrice(displayPrice: number, walletIndex: number): num
   return parseFloat((base + increment).toFixed(6));
 }
 
-// Get next available wallet (rotate every 15 minutes)
+// Track order count per coinNetwork for sequential rotation
+const orderCounts: Record<string, number> = {};
+
+// Get next available wallet (sequential rotation per coin/network)
 export function getNextWallet(coinNetwork: string): Wallet {
   const pool = WALLET_POOLS[coinNetwork];
   if (!pool || pool.length === 0) {
     throw new Error(`No wallets configured for ${coinNetwork}`);
   }
 
-  // Simple rotation: use wallet index based on current time (15-minute windows)
-  const now = Date.now();
-  const windowMs = 15 * 60 * 1000; // 15 minutes
-  const windowIndex = Math.floor(now / windowMs) % pool.length;
-  const walletIndex = windowIndex % pool.length;
+  // Initialize counter for this coinNetwork if not exists
+  if (!orderCounts[coinNetwork]) {
+    orderCounts[coinNetwork] = 0;
+  }
 
+  // Get current order count and increment for next order
+  const currentCount = orderCounts[coinNetwork];
+  const walletIndex = currentCount % pool.length; // Rotate: 0-14, then back to 0
+  
+  // Increment counter for next order
+  orderCounts[coinNetwork] = currentCount + 1;
+
+  // Return wallet (index is 0-based, but wallet.index is 1-based)
   return pool[walletIndex];
 }
 
