@@ -7,7 +7,7 @@ export default function ProductsPage() {
   return (
     <div className="space-y-8">
       <h1 className="reveal text-2xl font-semibold tracking-tight">Products</h1>
-      <p className="max-w-2xl text-sm text-zinc-600">
+      <p className="reveal max-w-2xl text-sm text-zinc-600">
         Reduced-feature plans compared to the flagship offering. Designed to be
         simple, reliable, and affordable.
       </p>

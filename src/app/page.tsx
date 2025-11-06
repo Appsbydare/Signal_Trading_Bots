@@ -17,7 +17,7 @@ export default function Home() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.15, duration: 0.5 }}
-        className="max-w-2xl text-zinc-600"
+        className="reveal max-w-2xl text-zinc-600"
       >
         Configure strategies with multi-TP, SL, order types (instant/pending), and lot
         size management. Run it on Windows or VPS and let it work while you sleep.
