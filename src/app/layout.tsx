@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import localFont from "next/font/local";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -11,6 +12,14 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const bebasNeue = localFont({
+  src: "../fonts/BebasNeue-Regular.ttf",
+  variable: "--font-heading",
+  display: "swap",
+  weight: "400",
+  style: "normal",
 });
 
 export const metadata: Metadata = {
@@ -29,7 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased`}
       >
         <header className="sticky top-0 z-50 border-b border-black/10 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
