@@ -246,7 +246,14 @@ function CryptoPayment() {
 
   // Use crypto amount if available, otherwise fallback to embedded price (for stablecoins)
   const displayAmount = cryptoAmount !== null ? cryptoAmount : order.embeddedPrice;
-  const qrValue = order.walletAddress && displayAmount 
+  
+  // QR code format: Just address (for Binance compatibility)
+  // Binance app doesn't support URI schemes with amount parameter
+  // Users will enter the amount manually in their wallet
+  const qrValue = order.walletAddress || "";
+  
+  // Alternative QR with amount (for wallets that support it)
+  const qrValueWithAmount = order.walletAddress && displayAmount 
     ? `${order.walletAddress}?amount=${displayAmount}` 
     : "";
 
@@ -285,11 +292,21 @@ function CryptoPayment() {
             )}
           </div>
 
-          {order.walletAddress && displayAmount && (
-            <div className="mb-6 flex justify-center">
-              <div className="rounded-lg border-2 border-white bg-white p-4">
-                <QRCodeCanvas value={qrValue} size={200} />
+          {order.walletAddress && (
+            <div className="mb-6">
+              <div className="mb-3 flex justify-center">
+                <div className="rounded-lg border-2 border-white bg-white p-4">
+                  <QRCodeCanvas value={qrValue} size={200} />
+                </div>
               </div>
+              <p className="text-center text-xs text-zinc-500">
+                Scan with Binance or any wallet app. Enter amount manually:{" "}
+                <span className="font-semibold text-white">
+                  {displayAmount !== null 
+                    ? displayAmount.toFixed(coin === "BTC" ? 8 : coin === "ETH" || coin === "BNB" ? 6 : 6)
+                    : "0.000000"} {coin}
+                </span>
+              </p>
             </div>
           )}
 
@@ -422,11 +439,19 @@ function CryptoPayment() {
                     </div>
                   </div>
 
-                  <div className="flex justify-center rounded-lg border border-zinc-700 bg-white p-4">
-                    <QRCodeCanvas 
-                      value={`${order.walletAddress}?amount=${displayAmount}`} 
-                      size={200} 
-                    />
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="rounded-lg border border-zinc-700 bg-white p-4">
+                      <QRCodeCanvas 
+                        value={order.walletAddress} 
+                        size={200} 
+                      />
+                    </div>
+                    <p className="text-xs text-zinc-400">
+                      QR contains address only. Enter amount:{" "}
+                      <span className="font-semibold text-white">
+                        {displayAmount.toFixed(coin === "BTC" ? 8 : coin === "ETH" || coin === "BNB" ? 6 : 6)} {coin}
+                      </span>
+                    </p>
                   </div>
                 </div>
 
