@@ -51,9 +51,7 @@ export default function ProductsPage() {
           </ul>
           <div className="mt-4 flex gap-3">
             <a
-              href="https://docs.google.com/forms/d/e/1FAIpQLSclVvR_Rwz-kdAUdbBRsIr2FxVn2n2RkCY0UP-oLjaLlCAIuA/viewform?usp=header"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/payment?plan=starter"
               className="rounded-md bg-black px-4 py-2 text-white hover:bg-zinc-800"
             >
               Buy Starter
@@ -76,9 +74,7 @@ export default function ProductsPage() {
           </ul>
           <div className="mt-4 flex gap-3">
             <a
-              href="https://docs.google.com/forms/d/e/1FAIpQLSclVvR_Rwz-kdAUdbBRsIr2FxVn2n2RkCY0UP-oLjaLlCAIuA/viewform?usp=header"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/payment?plan=pro"
               className="rounded-md bg-black px-4 py-2 text-white hover:bg-zinc-800"
             >
               Buy Pro
