@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SchemaOrg from "./schema-org";
+import Analytics from "./analytics";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -73,6 +74,7 @@ export default function RootLayout({
         <main className="mx-auto min-h-[70vh] max-w-6xl px-6 py-12">{children}</main>
 
         <SchemaOrg />
+        <Analytics />
 
         <footer className="border-t border-black/10 py-10 text-sm">
           <div className="mx-auto max-w-6xl px-6">
