@@ -1,7 +1,7 @@
 "use client";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
-import QRCode from "qrcode.react";
+import { QRCodeCanvas } from "qrcode.react";
 
 function CryptoPayment() {
   const searchParams = useSearchParams();
@@ -150,7 +150,7 @@ function CryptoPayment() {
 
           <div className="mb-6 flex justify-center">
             <div className="rounded-lg border-2 border-white bg-white p-4">
-              <QRCode value={qrValue} size={200} />
+              <QRCodeCanvas value={qrValue} size={200} />
             </div>
           </div>
 
