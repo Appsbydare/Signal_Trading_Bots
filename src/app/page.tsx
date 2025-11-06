@@ -9,7 +9,7 @@ export default function Home() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="text-3xl font-semibold tracking-tight"
+        className="reveal text-3xl font-semibold tracking-tight"
       >
         Automate MT5 trading from Telegram signals
       </motion.h1>
@@ -38,14 +38,14 @@ export default function Home() {
       </div>
       <div className="mt-10 grid gap-6 sm:grid-cols-2">
         <div className="rounded-lg border p-6">
-          <h3 className="mb-2 font-medium">How it works</h3>
+          <h3 className="reveal mb-2 font-medium">How it works</h3>
           <p className="text-sm text-zinc-600">
             The bot monitors Telegram signals and executes orders on MT5 based on your
             configured mapping and strategy.
           </p>
         </div>
         <div className="rounded-lg border p-6">
-          <h3 className="mb-2 font-medium">Important notice</h3>
+          <h3 className="reveal mb-2 font-medium">Important notice</h3>
           <p className="text-sm text-zinc-600">
             Use a demo first. Trading involves significant risk. Not financial advice.
           </p>

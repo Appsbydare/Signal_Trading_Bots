@@ -6,7 +6,7 @@ export const metadata = {
 export default function ContactPage() {
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-semibold tracking-tight">Contact</h1>
+      <h1 className="reveal text-2xl font-semibold tracking-tight">Contact</h1>
       <div className="space-y-4">
         <p className="max-w-2xl text-sm text-zinc-600">
           We typically respond within 1–2 business days.

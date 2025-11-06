@@ -25,7 +25,7 @@ const faqs = [
 export default function FAQPage() {
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-semibold tracking-tight">FAQ</h1>
+      <h1 className="reveal text-2xl font-semibold tracking-tight">FAQ</h1>
       <ul className="space-y-4">
         {faqs.map((item) => (
           <li key={item.q} className="rounded-lg border p-4">

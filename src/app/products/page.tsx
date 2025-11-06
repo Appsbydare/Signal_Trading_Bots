@@ -6,14 +6,14 @@ export const metadata = {
 export default function ProductsPage() {
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-semibold tracking-tight">Products</h1>
+      <h1 className="reveal text-2xl font-semibold tracking-tight">Products</h1>
       <p className="max-w-2xl text-sm text-zinc-600">
         Reduced-feature plans compared to the flagship offering. Designed to be
         simple, reliable, and affordable.
       </p>
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="rounded-lg border p-6">
-          <h2 className="text-lg font-medium">Starter</h2>
+          <h2 className="reveal text-lg font-medium">Starter</h2>
           <p className="text-sm text-zinc-600">$29/month</p>
           <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-zinc-700">
             <li>Telegram signal monitoring</li>
@@ -22,7 +22,7 @@ export default function ProductsPage() {
           </ul>
         </div>
         <div className="rounded-lg border p-6">
-          <h2 className="text-lg font-medium">Pro</h2>
+          <h2 className="reveal text-lg font-medium">Pro</h2>
           <p className="text-sm text-zinc-600">$49/month</p>
           <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-zinc-700">
             <li>Everything in Starter</li>

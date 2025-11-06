@@ -3,6 +3,7 @@ import Link from "next/link";
 import localFont from "next/font/local";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import SchemaOrg from "./schema-org";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,6 +29,21 @@ export const metadata: Metadata = {
     "Automate MT5 trades from Telegram signals with configurable strategies (TP/SL, order type, lot sizing). Simple, professional, and affordable.",
   metadataBase: new URL("https://www.signaltradingbots.com"),
   alternates: { canonical: "/" },
+  openGraph: {
+    title: "signaltradingbots | Telegram → MT5 Automation",
+    description:
+      "Automate MT5 trades from Telegram signals with configurable strategies.",
+    url: "https://www.signaltradingbots.com",
+    siteName: "signaltradingbots",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "signaltradingbots | Telegram → MT5 Automation",
+    description:
+      "Automate MT5 trades from Telegram signals with configurable strategies.",
+  },
 };
 
 export default function RootLayout({
@@ -55,6 +71,8 @@ export default function RootLayout({
         </header>
 
         <main className="mx-auto min-h-[70vh] max-w-6xl px-6 py-12">{children}</main>
+
+        <SchemaOrg />
 
         <footer className="border-t border-black/10 py-10 text-sm">
           <div className="mx-auto max-w-6xl px-6">

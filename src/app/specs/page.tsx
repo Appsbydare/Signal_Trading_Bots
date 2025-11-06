@@ -6,7 +6,7 @@ export const metadata = {
 export default function SpecsPage() {
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-semibold tracking-tight">Specifications</h1>
+      <h1 className="reveal text-2xl font-semibold tracking-tight">Specifications</h1>
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="rounded-lg border p-6">
           <h2 className="mb-2 font-medium">Platform</h2>
