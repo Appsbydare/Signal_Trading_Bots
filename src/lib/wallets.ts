@@ -81,12 +81,28 @@ const walletOrderCounts: Record<string, number> = {};
 const walletRotationCounts: Record<string, number> = {};
 
 // Calculate embedded price based on order count for this specific wallet
+// Resets to base price when it would exceed display price
 export function getEmbeddedPrice(displayPrice: number, orderCount: number): number {
   // Base: displayPrice - 0.099890
-  // Increment: orderCount * 0.000010 (increments for each order to this wallet)
   const base = displayPrice - 0.09989;
-  const increment = orderCount * 0.00001;
-  return parseFloat((base + increment).toFixed(6));
+  
+  // Calculate maximum order count before price exceeds display price
+  // maxOrderCount = (displayPrice - base) / 0.00001
+  // For $29: (29 - 28.90011) / 0.00001 = 9989
+  // For $49: (49 - 48.90011) / 0.00001 = 9989
+  const maxOrderCount = Math.floor((displayPrice - base) / 0.00001);
+  
+  // Reset orderCount if it would exceed display price
+  const adjustedOrderCount = orderCount % (maxOrderCount + 1);
+  
+  // Increment: adjustedOrderCount * 0.000010
+  const increment = adjustedOrderCount * 0.00001;
+  const calculatedPrice = base + increment;
+  
+  // Ensure price never exceeds display price
+  const finalPrice = calculatedPrice >= displayPrice ? base : calculatedPrice;
+  
+  return parseFloat(finalPrice.toFixed(6));
 }
 
 // Get next available wallet (sequential rotation per coin/network)
@@ -116,9 +132,22 @@ export function getNextWallet(coinNetwork: string): { wallet: Wallet; orderCount
     walletOrderCounts[walletKey] = 0;
   }
 
-  // Get current order count for this wallet and increment for next order
-  const orderCount = walletOrderCounts[walletKey];
-  walletOrderCounts[walletKey] = orderCount + 1;
+  // Get current order count for this wallet
+  let orderCount = walletOrderCounts[walletKey];
+  
+  // Calculate max order count (same logic as in getEmbeddedPrice)
+  // We use a default displayPrice of 29 for calculation, but actual price will be calculated with real displayPrice
+  const defaultBase = 29 - 0.09989;
+  const maxOrderCount = Math.floor((29 - defaultBase) / 0.00001); // 9989
+  
+  // Reset orderCount if it exceeds max (prevents counter from growing indefinitely)
+  if (orderCount > maxOrderCount) {
+    orderCount = 0;
+    walletOrderCounts[walletKey] = 0;
+  } else {
+    // Increment for next order
+    walletOrderCounts[walletKey] = orderCount + 1;
+  }
 
   return { wallet: selectedWallet, orderCount };
 }
