@@ -28,7 +28,17 @@ function CryptoPayment() {
 
     // Fetch order details
     fetch(`/api/orders/${orderId}/status`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          // If 404, order might not exist yet or server restarted
+          if (res.status === 404) {
+            console.warn("Order not found, will retry...");
+            return null;
+          }
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((data) => {
         if (data && !data.error) {
           setOrder(data);
@@ -41,6 +51,21 @@ function CryptoPayment() {
             const remaining = Math.max(0, Math.floor((expires - now) / 1000));
             setTimeLeft(remaining);
           }
+        } else if (data === null) {
+          // Order not found, retry after a short delay
+          setTimeout(() => {
+            fetch(`/api/orders/${orderId}/status`)
+              .then((res) => res.json())
+              .then((retryData) => {
+                if (retryData && !retryData.error) {
+                  setOrder(retryData);
+                  setStatus(retryData.status);
+                }
+              })
+              .catch(() => {
+                // Silently fail retry
+              });
+          }, 2000);
         }
       })
       .catch((error) => {
@@ -50,7 +75,16 @@ function CryptoPayment() {
     // Poll status every 5 seconds
     const statusInterval = setInterval(() => {
       fetch(`/api/orders/${orderId}/status`)
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) {
+            // Don't log 404 errors during polling, just skip
+            if (res.status === 404) {
+              return null;
+            }
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          return res.json();
+        })
         .then((data) => {
           if (data && !data.error) {
             setStatus(data.status);
@@ -62,7 +96,10 @@ function CryptoPayment() {
           }
         })
         .catch((error) => {
-          console.error("Status poll error:", error);
+          // Only log non-404 errors
+          if (error.message && !error.message.includes("404")) {
+            console.error("Status poll error:", error);
+          }
         });
     }, 5000);
 
@@ -228,10 +265,37 @@ function CryptoPayment() {
           {order.walletAddress && order.embeddedPrice && (
             <div className="text-center">
               <button
-                onClick={() => window.open(`tronlink://transfer?address=${order.walletAddress}&amount=${order.embeddedPrice}`, "_blank")}
+                onClick={() => {
+                  // Generate wallet deep link based on network
+                  let walletLink = "";
+                  if (order.network === "TRC20") {
+                    walletLink = `tronlink://transfer?address=${order.walletAddress}&amount=${order.embeddedPrice}`;
+                  } else if (order.network === "ERC20" || order.network === "ETH") {
+                    // MetaMask or other Ethereum wallets
+                    walletLink = `ethereum:${order.walletAddress}?value=${order.embeddedPrice}`;
+                  } else if (order.network === "BSC") {
+                    // Trust Wallet or MetaMask for BSC
+                    walletLink = `trust://transfer?address=${order.walletAddress}&amount=${order.embeddedPrice}`;
+                  } else if (order.network === "BTC") {
+                    // Bitcoin wallets
+                    walletLink = `bitcoin:${order.walletAddress}?amount=${order.embeddedPrice}`;
+                  }
+                  
+                  if (walletLink) {
+                    window.open(walletLink, "_blank");
+                  } else {
+                    // Fallback: copy address to clipboard
+                    navigator.clipboard.writeText(order.walletAddress);
+                    alert("Wallet address copied to clipboard!");
+                  }
+                }}
                 className="rounded-md bg-black px-6 py-3 font-medium text-white hover:bg-zinc-800"
               >
-                Pay from wallet
+                {order.network === "TRC20" ? "Pay with TronLink" : 
+                 order.network === "ERC20" || order.network === "ETH" ? "Pay with MetaMask" :
+                 order.network === "BSC" ? "Pay with Trust Wallet" :
+                 order.network === "BTC" ? "Pay with Bitcoin Wallet" :
+                 "Pay from wallet"}
               </button>
             </div>
           )}

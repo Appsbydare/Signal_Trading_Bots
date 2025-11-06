@@ -18,12 +18,22 @@ function PaymentForm() {
   });
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
+  const [selectedCrypto, setSelectedCrypto] = useState<string | null>(null);
 
   const [creatingOrder, setCreatingOrder] = useState(false);
 
+  const cryptoOptions = [
+    { value: "USDT-TRC20", label: "USDT (TRC20)", coin: "USDT", network: "TRC20", description: "Tron Network - Fast & Low Fees" },
+    { value: "USDT-ERC20", label: "USDT (ERC20)", coin: "USDT", network: "ERC20", description: "Ethereum Network" },
+    { value: "BTC", label: "Bitcoin (BTC)", coin: "BTC", network: "BTC", description: "Bitcoin Network" },
+    { value: "ETH", label: "Ethereum (ETH)", coin: "ETH", network: "ETH", description: "Ethereum Network" },
+    { value: "BNB", label: "BNB (BSC)", coin: "BNB", network: "BSC", description: "Binance Smart Chain" },
+    { value: "USDC-ERC20", label: "USDC (ERC20)", coin: "USDC", network: "ERC20", description: "Ethereum Network" },
+  ];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!agreedToTerms || !selectedPayment || selectedPayment !== "crypto") return;
+    if (!agreedToTerms || !selectedPayment || selectedPayment !== "crypto" || !selectedCrypto) return;
 
     setCreatingOrder(true);
 
@@ -37,6 +47,7 @@ function PaymentForm() {
           email: formData.email,
           fullName: formData.fullName,
           country: formData.country,
+          coinNetwork: selectedCrypto,
         }),
       });
 
@@ -219,6 +230,44 @@ function PaymentForm() {
             </div>
           </section>
 
+          {/* Crypto Selection - Show when crypto payment is selected */}
+          {selectedPayment === "crypto" && (
+            <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
+              <h2 className="mb-4 text-lg font-semibold text-white">Select Cryptocurrency</h2>
+              <div className="space-y-3">
+                {cryptoOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setSelectedCrypto(option.value)}
+                    className={`w-full rounded-lg border p-4 text-left transition-colors ${
+                      selectedCrypto === option.value
+                        ? "border-green-500 bg-green-500/10"
+                        : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-white">{option.label}</p>
+                        <p className="text-sm text-zinc-400">{option.description}</p>
+                      </div>
+                      {selectedCrypto === option.value && (
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500">
+                          <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {!selectedCrypto && (
+                <p className="mt-3 text-sm text-amber-400">Please select a cryptocurrency to continue</p>
+              )}
+            </section>
+          )}
+
           {/* Terms & Conditions */}
           <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
             <h2 className="mb-4 text-lg font-semibold text-white">Terms & Conditions</h2>
@@ -277,7 +326,7 @@ function PaymentForm() {
             </Link>
             <button
               type="submit"
-              disabled={!agreedToTerms || !selectedPayment || selectedPayment !== "crypto" || creatingOrder}
+              disabled={!agreedToTerms || !selectedPayment || selectedPayment !== "crypto" || !selectedCrypto || creatingOrder}
               className="flex-1 rounded-md bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {creatingOrder ? "Creating Order..." : "Proceed to Payment"}

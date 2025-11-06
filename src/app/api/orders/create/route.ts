@@ -8,15 +8,15 @@ const orders = new Map();
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { plan, email, fullName, country } = body;
+    const { plan, email, fullName, country, coinNetwork } = body;
 
     if (!plan || !email || !fullName || !country) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     const displayPrice = plan === "pro" ? 49 : 29;
-    const coinNetwork = "USDT-TRC20"; // Default, can be selected by user
-    const wallet = getNextWallet(coinNetwork);
+    const selectedCoinNetwork = coinNetwork || "USDT-TRC20"; // Default to USDT-TRC20 if not provided
+    const wallet = getNextWallet(selectedCoinNetwork);
     const embeddedPrice = getEmbeddedPrice(displayPrice, wallet.index);
 
     const orderId = `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`;
