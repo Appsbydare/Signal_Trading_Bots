@@ -36,19 +36,36 @@ export default function Home() {
           Contact
         </Link>
       </div>
-      <div className="mt-10 grid gap-6 sm:grid-cols-2">
-        <div className="rounded-lg border p-6">
-          <h3 className="reveal mb-2 font-medium">How it works</h3>
-          <p className="text-sm text-zinc-600">
-            The bot monitors Telegram signals and executes orders on MT5 based on your
-            configured mapping and strategy.
-          </p>
+      <div className="mt-10 space-y-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm font-medium text-zinc-600">Supported Platforms:</span>
+          <img
+            src="/telegram-badge.svg"
+            alt="Telegram Compatible"
+            title="Works with Telegram signals"
+            className="h-8 w-8 transition hover:scale-110"
+          />
+          <img
+            src="/mt5-badge.svg"
+            alt="MT5 Supported"
+            title="Executes trades via MetaTrader 5"
+            className="h-8 w-8 transition hover:scale-110"
+          />
         </div>
-        <div className="rounded-lg border p-6">
-          <h3 className="reveal mb-2 font-medium">Important notice</h3>
-          <p className="text-sm text-zinc-600">
-            Use a demo first. Trading involves significant risk. Not financial advice.
-          </p>
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div className="rounded-lg border p-6">
+            <h3 className="reveal mb-2 font-medium">How it works</h3>
+            <p className="text-sm text-zinc-600">
+              The bot monitors Telegram signals and executes orders on MT5 based on your
+              configured mapping and strategy.
+            </p>
+          </div>
+          <div className="rounded-lg border p-6">
+            <h3 className="reveal mb-2 font-medium">Important notice</h3>
+            <p className="text-sm text-zinc-600">
+              Use a demo first. Trading involves significant risk. Not financial advice.
+            </p>
+          </div>
         </div>
       </div>
     </div>

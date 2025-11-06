@@ -13,6 +13,21 @@ export default function ProductsPage() {
           Simple, reliable, and affordable. Choose a plan and submit your order
           via our Google Form.
         </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm font-medium text-zinc-600">Compatible with:</span>
+          <img
+            src="/telegram-badge.svg"
+            alt="Telegram Compatible"
+            title="Works with Telegram signals"
+            className="h-8 w-8 transition hover:scale-110"
+          />
+          <img
+            src="/mt5-badge.svg"
+            alt="MT5 Supported"
+            title="Executes trades via MetaTrader 5"
+            className="h-8 w-8 transition hover:scale-110"
+          />
+        </div>
         <div className="grid gap-6 sm:grid-cols-3">
           <div className="rounded-lg border p-6">
             <h3 className="reveal mb-2 font-medium">Overview</h3>
@@ -42,7 +57,21 @@ export default function ProductsPage() {
       </section>
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="rounded-lg border p-6">
-          <h2 className="reveal text-lg font-medium">Starter</h2>
+          <div className="mb-3 flex items-center gap-2">
+            <h2 className="reveal text-lg font-medium">Starter</h2>
+            <img
+              src="/telegram-badge.svg"
+              alt="Telegram Compatible"
+              title="Works with Telegram signals"
+              className="h-6 w-6 transition hover:scale-110"
+            />
+            <img
+              src="/mt5-badge.svg"
+              alt="MT5 Supported"
+              title="Executes trades via MetaTrader 5"
+              className="h-6 w-6 transition hover:scale-110"
+            />
+          </div>
           <p className="text-sm text-zinc-600">$29/month</p>
           <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-zinc-700">
             <li>Telegram signal monitoring</li>
@@ -65,7 +94,21 @@ export default function ProductsPage() {
           </div>
         </div>
         <div className="rounded-lg border p-6">
-          <h2 className="reveal text-lg font-medium">Pro</h2>
+          <div className="mb-3 flex items-center gap-2">
+            <h2 className="reveal text-lg font-medium">Pro</h2>
+            <img
+              src="/telegram-badge.svg"
+              alt="Telegram Compatible"
+              title="Works with Telegram signals"
+              className="h-6 w-6 transition hover:scale-110"
+            />
+            <img
+              src="/mt5-badge.svg"
+              alt="MT5 Supported"
+              title="Executes trades via MetaTrader 5"
+              className="h-6 w-6 transition hover:scale-110"
+            />
+          </div>
           <p className="text-sm text-zinc-600">$49/month</p>
           <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-zinc-700">
             <li>Everything in Starter</li>
