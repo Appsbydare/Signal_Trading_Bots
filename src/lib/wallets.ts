@@ -77,19 +77,29 @@ export const WALLET_POOLS: Record<string, Wallet[]> = {
 // Track order count per wallet address (for price increment within each wallet)
 const walletOrderCounts: Record<string, number> = {};
 
+// Track last reset date per wallet (for daily reset)
+const walletLastResetDate: Record<string, string> = {};
+
 // Track wallet rotation per coinNetwork
 const walletRotationCounts: Record<string, number> = {};
 
+// Get today's date string (YYYY-MM-DD) for daily reset tracking
+function getTodayDateString(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
 // Calculate embedded price based on order count for this specific wallet
 // Resets to base price when it would exceed display price
+// Base price: displayPrice - 0.01989 (starts from 28.98011 for $29)
 export function getEmbeddedPrice(displayPrice: number, orderCount: number): number {
-  // Base: displayPrice - 0.099890
-  const base = displayPrice - 0.09989;
+  // Base: displayPrice - 0.019890 (smaller loss, starts closer to display price)
+  const base = displayPrice - 0.01989;
   
   // Calculate maximum order count before price exceeds display price
   // maxOrderCount = (displayPrice - base) / 0.00001
-  // For $29: (29 - 28.90011) / 0.00001 = 9989
-  // For $49: (49 - 48.90011) / 0.00001 = 9989
+  // For $29: (29 - 28.98011) / 0.00001 = 1989
+  // For $49: (49 - 48.98011) / 0.00001 = 1989
   const maxOrderCount = Math.floor((displayPrice - base) / 0.00001);
   
   // Reset orderCount if it would exceed display price
@@ -128,8 +138,13 @@ export function getNextWallet(coinNetwork: string): { wallet: Wallet; orderCount
 
   // Get order count for this specific wallet address
   const walletKey = `${coinNetwork}:${selectedWallet.address}`;
-  if (!walletOrderCounts[walletKey]) {
+  const today = getTodayDateString();
+  
+  // Check if we need to reset (new day)
+  if (!walletLastResetDate[walletKey] || walletLastResetDate[walletKey] !== today) {
+    // Reset order count for new day
     walletOrderCounts[walletKey] = 0;
+    walletLastResetDate[walletKey] = today;
   }
 
   // Get current order count for this wallet
@@ -137,10 +152,11 @@ export function getNextWallet(coinNetwork: string): { wallet: Wallet; orderCount
   
   // Calculate max order count (same logic as in getEmbeddedPrice)
   // We use a default displayPrice of 29 for calculation, but actual price will be calculated with real displayPrice
-  const defaultBase = 29 - 0.09989;
-  const maxOrderCount = Math.floor((29 - defaultBase) / 0.00001); // 9989
+  const defaultBase = 29 - 0.01989; // Updated base
+  const maxOrderCount = Math.floor((29 - defaultBase) / 0.00001); // 1989
   
   // Reset orderCount if it exceeds max (prevents counter from growing indefinitely)
+  // This is a safety check, but daily reset should handle this
   if (orderCount > maxOrderCount) {
     orderCount = 0;
     walletOrderCounts[walletKey] = 0;
