@@ -22,6 +22,29 @@ function PaymentForm() {
 
   const [creatingOrder, setCreatingOrder] = useState(false);
 
+  // Helper function to get crypto icon
+  const getCryptoIcon = (coin: string) => {
+    const icons: Record<string, string> = {
+      BTC: "₿",
+      ETH: "Ξ",
+      BNB: "BNB",
+      USDT: "₮",
+      USDC: "₮",
+    };
+    return icons[coin] || "●";
+  };
+
+  // Helper function to get network badge color
+  const getNetworkBadgeColor = (network: string) => {
+    const colors: Record<string, string> = {
+      TRC20: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+      ERC20: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+      BTC: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+      BSC: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+    };
+    return colors[network] || "bg-zinc-500/20 text-zinc-400 border-zinc-500/30";
+  };
+
   const cryptoOptions = [
     { value: "USDT-TRC20", label: "USDT (TRC20)", coin: "USDT", network: "TRC20", description: "Tron Network - Fast & Low Fees" },
     { value: "USDT-ERC20", label: "USDT (ERC20)", coin: "USDT", network: "ERC20", description: "Ethereum Network - ERC20 Token" },
@@ -197,7 +220,14 @@ function PaymentForm() {
                     </div>
                     <div>
                       <p className="font-semibold text-white">Cryptocurrency</p>
-                      <p className="text-sm text-zinc-400">USDT, Bitcoin, Ethereum & more</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-zinc-400">USDT, Bitcoin, BNB & more</p>
+                        <div className="flex gap-1">
+                          <span className="rounded border border-orange-500/30 bg-orange-500/10 px-1.5 py-0.5 text-[10px] font-medium text-orange-400">TRC20</span>
+                          <span className="rounded border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-medium text-blue-400">ERC20</span>
+                          <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 text-[10px] font-medium text-yellow-400">BSC</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <span className="rounded-md bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">Available</span>
@@ -216,7 +246,7 @@ function PaymentForm() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500/20">
-                      <span className="text-xl font-bold text-yellow-400">B</span>
+                      <span className="text-lg font-bold text-yellow-400">BNB</span>
                     </div>
                     <div>
                       <p className="font-semibold text-white">Binance Pay</p>
@@ -246,9 +276,19 @@ function PaymentForm() {
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold text-white">{option.label}</p>
-                        <p className="text-sm text-zinc-400">{option.description}</p>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-700/50 text-2xl">
+                          {getCryptoIcon(option.coin)}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-white">{option.label}</p>
+                            <span className={`rounded border px-2 py-0.5 text-xs font-medium ${getNetworkBadgeColor(option.network)}`}>
+                              {option.network}
+                            </span>
+                          </div>
+                          <p className="text-sm text-zinc-400">{option.description}</p>
+                        </div>
                       </div>
                       {selectedCrypto === option.value && (
                         <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500">
@@ -266,6 +306,14 @@ function PaymentForm() {
               )}
             </section>
           )}
+
+          {/* Payment Methods Disclaimer */}
+          <section className="rounded-lg border border-zinc-800/50 bg-zinc-900/30 p-4">
+            <p className="text-xs text-zinc-500">
+              Payment method names and network identifiers are used for identification purposes only. 
+              We are not affiliated with, endorsed by, or partnered with any payment provider or blockchain network.
+            </p>
+          </section>
 
           {/* Terms & Conditions */}
           <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">

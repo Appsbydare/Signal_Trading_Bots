@@ -264,7 +264,18 @@ function CryptoPayment() {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h1 className="text-xl font-semibold text-white">Order #{order.orderId}</h1>
-              <p className="text-sm text-zinc-400">{order.plan} Plan</p>
+              <div className="mt-1 flex items-center gap-2">
+                <p className="text-sm text-zinc-400">{order.plan} Plan</p>
+                <span className={`rounded border px-2 py-0.5 text-xs font-medium ${
+                  network === "TRC20" ? "bg-orange-500/20 text-orange-400 border-orange-500/30" :
+                  network === "ERC20" ? "bg-blue-500/20 text-blue-400 border-blue-500/30" :
+                  network === "BSC" ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" :
+                  network === "BTC" ? "bg-orange-500/20 text-orange-400 border-orange-500/30" :
+                  "bg-zinc-500/20 text-zinc-400 border-zinc-500/30"
+                }`}>
+                  {network}
+                </span>
+              </div>
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-white">${order.displayPrice} USD</p>
@@ -279,6 +290,11 @@ function CryptoPayment() {
           </div>
 
           <div className="mb-6 text-center">
+            <div className="mb-3 flex items-center justify-center gap-2">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-700/50 text-3xl">
+                {coin === "BTC" ? "₿" : coin === "ETH" ? "Ξ" : coin === "BNB" ? "BNB" : coin === "USDT" || coin === "USDC" ? "₮" : "●"}
+              </div>
+            </div>
             <p className="mb-2 text-sm text-zinc-400">Total to pay</p>
             <p className="text-3xl font-bold text-white">
               {displayAmount !== null 
@@ -299,8 +315,17 @@ function CryptoPayment() {
                   <QRCodeCanvas value={qrValue} size={200} />
                 </div>
               </div>
-              <p className="text-center text-xs text-zinc-500">
-                Scan with Binance or any wallet app. Enter amount manually:{" "}
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <p className="text-xs text-zinc-500">
+                  Compatible with:{" "}
+                </p>
+                <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-2 py-0.5 text-[10px] font-medium text-yellow-400">Binance</span>
+                <span className="rounded border border-orange-500/30 bg-orange-500/10 px-2 py-0.5 text-[10px] font-medium text-orange-400">TronLink</span>
+                <span className="rounded border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium text-blue-400">MetaMask</span>
+                <span className="rounded border border-zinc-500/30 bg-zinc-500/10 px-2 py-0.5 text-[10px] font-medium text-zinc-400">Other Wallets</span>
+              </div>
+              <p className="mt-2 text-center text-xs text-zinc-500">
+                Enter amount manually:{" "}
                 <span className="font-semibold text-white">
                   {displayAmount !== null 
                     ? displayAmount.toFixed(coin === "BTC" ? 8 : coin === "ETH" || coin === "BNB" ? 6 : 6)
