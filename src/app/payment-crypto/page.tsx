@@ -17,6 +17,8 @@ function CryptoPayment() {
   const [txHash, setTxHash] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [cryptoPrice, setCryptoPrice] = useState<number | null>(null);
+  const [cryptoAmount, setCryptoAmount] = useState<number | null>(null);
 
   // Ensure component is mounted (client-side only)
   useEffect(() => {
@@ -50,6 +52,23 @@ function CryptoPayment() {
             const now = Date.now();
             const remaining = Math.max(0, Math.floor((expires - now) / 1000));
             setTimeLeft(remaining);
+          }
+
+          // Fetch crypto price and calculate amount
+          if (data.embeddedPrice && data.coin) {
+            fetch(`/api/crypto/prices?coin=${data.coin}`)
+              .then((priceRes) => priceRes.json())
+              .then((priceData) => {
+                if (priceData.price) {
+                  setCryptoPrice(priceData.price);
+                  // Convert USD embedded price to crypto amount
+                  const amount = data.embeddedPrice / priceData.price;
+                  setCryptoAmount(amount);
+                }
+              })
+              .catch((error) => {
+                console.error("Failed to fetch crypto price:", error);
+              });
           }
         } else if (data === null) {
           // Order not found, retry after a short delay
@@ -167,8 +186,10 @@ function CryptoPayment() {
     );
   }
 
-  const qrValue = order.walletAddress && order.embeddedPrice 
-    ? `${order.walletAddress}?amount=${order.embeddedPrice}` 
+  // Use crypto amount if available, otherwise fallback to embedded price (for stablecoins)
+  const displayAmount = cryptoAmount !== null ? cryptoAmount : order.embeddedPrice;
+  const qrValue = order.walletAddress && displayAmount 
+    ? `${order.walletAddress}?amount=${displayAmount}` 
     : "";
 
   return (
@@ -195,11 +216,18 @@ function CryptoPayment() {
           <div className="mb-6 text-center">
             <p className="mb-2 text-sm text-zinc-400">Total to pay</p>
             <p className="text-3xl font-bold text-white">
-              {order.embeddedPrice ? order.embeddedPrice.toFixed(6) : "0.000000"} {coin}
+              {displayAmount !== null 
+                ? displayAmount.toFixed(coin === "BTC" ? 8 : coin === "ETH" || coin === "BNB" ? 6 : 6)
+                : "0.000000"} {coin}
             </p>
+            {cryptoPrice && cryptoPrice !== 1 && (
+              <p className="mt-1 text-xs text-zinc-500">
+                ≈ ${order.embeddedPrice?.toFixed(2)} USD
+              </p>
+            )}
           </div>
 
-          {order.walletAddress && order.embeddedPrice && (
+          {order.walletAddress && displayAmount && (
             <div className="mb-6 flex justify-center">
               <div className="rounded-lg border-2 border-white bg-white p-4">
                 <QRCodeCanvas value={qrValue} size={200} />
@@ -262,23 +290,23 @@ function CryptoPayment() {
             </div>
           )}
 
-          {order.walletAddress && order.embeddedPrice && (
+          {order.walletAddress && displayAmount && (
             <div className="text-center">
               <button
                 onClick={() => {
                   // Generate wallet deep link based on network
                   let walletLink = "";
                   if (order.network === "TRC20") {
-                    walletLink = `tronlink://transfer?address=${order.walletAddress}&amount=${order.embeddedPrice}`;
+                    walletLink = `tronlink://transfer?address=${order.walletAddress}&amount=${displayAmount}`;
                   } else if (order.network === "ERC20" || order.network === "ETH") {
                     // MetaMask or other Ethereum wallets
-                    walletLink = `ethereum:${order.walletAddress}?value=${order.embeddedPrice}`;
+                    walletLink = `ethereum:${order.walletAddress}?value=${displayAmount}`;
                   } else if (order.network === "BSC") {
                     // Trust Wallet or MetaMask for BSC
-                    walletLink = `trust://transfer?address=${order.walletAddress}&amount=${order.embeddedPrice}`;
+                    walletLink = `trust://transfer?address=${order.walletAddress}&amount=${displayAmount}`;
                   } else if (order.network === "BTC") {
-                    // Bitcoin wallets
-                    walletLink = `bitcoin:${order.walletAddress}?amount=${order.embeddedPrice}`;
+                    // Bitcoin wallets - amount in BTC
+                    walletLink = `bitcoin:${order.walletAddress}?amount=${displayAmount}`;
                   }
                   
                   if (walletLink) {
