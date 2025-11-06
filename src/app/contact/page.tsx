@@ -27,11 +27,12 @@ export default function ContactPage() {
             directly to your form.
           </p>
           <a
-            href="#"
-            aria-disabled
-            className="inline-block cursor-not-allowed rounded-md bg-black px-4 py-2 text-white opacity-60"
+            href="https://docs.google.com/forms/d/e/1FAIpQLSclVvR_Rwz-kdAUdbBRsIr2FxVn2n2RkCY0UP-oLjaLlCAIuA/viewform?usp=header"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block rounded-md bg-black px-4 py-2 text-white hover:bg-zinc-800"
           >
-            Open Contact Form (coming soon)
+            Open Contact Form
           </a>
         </div>
       </div>
