@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# wallet files with private keys (DO NOT COMMIT)
+*_wallets_output.txt
+*_wallets.txt
+*.wallet

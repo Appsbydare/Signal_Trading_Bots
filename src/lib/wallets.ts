@@ -44,8 +44,21 @@ export const WALLET_POOLS: Record<string, Wallet[]> = {
     { address: "0x526b8375e72de2d88c57ec38012e239d379b7f1e", coin: "USDT", network: "ERC20", index: 15 },
   ],
   "BTC": [
-    { address: "YOUR_BINANCE_BTC_WALLET_1", coin: "BTC", network: "BTC", index: 1 },
-    // Add 14 more wallets
+    { address: "13hF6PqeZWERviRYRE1Gmpsb9D73S3GUcs", coin: "BTC", network: "BTC", index: 1 },
+    { address: "1FJzBtHE7NjAjPUR26k49Cj41GHQYRbAmG", coin: "BTC", network: "BTC", index: 2 },
+    { address: "1FgjE17fXWNeqae9m6rxXwzLMAEqZvxxNU", coin: "BTC", network: "BTC", index: 3 },
+    { address: "1JZqvCBUzziajvBvVHyv9D1sGNipZtmq8", coin: "BTC", network: "BTC", index: 4 },
+    { address: "1NAS43ri7frZakbn2ZFQ3Jm76ovVSNkV3i", coin: "BTC", network: "BTC", index: 5 },
+    { address: "13rYrVaZBHGLFc1EAqkpTXKrMizAhAKi71", coin: "BTC", network: "BTC", index: 6 },
+    { address: "17oCRjb17GtLpNdo4iEoKyRiPDLmmSqhkg", coin: "BTC", network: "BTC", index: 7 },
+    { address: "1BLFaJgJGBVMiX3ycf7mmeR2t7idTuAivC", coin: "BTC", network: "BTC", index: 8 },
+    { address: "14SteNWVQP9Xqjpjv49YMFsqPdQcs8HJkM", coin: "BTC", network: "BTC", index: 9 },
+    { address: "1B7ffGHpdChTRm1sNjJHDiLL2VRc7z7Lhs", coin: "BTC", network: "BTC", index: 10 },
+    { address: "12dPxvEaT7GHwK4GpZFLHAw2bkaFbPqpfr", coin: "BTC", network: "BTC", index: 11 },
+    { address: "19SzcQdS98YhALwYqXT3fTY6sfsGqe77C2", coin: "BTC", network: "BTC", index: 12 },
+    { address: "17wxfYmQSKwKqM5WrvXgofuTZcvngnaWLv", coin: "BTC", network: "BTC", index: 13 },
+    { address: "1272CDwE3cFzgFhtSbW1iYTQb8faWy6yA8", coin: "BTC", network: "BTC", index: 14 },
+    { address: "1FwFtfiDR8SbUAMUME1jHJdnW9vA28AY2S", coin: "BTC", network: "BTC", index: 15 },
   ],
   "ETH": [
     { address: "YOUR_BINANCE_ETH_WALLET_1", coin: "ETH", network: "ETH", index: 1 },
