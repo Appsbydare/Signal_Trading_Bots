@@ -57,16 +57,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased`}
       >
-        <header className="sticky top-0 z-50 border-b border-black/10 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+        <header className="sticky top-0 z-50 border-b border-black/20 bg-zinc-900/95 text-zinc-50 backdrop-blur supports-[backdrop-filter]:bg-zinc-900/85">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
             <Link href="/" className="text-base font-semibold tracking-tight">
               signaltradingbots
             </Link>
             <nav className="flex items-center gap-6 text-sm">
-              <Link href="/products">Products</Link>
-              <Link href="/specs">Specs</Link>
-              <Link href="/faq">FAQ</Link>
-              <Link href="/contact">Contact</Link>
+              <Link className="hover:opacity-80" href="/products">Products</Link>
+              <Link className="hover:opacity-80" href="/specs">Specs</Link>
+              <Link className="hover:opacity-80" href="/faq">FAQ</Link>
+              <Link className="hover:opacity-80" href="/contact">Contact</Link>
             </nav>
           </div>
         </header>
@@ -76,20 +76,21 @@ export default function RootLayout({
         <SchemaOrg />
         <Analytics />
 
-        <footer className="border-t border-black/10 py-10 text-sm">
+        <footer className="mt-10 border-t border-black/20 bg-zinc-950 py-10 text-sm text-zinc-300">
           <div className="mx-auto max-w-6xl px-6">
-            <div className="flex flex-col gap-2 text-zinc-600">
-              <p>
-                © {new Date().getFullYear()} signaltradingbots. All rights reserved.
-              </p>
-              <p>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="font-medium text-zinc-200">signaltradingbots</p>
+                <div className="flex gap-4">
+                  <Link className="hover:opacity-80" href="/terms">Terms</Link>
+                  <Link className="hover:opacity-80" href="/privacy">Privacy</Link>
+                  <Link className="hover:opacity-80" href="/refund">Refund</Link>
+                </div>
+              </div>
+              <p>© {new Date().getFullYear()} signaltradingbots. All rights reserved.</p>
+              <p className="text-xs text-zinc-400">
                 MetaTrader, MT4, and MT5 are trademarks of MetaQuotes Software Corp. Telegram is a trademark of Telegram FZ-LLC. Trading involves risk; use a demo first. Not financial advice.
               </p>
-              <div className="flex gap-4">
-                <Link href="/terms">Terms</Link>
-                <Link href="/privacy">Privacy</Link>
-                <Link href="/refund">Refund</Link>
-              </div>
             </div>
           </div>
         </footer>
