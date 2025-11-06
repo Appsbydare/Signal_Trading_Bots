@@ -65,8 +65,21 @@ export const WALLET_POOLS: Record<string, Wallet[]> = {
     // Add 14 more wallets
   ],
   "BNB": [
-    { address: "YOUR_BINANCE_BNB_WALLET_1", coin: "BNB", network: "BSC", index: 1 },
-    // Add 14 more wallets
+    { address: "0x5796C69917eb8a1F23FF65dd8AafEC2bE1d2C6F5", coin: "BNB", network: "BSC", index: 1 },
+    { address: "0xE84ce0A69DD113CFf56e6C7Bb25D1f8957Ff1431", coin: "BNB", network: "BSC", index: 2 },
+    { address: "0xc5fe57f66430f32EAbe25517737dA2088a8226A9", coin: "BNB", network: "BSC", index: 3 },
+    { address: "0xC97d4924044dE44EbFF10F15b7C700f5b0beA33C", coin: "BNB", network: "BSC", index: 4 },
+    { address: "0xDF02713EC1277f76fa6891860Ce7e9fa3a39cfF3", coin: "BNB", network: "BSC", index: 5 },
+    { address: "0xd94AFf40C1f9141FBaBEEEf5ba4653c23bC0Da47", coin: "BNB", network: "BSC", index: 6 },
+    { address: "0xd4779bDef1e390f78D1F2f958c5F518106629866", coin: "BNB", network: "BSC", index: 7 },
+    { address: "0xD8C80E92338916B44E94547b70EB0139280Ef388", coin: "BNB", network: "BSC", index: 8 },
+    { address: "0xB0Ad9529CB1E19D237ae4da47A7d0bC05A948F40", coin: "BNB", network: "BSC", index: 9 },
+    { address: "0x713cC627E2158370ce1d1d1Bc1C824f2991E53C5", coin: "BNB", network: "BSC", index: 10 },
+    { address: "0x1b10A15Ab0962c0052F1d12DAa70bBd85B032b2b", coin: "BNB", network: "BSC", index: 11 },
+    { address: "0x90696ED08501f0E9dC95FCe0C5888666191a881b", coin: "BNB", network: "BSC", index: 12 },
+    { address: "0xeff8ED2083b073879Ae53EDb568BED270FA59CE1", coin: "BNB", network: "BSC", index: 13 },
+    { address: "0x543E468649d3e070c4407c7BC22e9fd8122D5884", coin: "BNB", network: "BSC", index: 14 },
+    { address: "0x6278ebFd62bea971Dbe4F8D09A82d51eFFDa01b7", coin: "BNB", network: "BSC", index: 15 },
   ],
   "USDC-ERC20": [
     { address: "0xb96cbffa9c1463a863a83893e371176bda25e650", coin: "USDC", network: "ERC20", index: 1 },
