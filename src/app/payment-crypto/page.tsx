@@ -19,6 +19,7 @@ function CryptoPayment() {
   const [mounted, setMounted] = useState(false);
   const [cryptoPrice, setCryptoPrice] = useState<number | null>(null);
   const [cryptoAmount, setCryptoAmount] = useState<number | null>(null);
+  const [showManualPaymentModal, setShowManualPaymentModal] = useState(false);
 
   // Ensure component is mounted (client-side only)
   useEffect(() => {
@@ -178,6 +179,63 @@ function CryptoPayment() {
     return `${mins}m ${secs}s`;
   };
 
+  // Try to open wallet with multiple schemes (wallet detection)
+  const tryOpenWallet = (network: string, address: string, amount: number): void => {
+    const walletSchemes: Record<string, string[]> = {
+      BTC: [
+        `bitcoin:${address}?amount=${amount}`, // Standard BIP21 - works with most wallets
+      ],
+      TRC20: [
+        `tronlink://transfer?address=${address}&amount=${amount}`, // TronLink
+      ],
+      ERC20: [
+        `ethereum:${address}?value=${amount}`, // Standard Ethereum URI
+      ],
+      ETH: [
+        `ethereum:${address}?value=${amount}`, // Standard Ethereum URI
+      ],
+      BSC: [
+        `trust://transfer?address=${address}&amount=${amount}`, // Trust Wallet
+      ],
+    };
+
+    const schemes = walletSchemes[network] || [];
+    
+    // Try the first (most common) scheme
+    if (schemes.length > 0) {
+      try {
+        // Use window.location for better compatibility
+        window.location.href = schemes[0];
+      } catch (error) {
+        console.error("Failed to open wallet:", error);
+      }
+    }
+  };
+
+  const handleCopyAddress = () => {
+    if (order?.walletAddress) {
+      navigator.clipboard.writeText(order.walletAddress);
+      alert("Wallet address copied to clipboard!");
+    }
+  };
+
+  const handleCopyAmount = () => {
+    if (displayAmount !== null) {
+      const decimals = coin === "BTC" ? 8 : coin === "ETH" || coin === "BNB" ? 6 : 6;
+      navigator.clipboard.writeText(displayAmount.toFixed(decimals));
+      alert(`Amount (${displayAmount.toFixed(decimals)} ${coin}) copied to clipboard!`);
+    }
+  };
+
+  const handleCopyPaymentDetails = () => {
+    if (order?.walletAddress && displayAmount !== null) {
+      const decimals = coin === "BTC" ? 8 : coin === "ETH" || coin === "BNB" ? 6 : 6;
+      const details = `Address: ${order.walletAddress}\nAmount: ${displayAmount.toFixed(decimals)} ${coin}`;
+      navigator.clipboard.writeText(details);
+      alert("Payment details copied to clipboard!");
+    }
+  };
+
   if (!mounted || !order) {
     return (
       <div className="min-h-screen bg-zinc-950 py-12 text-center text-white">
@@ -291,47 +349,17 @@ function CryptoPayment() {
           )}
 
           {order.walletAddress && displayAmount && (
-            <div className="text-center">
+            <div className="flex flex-col gap-3 text-center">
               <button
                 onClick={() => {
-                  // Generate wallet deep link based on network
-                  let walletLink = "";
-                  if (order.network === "TRC20") {
-                    walletLink = `tronlink://transfer?address=${order.walletAddress}&amount=${displayAmount}`;
-                  } else if (order.network === "ERC20" || order.network === "ETH") {
-                    // MetaMask or other Ethereum wallets
-                    walletLink = `ethereum:${order.walletAddress}?value=${displayAmount}`;
-                  } else if (order.network === "BSC") {
-                    // Trust Wallet or MetaMask for BSC
-                    walletLink = `trust://transfer?address=${order.walletAddress}&amount=${displayAmount}`;
-                  } else if (order.network === "BTC") {
-                    // Bitcoin wallets - standard BIP21 URI scheme
-                    // Format: bitcoin:ADDRESS?amount=AMOUNT
-                    // Works with: Electrum, BlueWallet, Exodus, Trust Wallet, Coinbase Wallet, etc.
-                    walletLink = `bitcoin:${order.walletAddress}?amount=${displayAmount}`;
-                  }
+                  // Try to open wallet with detection
+                  tryOpenWallet(order.network, order.walletAddress, displayAmount);
                   
-                  if (walletLink) {
-                    // Try to open wallet app via deep link
-                    // Standard Bitcoin URI scheme (BIP21): bitcoin:ADDRESS?amount=AMOUNT
-                    // Works with: Electrum, BlueWallet, Exodus, Trust Wallet, Coinbase Wallet, etc.
-                    try {
-                      window.location.href = walletLink;
-                    } catch (error) {
-                      // If deep link fails, fallback to copying address
-                      navigator.clipboard.writeText(order.walletAddress);
-                      alert(
-                        `Bitcoin wallet address copied!\n\n` +
-                        `Address: ${order.walletAddress}\n` +
-                        `Amount: ${displayAmount.toFixed(8)} BTC\n\n` +
-                        `Please open your Bitcoin wallet and send the amount manually.`
-                      );
-                    }
-                  } else {
-                    // Fallback: copy address to clipboard
-                    navigator.clipboard.writeText(order.walletAddress);
-                    alert("Wallet address copied to clipboard!");
-                  }
+                  // Show manual payment modal after a delay
+                  // User can close it if wallet opened successfully
+                  setTimeout(() => {
+                    setShowManualPaymentModal(true);
+                  }, 2000);
                 }}
                 className="rounded-md bg-black px-6 py-3 font-medium text-white hover:bg-zinc-800"
               >
@@ -341,6 +369,94 @@ function CryptoPayment() {
                  order.network === "BTC" ? "Pay with Bitcoin Wallet" :
                  "Pay from wallet"}
               </button>
+              <button
+                onClick={() => setShowManualPaymentModal(true)}
+                className="text-sm text-zinc-400 hover:text-zinc-300 underline"
+              >
+                Show Manual Payment Instructions
+              </button>
+            </div>
+          )}
+
+          {/* Manual Payment Modal */}
+          {showManualPaymentModal && order.walletAddress && displayAmount && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+              <div className="relative w-full max-w-md rounded-lg border border-zinc-800 bg-zinc-900 p-6">
+                <button
+                  onClick={() => setShowManualPaymentModal(false)}
+                  className="absolute right-4 top-4 text-zinc-400 hover:text-white"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+
+                <h2 className="mb-4 text-xl font-semibold text-white">Manual Payment Instructions</h2>
+                
+                <div className="mb-4 space-y-3">
+                  <div>
+                    <label className="mb-1 block text-sm text-zinc-400">Wallet Address:</label>
+                    <div className="flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-800 p-2">
+                      <code className="flex-1 break-all text-xs text-white">{order.walletAddress}</code>
+                      <button
+                        onClick={handleCopyAddress}
+                        className="rounded px-2 py-1 text-xs text-zinc-400 hover:bg-zinc-700"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm text-zinc-400">Amount to Send:</label>
+                    <div className="flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-800 p-2">
+                      <code className="flex-1 text-sm font-semibold text-white">
+                        {displayAmount.toFixed(coin === "BTC" ? 8 : coin === "ETH" || coin === "BNB" ? 6 : 6)} {coin}
+                      </code>
+                      <button
+                        onClick={handleCopyAmount}
+                        className="rounded px-2 py-1 text-xs text-zinc-400 hover:bg-zinc-700"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center rounded-lg border border-zinc-700 bg-white p-4">
+                    <QRCodeCanvas 
+                      value={`${order.walletAddress}?amount=${displayAmount}`} 
+                      size={200} 
+                    />
+                  </div>
+                </div>
+
+                <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+                  <p className="text-sm text-amber-200">
+                    <strong>Steps:</strong>
+                  </p>
+                  <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs text-amber-200/90">
+                    <li>Open your {coin} wallet app</li>
+                    <li>Scan the QR code or copy the address</li>
+                    <li>Send exactly <strong>{displayAmount.toFixed(coin === "BTC" ? 8 : 6)} {coin}</strong></li>
+                    <li>Wait for blockchain confirmation</li>
+                  </ol>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCopyPaymentDetails}
+                    className="flex-1 rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+                  >
+                    Copy All Details
+                  </button>
+                  <button
+                    onClick={() => setShowManualPaymentModal(false)}
+                    className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    Got It
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
