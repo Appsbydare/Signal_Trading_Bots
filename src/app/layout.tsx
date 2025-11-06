@@ -58,14 +58,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased`}
       >
-        <header className="sticky top-0 z-50 border-b border-black/20 bg-zinc-900/95 text-zinc-50 backdrop-blur supports-[backdrop-filter]:bg-zinc-900/85">
+        <header className="sticky top-0 z-50 border-b border-black/20 bg-zinc-950 text-zinc-50">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
             <Link href="/" className="flex items-center">
               <Image
                 src="/Tradingbot.png"
                 alt="SIGNAL trading bots"
-                width={180}
-                height={50}
+                width={90}
+                height={25}
                 className="h-auto w-auto"
                 priority
               />
