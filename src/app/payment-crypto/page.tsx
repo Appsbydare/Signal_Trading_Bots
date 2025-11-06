@@ -305,12 +305,28 @@ function CryptoPayment() {
                     // Trust Wallet or MetaMask for BSC
                     walletLink = `trust://transfer?address=${order.walletAddress}&amount=${displayAmount}`;
                   } else if (order.network === "BTC") {
-                    // Bitcoin wallets - amount in BTC
+                    // Bitcoin wallets - standard BIP21 URI scheme
+                    // Format: bitcoin:ADDRESS?amount=AMOUNT
+                    // Works with: Electrum, BlueWallet, Exodus, Trust Wallet, Coinbase Wallet, etc.
                     walletLink = `bitcoin:${order.walletAddress}?amount=${displayAmount}`;
                   }
                   
                   if (walletLink) {
-                    window.open(walletLink, "_blank");
+                    // Try to open wallet app via deep link
+                    // Standard Bitcoin URI scheme (BIP21): bitcoin:ADDRESS?amount=AMOUNT
+                    // Works with: Electrum, BlueWallet, Exodus, Trust Wallet, Coinbase Wallet, etc.
+                    try {
+                      window.location.href = walletLink;
+                    } catch (error) {
+                      // If deep link fails, fallback to copying address
+                      navigator.clipboard.writeText(order.walletAddress);
+                      alert(
+                        `Bitcoin wallet address copied!\n\n` +
+                        `Address: ${order.walletAddress}\n` +
+                        `Amount: ${displayAmount.toFixed(8)} BTC\n\n` +
+                        `Please open your Bitcoin wallet and send the amount manually.`
+                      );
+                    }
                   } else {
                     // Fallback: copy address to clipboard
                     navigator.clipboard.writeText(order.walletAddress);
