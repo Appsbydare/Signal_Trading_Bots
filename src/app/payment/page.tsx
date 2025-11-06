@@ -88,38 +88,28 @@ function PaymentForm() {
             </div>
           </section>
 
-          {/* Hardware Fingerprint */}
+          {/* Important Warning */}
           <section className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-6">
             <div className="mb-3 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20">
                 <svg className="h-6 w-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M4.93 19h14.14a2 2 0 001.79-2.9L13.79 4.9a2 2 0 00-3.58 0L3.14 16.1A2 2 0 004.93 19z" />
                 </svg>
               </div>
-              <h2 className="text-lg font-semibold text-white">Hardware Fingerprint Required</h2>
+              <h2 className="text-lg font-semibold text-amber-300">Important Warning</h2>
             </div>
-            <p className="mb-3 text-sm text-zinc-300">
-              Your license will be bound to your computer to prevent unauthorized sharing. Please download and run the app to get your hardware fingerprint.
-            </p>
-            <a href="#" className="mb-4 inline-flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300">
-              How to get your hardware fingerprint?
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </a>
-            <div>
-              <label className="mb-1 block text-sm text-zinc-300">
-                Hardware Fingerprint <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.hardwareFingerprint}
-                onChange={(e) => setFormData({ ...formData, hardwareFingerprint: e.target.value })}
-                placeholder="e.g., A1B2C3D4E5F6G7H8"
-                className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-white placeholder:text-zinc-500 focus:border-blue-500 focus:outline-none"
-              />
-              <p className="mt-1 text-xs text-zinc-500">16-character hexadecimal code shown when you run the app</p>
+            <div className="space-y-3 text-sm text-amber-100/90">
+              <p>
+                <span className="font-semibold text-amber-200">Demo First:</span> Test with a demo account to understand SL/TP
+                settings for your signal provider.
+              </p>
+              <p>
+                <span className="font-semibold text-amber-200">Not Financial Advice:</span> signaltradingbots is a software
+                company, not financial advisers.
+              </p>
+              <p>
+                <span className="font-semibold text-amber-200">High Risk:</span> 95%+ of traders lose money. Practice with demo first!
+              </p>
             </div>
           </section>
 
