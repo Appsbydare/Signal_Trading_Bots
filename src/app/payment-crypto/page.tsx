@@ -16,16 +16,35 @@ function CryptoPayment() {
   const [showTxInput, setShowTxInput] = useState(false);
   const [txHash, setTxHash] = useState("");
   const [verifying, setVerifying] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure component is mounted (client-side only)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
-    if (!orderId) return;
+    if (!orderId || !mounted) return;
 
     // Fetch order details
     fetch(`/api/orders/${orderId}/status`)
       .then((res) => res.json())
       .then((data) => {
-        setOrder(data);
-        setStatus(data.status);
+        if (data && !data.error) {
+          setOrder(data);
+          setStatus(data.status);
+          
+          // Calculate time left from expiresAt
+          if (data.expiresAt) {
+            const expires = new Date(data.expiresAt).getTime();
+            const now = Date.now();
+            const remaining = Math.max(0, Math.floor((expires - now) / 1000));
+            setTimeLeft(remaining);
+          }
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch order:", error);
       });
 
     // Poll status every 5 seconds
@@ -33,12 +52,17 @@ function CryptoPayment() {
       fetch(`/api/orders/${orderId}/status`)
         .then((res) => res.json())
         .then((data) => {
-          setStatus(data.status);
-          if (data.status === "paid") {
-            clearInterval(statusInterval);
-            // Redirect to success page
-            router.push(`/payment-success?orderId=${orderId}`);
+          if (data && !data.error) {
+            setStatus(data.status);
+            if (data.status === "paid") {
+              clearInterval(statusInterval);
+              // Redirect to success page
+              router.push(`/payment-success?orderId=${orderId}`);
+            }
           }
+        })
+        .catch((error) => {
+          console.error("Status poll error:", error);
         });
     }, 5000);
 
@@ -55,9 +79,7 @@ function CryptoPayment() {
 
     // Show TX input after 5 minutes if no payment detected
     const txInputTimeout = setTimeout(() => {
-      if (status === "waiting_for_payment") {
-        setShowTxInput(true);
-      }
+      setShowTxInput(true);
     }, 5 * 60 * 1000);
 
     return () => {
@@ -65,7 +87,7 @@ function CryptoPayment() {
       clearInterval(timerInterval);
       clearTimeout(txInputTimeout);
     };
-  }, [orderId, status, router]);
+  }, [orderId, router, mounted]);
 
   const handleTxSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,7 +122,7 @@ function CryptoPayment() {
     return `${mins}m ${secs}s`;
   };
 
-  if (!order) {
+  if (!mounted || !order) {
     return (
       <div className="min-h-screen bg-zinc-950 py-12 text-center text-white">
         Loading order...
@@ -108,17 +130,9 @@ function CryptoPayment() {
     );
   }
 
-  // Calculate time left from expiresAt
-  useEffect(() => {
-    if (order.expiresAt) {
-      const expires = new Date(order.expiresAt).getTime();
-      const now = Date.now();
-      const remaining = Math.max(0, Math.floor((expires - now) / 1000));
-      setTimeLeft(remaining);
-    }
-  }, [order.expiresAt]);
-
-  const qrValue = `${order.walletAddress}?amount=${order.embeddedPrice}`;
+  const qrValue = order.walletAddress && order.embeddedPrice 
+    ? `${order.walletAddress}?amount=${order.embeddedPrice}` 
+    : "";
 
   return (
     <div className="min-h-screen bg-zinc-950 py-12">
@@ -144,26 +158,30 @@ function CryptoPayment() {
           <div className="mb-6 text-center">
             <p className="mb-2 text-sm text-zinc-400">Total to pay</p>
             <p className="text-3xl font-bold text-white">
-              {order.embeddedPrice.toFixed(6)} {coin}
+              {order.embeddedPrice ? order.embeddedPrice.toFixed(6) : "0.000000"} {coin}
             </p>
           </div>
 
-          <div className="mb-6 flex justify-center">
-            <div className="rounded-lg border-2 border-white bg-white p-4">
-              <QRCodeCanvas value={qrValue} size={200} />
+          {order.walletAddress && order.embeddedPrice && (
+            <div className="mb-6 flex justify-center">
+              <div className="rounded-lg border-2 border-white bg-white p-4">
+                <QRCodeCanvas value={qrValue} size={200} />
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="mb-6">
             <label className="mb-2 block text-sm text-zinc-300">{network} address:</label>
             <div className="flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-800 p-3">
-              <code className="flex-1 text-sm text-white">{order.walletAddress}</code>
-              <button
-                onClick={() => navigator.clipboard.writeText(order.walletAddress)}
-                className="rounded px-2 py-1 text-xs text-zinc-400 hover:bg-zinc-700"
-              >
-                Copy
-              </button>
+              <code className="flex-1 text-sm text-white">{order.walletAddress || "Loading..."}</code>
+              {order.walletAddress && (
+                <button
+                  onClick={() => navigator.clipboard.writeText(order.walletAddress)}
+                  className="rounded px-2 py-1 text-xs text-zinc-400 hover:bg-zinc-700"
+                >
+                  Copy
+                </button>
+              )}
             </div>
           </div>
 
@@ -207,14 +225,16 @@ function CryptoPayment() {
             </div>
           )}
 
-          <div className="text-center">
-            <button
-              onClick={() => window.open(`tronlink://transfer?address=${order.walletAddress}&amount=${order.embeddedPrice}`, "_blank")}
-              className="rounded-md bg-black px-6 py-3 font-medium text-white hover:bg-zinc-800"
-            >
-              Pay from wallet
-            </button>
-          </div>
+          {order.walletAddress && order.embeddedPrice && (
+            <div className="text-center">
+              <button
+                onClick={() => window.open(`tronlink://transfer?address=${order.walletAddress}&amount=${order.embeddedPrice}`, "_blank")}
+                className="rounded-md bg-black px-6 py-3 font-medium text-white hover:bg-zinc-800"
+              >
+                Pay from wallet
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
