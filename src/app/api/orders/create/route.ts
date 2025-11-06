@@ -16,8 +16,8 @@ export async function POST(request: NextRequest) {
 
     const displayPrice = plan === "pro" ? 49 : 29;
     const selectedCoinNetwork = coinNetwork || "USDT-TRC20"; // Default to USDT-TRC20 if not provided
-    const wallet = getNextWallet(selectedCoinNetwork);
-    const embeddedPrice = getEmbeddedPrice(displayPrice, wallet.index);
+    const { wallet, orderCount } = getNextWallet(selectedCoinNetwork);
+    const embeddedPrice = getEmbeddedPrice(displayPrice, orderCount);
 
     const orderId = `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`;
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes

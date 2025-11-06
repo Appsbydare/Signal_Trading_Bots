@@ -74,38 +74,52 @@ export const WALLET_POOLS: Record<string, Wallet[]> = {
   ],
 };
 
-// Calculate embedded price based on wallet index
-export function getEmbeddedPrice(displayPrice: number, walletIndex: number): number {
+// Track order count per wallet address (for price increment within each wallet)
+const walletOrderCounts: Record<string, number> = {};
+
+// Track wallet rotation per coinNetwork
+const walletRotationCounts: Record<string, number> = {};
+
+// Calculate embedded price based on order count for this specific wallet
+export function getEmbeddedPrice(displayPrice: number, orderCount: number): number {
   // Base: displayPrice - 0.099890
-  // Increment: walletIndex * 0.000010
+  // Increment: orderCount * 0.000010 (increments for each order to this wallet)
   const base = displayPrice - 0.09989;
-  const increment = walletIndex * 0.00001;
+  const increment = orderCount * 0.00001;
   return parseFloat((base + increment).toFixed(6));
 }
 
-// Track order count per coinNetwork for sequential rotation
-const orderCounts: Record<string, number> = {};
-
 // Get next available wallet (sequential rotation per coin/network)
-export function getNextWallet(coinNetwork: string): Wallet {
+// Returns wallet and its current order count for price calculation
+export function getNextWallet(coinNetwork: string): { wallet: Wallet; orderCount: number } {
   const pool = WALLET_POOLS[coinNetwork];
   if (!pool || pool.length === 0) {
     throw new Error(`No wallets configured for ${coinNetwork}`);
   }
 
-  // Initialize counter for this coinNetwork if not exists
-  if (!orderCounts[coinNetwork]) {
-    orderCounts[coinNetwork] = 0;
+  // Initialize rotation counter for this coinNetwork if not exists
+  if (!walletRotationCounts[coinNetwork]) {
+    walletRotationCounts[coinNetwork] = 0;
   }
 
-  // Get current order count and increment for next order
-  const currentCount = orderCounts[coinNetwork];
-  const walletIndex = currentCount % pool.length; // Rotate: 0-14, then back to 0
+  // Get current rotation count and select wallet
+  const currentRotation = walletRotationCounts[coinNetwork];
+  const walletIndex = currentRotation % pool.length; // Rotate: 0-14, then back to 0
+  const selectedWallet = pool[walletIndex];
   
-  // Increment counter for next order
-  orderCounts[coinNetwork] = currentCount + 1;
+  // Increment rotation counter for next order
+  walletRotationCounts[coinNetwork] = currentRotation + 1;
 
-  // Return wallet (index is 0-based, but wallet.index is 1-based)
-  return pool[walletIndex];
+  // Get order count for this specific wallet address
+  const walletKey = `${coinNetwork}:${selectedWallet.address}`;
+  if (!walletOrderCounts[walletKey]) {
+    walletOrderCounts[walletKey] = 0;
+  }
+
+  // Get current order count for this wallet and increment for next order
+  const orderCount = walletOrderCounts[walletKey];
+  walletOrderCounts[walletKey] = orderCount + 1;
+
+  return { wallet: selectedWallet, orderCount };
 }
 
