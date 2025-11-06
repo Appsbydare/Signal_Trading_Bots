@@ -19,11 +19,40 @@ function PaymentForm() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [creatingOrder, setCreatingOrder] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreedToTerms || !selectedPayment || selectedPayment !== "crypto") return;
-    // Redirect to Google Form - user will fill in all details there
-    window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSclVvR_Rwz-kdAUdbBRsIr2FxVn2n2RkCY0UP-oLjaLlCAIuA/viewform?usp=header";
+
+    setCreatingOrder(true);
+
+    try {
+      // Create order
+      const response = await fetch("/api/orders/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan,
+          email: formData.email,
+          fullName: formData.fullName,
+          country: formData.country,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.orderId) {
+        // Redirect to crypto payment page
+        window.location.href = `/payment-crypto?orderId=${data.orderId}&coin=${data.coin}&network=${data.network}`;
+      } else {
+        alert("Failed to create order. Please try again.");
+        setCreatingOrder(false);
+      }
+    } catch (error) {
+      alert("Error creating order. Please try again.");
+      setCreatingOrder(false);
+    }
   };
 
   return (
@@ -248,10 +277,10 @@ function PaymentForm() {
             </Link>
             <button
               type="submit"
-              disabled={!agreedToTerms || !selectedPayment || selectedPayment !== "crypto"}
+              disabled={!agreedToTerms || !selectedPayment || selectedPayment !== "crypto" || creatingOrder}
               className="flex-1 rounded-md bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Proceed to Payment
+              {creatingOrder ? "Creating Order..." : "Proceed to Payment"}
             </button>
           </div>
         </form>
