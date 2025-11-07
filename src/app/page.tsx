@@ -79,6 +79,7 @@ export default function Home() {
               Use a demo first. Trading involves significant risk. Not financial advice.
             </p>
           </div>
+          </div>
         </div>
         </div>
         </div>
