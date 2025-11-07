@@ -75,6 +75,115 @@ export default function Home() {
         </div>
       </div>
       </div>
+
+      {/* Broker List Section */}
+      <section className="bg-zinc-950 py-12">
+        <div className="mx-auto max-w-7xl px-6">
+          <h2 className="mb-8 text-center text-2xl font-semibold text-white">Broker List</h2>
+          
+          {/* First Row - Moving Left to Right */}
+          <div className="mb-8 overflow-hidden">
+            <div className="broker-scroll-left flex gap-4">
+              {[
+                { name: "XM Group", description: "Forex trading and trading in other leveraged products involves substantial risk." },
+                { name: "PrimeXBT", description: "Trading involves substantial risk and may not be suitable for all investors." },
+                { name: "Trade Nation", description: "Financial Spread Bets and CFDs are complex instruments with high risk." },
+                { name: "HF Markets", description: "Risk Warning: Trading leveraged products such as CFDs carries significant risk." },
+              ].map((broker, index) => (
+                <div
+                  key={`row1-${index}`}
+                  className="broker-card flex min-w-[300px] flex-shrink-0 flex-col rounded-lg bg-zinc-800 p-6 text-white"
+                >
+                  <div className="mb-4 flex items-center gap-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded bg-zinc-700 text-xs text-zinc-400">
+                      Logo
+                    </div>
+                    <h3 className="text-lg font-semibold">{broker.name}</h3>
+                  </div>
+                  <p className="mb-4 text-sm text-zinc-300">{broker.description}</p>
+                  <button className="mt-auto rounded-md bg-[#5e17eb] px-4 py-2 text-white !text-white transition hover:bg-[#4512c2]">
+                    Open Account
+                  </button>
+                </div>
+              ))}
+              {/* Duplicate for seamless loop */}
+              {[
+                { name: "XM Group", description: "Forex trading and trading in other leveraged products involves substantial risk." },
+                { name: "PrimeXBT", description: "Trading involves substantial risk and may not be suitable for all investors." },
+                { name: "Trade Nation", description: "Financial Spread Bets and CFDs are complex instruments with high risk." },
+                { name: "HF Markets", description: "Risk Warning: Trading leveraged products such as CFDs carries significant risk." },
+              ].map((broker, index) => (
+                <div
+                  key={`row1-dup-${index}`}
+                  className="broker-card flex min-w-[300px] flex-shrink-0 flex-col rounded-lg bg-zinc-800 p-6 text-white"
+                >
+                  <div className="mb-4 flex items-center gap-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded bg-zinc-700 text-xs text-zinc-400">
+                      Logo
+                    </div>
+                    <h3 className="text-lg font-semibold">{broker.name}</h3>
+                  </div>
+                  <p className="mb-4 text-sm text-zinc-300">{broker.description}</p>
+                  <button className="mt-auto rounded-md bg-[#5e17eb] px-4 py-2 text-white !text-white transition hover:bg-[#4512c2]">
+                    Open Account
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Second Row - Moving Right to Left */}
+          <div className="overflow-hidden">
+            <div className="broker-scroll-right flex gap-4">
+              {[
+                { name: "IC Markets", description: "IC Markets Global is the trading name of Raw Trading Ltd." },
+                { name: "ATFX", description: "ATFX is a leading forex broker trusted by traders worldwide." },
+                { name: "FxPro", description: "Risk Warning: Contracts for Difference (CFDs) carry a high level of risk." },
+                { name: "Pepperstone", description: "CFDs are complex instruments and come with a high risk of losing money." },
+              ].map((broker, index) => (
+                <div
+                  key={`row2-${index}`}
+                  className="broker-card flex min-w-[300px] flex-shrink-0 flex-col rounded-lg bg-zinc-800 p-6 text-white"
+                >
+                  <div className="mb-4 flex items-center gap-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded bg-zinc-700 text-xs text-zinc-400">
+                      Logo
+                    </div>
+                    <h3 className="text-lg font-semibold">{broker.name}</h3>
+                  </div>
+                  <p className="mb-4 text-sm text-zinc-300">{broker.description}</p>
+                  <button className="mt-auto rounded-md bg-[#5e17eb] px-4 py-2 text-white !text-white transition hover:bg-[#4512c2]">
+                    Open Account
+                  </button>
+                </div>
+              ))}
+              {/* Duplicate for seamless loop */}
+              {[
+                { name: "IC Markets", description: "IC Markets Global is the trading name of Raw Trading Ltd." },
+                { name: "ATFX", description: "ATFX is a leading forex broker trusted by traders worldwide." },
+                { name: "FxPro", description: "Risk Warning: Contracts for Difference (CFDs) carry a high level of risk." },
+                { name: "Pepperstone", description: "CFDs are complex instruments and come with a high risk of losing money." },
+              ].map((broker, index) => (
+                <div
+                  key={`row2-dup-${index}`}
+                  className="broker-card flex min-w-[300px] flex-shrink-0 flex-col rounded-lg bg-zinc-800 p-6 text-white"
+                >
+                  <div className="mb-4 flex items-center gap-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded bg-zinc-700 text-xs text-zinc-400">
+                      Logo
+                    </div>
+                    <h3 className="text-lg font-semibold">{broker.name}</h3>
+                  </div>
+                  <p className="mb-4 text-sm text-zinc-300">{broker.description}</p>
+                  <button className="mt-auto rounded-md bg-[#5e17eb] px-4 py-2 text-white !text-white transition hover:bg-[#4512c2]">
+                    Open Account
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
