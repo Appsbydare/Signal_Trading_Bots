@@ -4,7 +4,13 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="brand-callout space-y-10 rounded-3xl p-8">
+    <div className="space-y-6">
+      <div className="rounded-lg border border-[#5e17eb] bg-gradient-to-r from-[#5e17eb]/10 to-[#5e17eb]/5 px-6 py-4 text-center">
+        <p className="text-sm font-medium text-[#5e17eb]">
+          Service will be commencing on <strong>26th November</strong>
+        </p>
+      </div>
+      <div className="brand-callout space-y-10 rounded-3xl p-8">
       <motion.h1
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -67,6 +73,7 @@ export default function Home() {
             </p>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
