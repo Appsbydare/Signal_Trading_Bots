@@ -58,7 +58,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased`}
       >
-        <header className="sticky top-0 z-50 border-b border-black/20 bg-zinc-950 text-zinc-50">
+        <header className="sticky top-0 z-50 border-b border-[#5e17eb]/40 bg-zinc-950/98 text-zinc-50 shadow-sm">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
             <Link href="/" className="flex items-center">
               <Image
@@ -71,10 +71,10 @@ export default function RootLayout({
               />
             </Link>
             <nav className="flex items-center gap-6 text-sm">
-              <Link className="hover:opacity-80" href="/products">Products</Link>
-              <Link className="hover:opacity-80" href="/specs">Specs</Link>
-              <Link className="hover:opacity-80" href="/faq">FAQ</Link>
-              <Link className="hover:opacity-80" href="/contact">Contact</Link>
+              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/products">Products</Link>
+              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/specs">Specs</Link>
+              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/faq">FAQ</Link>
+              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/contact">Contact</Link>
             </nav>
           </div>
         </header>
@@ -84,7 +84,7 @@ export default function RootLayout({
         <SchemaOrg />
         <Analytics />
 
-        <footer className="mt-10 border-t border-black/20 bg-zinc-950 py-10 text-sm text-zinc-300">
+        <footer className="mt-10 border-t border-[#5e17eb]/25 bg-zinc-950 py-10 text-sm text-zinc-300">
           <div className="mx-auto max-w-6xl px-6">
             <div className="grid grid-cols-1 gap-8 pb-8 md:grid-cols-2 lg:grid-cols-4">
               {/* Company Section */}

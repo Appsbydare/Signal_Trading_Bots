@@ -3,6 +3,9 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --brand: #5e17eb;
+  --brand-dark: #4312b8;
+  --brand-soft: #f4f0ff;
 }
 
 @theme inline {
@@ -24,6 +27,15 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+main a {
+  color: var(--brand);
+  transition: color 150ms ease;
+}
+
+main a:hover {
+  color: var(--brand-dark);
 }
 
 h1, h2 {
@@ -67,4 +79,28 @@ h3 {
   .reveal {
     animation: none !important;
   }
+}
+
+.brand-heading {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.6rem;
+}
+
+.brand-heading::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 3.5rem;
+  height: 0.25rem;
+  border-radius: 9999px;
+  background: var(--brand);
+  opacity: 0.9;
+}
+
+.brand-callout {
+  border: 1px solid rgba(94, 23, 235, 0.35);
+  background: linear-gradient(135deg, rgba(94, 23, 235, 0.12), rgba(94, 23, 235, 0.05) 45%, rgba(255, 255, 255, 0));
+  box-shadow: 0 12px 28px rgba(94, 23, 235, 0.12);
 }

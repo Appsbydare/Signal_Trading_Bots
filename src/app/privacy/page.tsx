@@ -6,7 +6,7 @@ export const metadata = {
 export default function PrivacyPage() {
   return (
     <div className="space-y-8">
-      <h1 className="reveal text-2xl font-semibold tracking-tight">Privacy Policy</h1>
+      <h1 className="reveal brand-heading text-2xl font-semibold tracking-tight">Privacy Policy</h1>
       <div className="prose prose-sm max-w-3xl space-y-4 text-zinc-700">
         <p className="reveal">
           Last updated: {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}

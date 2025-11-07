@@ -4,12 +4,12 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="space-y-10">
+    <div className="brand-callout space-y-10 rounded-3xl p-8">
       <motion.h1
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="reveal text-3xl font-semibold tracking-tight"
+        className="reveal brand-heading text-3xl font-semibold tracking-tight"
       >
         Automate MT5 trading from Telegram signals
       </motion.h1>
@@ -25,20 +25,20 @@ export default function Home() {
       <div className="flex gap-4">
         <Link
           href="/products"
-          className="rounded-md bg-black px-4 py-2 text-white hover:bg-zinc-800"
+          className="rounded-md bg-[#5e17eb] px-5 py-2 text-white shadow-sm transition hover:bg-[#4512c2] hover:shadow-md"
         >
           View Products
         </Link>
         <Link
           href="/contact"
-          className="rounded-md border px-4 py-2 hover:bg-zinc-50"
+          className="rounded-md border border-[#5e17eb] px-5 py-2 text-[#5e17eb] transition hover:bg-[#5e17eb] hover:text-white"
         >
           Contact
         </Link>
       </div>
       <div className="mt-10 space-y-6">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-sm font-medium text-zinc-600">Supported Platforms:</span>
+          <span className="text-sm font-medium text-[#5e17eb]">Supported Platforms:</span>
           <img
             src="/telegram-badge.svg"
             alt="Telegram Compatible"
@@ -53,14 +53,14 @@ export default function Home() {
           />
         </div>
         <div className="grid gap-6 sm:grid-cols-2">
-          <div className="rounded-lg border p-6">
+          <div className="rounded-lg border border-[#5e17eb] bg-white/80 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
             <h3 className="reveal mb-2 font-medium">How it works</h3>
             <p className="text-sm text-zinc-600">
               The bot monitors Telegram signals and executes orders on MT5 based on your
               configured mapping and strategy.
             </p>
           </div>
-          <div className="rounded-lg border p-6">
+          <div className="rounded-lg border border-[#5e17eb] bg-white/80 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
             <h3 className="reveal mb-2 font-medium">Important notice</h3>
             <p className="text-sm text-zinc-600">
               Use a demo first. Trading involves significant risk. Not financial advice.

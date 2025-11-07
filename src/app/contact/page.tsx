@@ -6,21 +6,21 @@ export const metadata = {
 export default function ContactPage() {
   return (
     <div className="space-y-8">
-      <h1 className="reveal text-2xl font-semibold tracking-tight">Contact</h1>
+      <h1 className="reveal brand-heading text-2xl font-semibold tracking-tight">Contact</h1>
       <div className="space-y-4">
         <p className="reveal max-w-2xl text-sm text-zinc-600">
           We typically respond within 1–2 business days.
         </p>
-        <div className="rounded-lg border p-4 text-sm">
+        <div className="rounded-lg border border-[#5e17eb] bg-white/95 p-4 text-sm shadow-sm transition hover:-translate-y-[2px] hover:shadow-md">
           <p className="mb-2 font-medium">Email support</p>
           <a
             href="mailto:support@signaltradingbots.com"
-            className="inline-block rounded-md border px-3 py-2 hover:bg-zinc-50"
+            className="inline-block rounded-md border border-[#5e17eb] px-3 py-2 text-[#5e17eb] transition hover:bg-[#5e17eb] hover:text-white"
           >
             support@signaltradingbots.com
           </a>
         </div>
-        <div className="rounded-lg border p-4 text-sm">
+        <div className="rounded-lg border border-[#5e17eb] bg-white/95 p-4 text-sm shadow-sm transition hover:-translate-y-[2px] hover:shadow-md">
           <p className="mb-2 font-medium">Google Form</p>
           <p className="mb-3 text-zinc-600">
             Share your Google Form link and we will wire this button to submit
@@ -30,7 +30,7 @@ export default function ContactPage() {
             href="https://docs.google.com/forms/d/e/1FAIpQLSclVvR_Rwz-kdAUdbBRsIr2FxVn2n2RkCY0UP-oLjaLlCAIuA/viewform?usp=header"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block rounded-md bg-black px-4 py-2 text-white hover:bg-zinc-800"
+            className="inline-block rounded-md bg-[#5e17eb] px-4 py-2 text-white shadow-sm transition hover:bg-[#4512c2] hover:shadow-md"
           >
             Open Contact Form
           </a>

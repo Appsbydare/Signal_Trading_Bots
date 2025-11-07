@@ -6,7 +6,7 @@ export const metadata = {
 export default function ProductsPage() {
   return (
     <div className="space-y-8">
-      <h1 className="reveal text-2xl font-semibold tracking-tight">Products</h1>
+      <h1 className="reveal brand-heading text-2xl font-semibold tracking-tight">Products</h1>
       <section className="space-y-4">
         <p className="reveal max-w-3xl text-sm text-zinc-600">
           Automate MT5 trades from Telegram signals with configurable strategies.
@@ -14,7 +14,7 @@ export default function ProductsPage() {
           via our Google Form.
         </p>
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-sm font-medium text-zinc-600">Compatible with:</span>
+          <span className="text-sm font-medium text-[#5e17eb]">Compatible with:</span>
           <img
             src="/telegram-badge.svg"
             alt="Telegram Compatible"
@@ -29,7 +29,7 @@ export default function ProductsPage() {
           />
         </div>
         <div className="grid gap-6 sm:grid-cols-3">
-          <div className="rounded-lg border p-6">
+          <div className="rounded-lg border border-[#5e17eb] bg-white/85 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
             <h3 className="reveal mb-2 font-medium">Overview</h3>
             <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-700">
               <li>Monitors Telegram signals in real time</li>
@@ -37,7 +37,7 @@ export default function ProductsPage() {
               <li>Configurable TP/SL, order type, lot sizing</li>
             </ul>
           </div>
-          <div className="rounded-lg border p-6">
+          <div className="rounded-lg border border-[#5e17eb] bg-white/85 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
             <h3 className="reveal mb-2 font-medium">Requirements</h3>
             <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-700">
               <li>Windows 10/11 (64-bit) or VPS</li>
@@ -45,7 +45,7 @@ export default function ProductsPage() {
               <li>Use a demo first before going live</li>
             </ul>
           </div>
-          <div className="rounded-lg border p-6">
+          <div className="rounded-lg border border-[#5e17eb] bg-white/85 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
             <h3 className="reveal mb-2 font-medium">Includes</h3>
             <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-700">
               <li>License for one user</li>
@@ -56,7 +56,7 @@ export default function ProductsPage() {
         </div>
       </section>
       <div className="grid gap-6 sm:grid-cols-2">
-        <div className="rounded-lg border p-6">
+        <div className="rounded-lg border border-[#5e17eb] bg-white/90 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
           <div className="mb-3 flex items-center gap-2">
             <h2 className="reveal text-lg font-medium">Starter</h2>
             <img
@@ -81,19 +81,19 @@ export default function ProductsPage() {
           <div className="mt-4 flex gap-3">
             <a
               href="/payment?plan=starter"
-              className="rounded-md bg-black px-4 py-2 text-white hover:bg-zinc-800"
+              className="rounded-md bg-[#5e17eb] px-4 py-2 text-white shadow-sm transition hover:bg-[#4512c2] hover:shadow-md"
             >
               Buy Starter
             </a>
             <a
               href="/contact"
-              className="rounded-md border px-4 py-2 hover:bg-zinc-50"
+              className="rounded-md border border-[#5e17eb] px-4 py-2 text-[#5e17eb] transition hover:bg-[#5e17eb] hover:text-white"
             >
               Questions?
             </a>
           </div>
         </div>
-        <div className="rounded-lg border p-6">
+        <div className="rounded-lg border border-[#5e17eb] bg-white/90 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
           <div className="mb-3 flex items-center gap-2">
             <h2 className="reveal text-lg font-medium">Pro</h2>
             <img
@@ -118,20 +118,20 @@ export default function ProductsPage() {
           <div className="mt-4 flex gap-3">
             <a
               href="/payment?plan=pro"
-              className="rounded-md bg-black px-4 py-2 text-white hover:bg-zinc-800"
+              className="rounded-md bg-[#5e17eb] px-4 py-2 text-white shadow-sm transition hover:bg-[#4512c2] hover:shadow-md"
             >
               Buy Pro
             </a>
             <a
               href="/contact"
-              className="rounded-md border px-4 py-2 hover:bg-zinc-50"
+              className="rounded-md border border-[#5e17eb] px-4 py-2 text-[#5e17eb] transition hover:bg-[#5e17eb] hover:text-white"
             >
               Questions?
             </a>
           </div>
         </div>
       </div>
-      <section className="rounded-lg border p-6">
+      <section className="rounded-lg border border-[#5e17eb] bg-white/90 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
         <h3 className="reveal mb-2 font-medium">Important notices</h3>
         <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-700">
           <li>Use a demo first to validate your signal provider’s SL/TP style.</li>

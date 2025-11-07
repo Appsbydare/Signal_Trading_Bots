@@ -7,7 +7,7 @@ export default function TermsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="reveal text-2xl font-semibold tracking-tight">Terms and Conditions</h1>
+        <h1 className="reveal brand-heading text-2xl font-semibold tracking-tight">Terms and Conditions</h1>
         <p className="reveal mt-2 text-sm text-zinc-600">
           Comprehensive terms covering USA, EU, and international regulations
         </p>
