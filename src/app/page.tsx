@@ -22,7 +22,7 @@ export default function Home() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="reveal brand-heading text-3xl font-semibold tracking-tight"
+        className="reveal brand-heading text-6xl font-semibold tracking-tight"
       >
         Automate MT5 trading from Telegram signals
       </motion.h1>
