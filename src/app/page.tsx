@@ -25,13 +25,13 @@ export default function Home() {
       <div className="flex gap-4">
         <Link
           href="/products"
-          className="rounded-md bg-[#5e17eb] px-5 py-2 text-white shadow-sm transition hover:bg-[#4512c2] hover:scale-105 hover:shadow-lg"
+          className="rounded-md bg-[#5e17eb] px-5 py-2 text-white !text-white shadow-sm transition hover:bg-[#4512c2] hover:scale-105 hover:shadow-lg"
         >
           View Products
         </Link>
         <Link
           href="/contact"
-          className="rounded-md bg-[#5e17eb] px-5 py-2 text-white shadow-sm transition hover:bg-[#4512c2] hover:scale-105 hover:shadow-lg"
+          className="rounded-md bg-[#5e17eb] px-5 py-2 text-white !text-white shadow-sm transition hover:bg-[#4512c2] hover:scale-105 hover:shadow-lg"
         >
           Contact
         </Link>

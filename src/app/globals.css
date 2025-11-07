@@ -29,12 +29,12 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-main a {
+main a:not([class*="bg-"]) {
   color: var(--brand);
   transition: color 150ms ease;
 }
 
-main a:hover {
+main a:not([class*="bg-"]):hover {
   color: var(--brand-dark);
 }
 

@@ -81,13 +81,13 @@ export default function ProductsPage() {
           <div className="mt-4 flex gap-3">
             <a
               href="/payment?plan=starter"
-              className="rounded-md bg-[#5e17eb] px-4 py-2 text-white shadow-sm transition hover:bg-[#4512c2] hover:scale-105 hover:shadow-lg"
+              className="rounded-md bg-[#5e17eb] px-4 py-2 !text-white shadow-sm transition hover:bg-[#4512c2] hover:scale-105 hover:shadow-lg"
             >
               Buy Starter
             </a>
             <a
               href="/contact"
-              className="rounded-md bg-[#5e17eb] px-4 py-2 text-white shadow-sm transition hover:bg-[#4512c2] hover:scale-105 hover:shadow-lg"
+              className="rounded-md bg-[#5e17eb] px-4 py-2 !text-white shadow-sm transition hover:bg-[#4512c2] hover:scale-105 hover:shadow-lg"
             >
               Questions?
             </a>
@@ -118,13 +118,13 @@ export default function ProductsPage() {
           <div className="mt-4 flex gap-3">
             <a
               href="/payment?plan=pro"
-              className="rounded-md bg-[#5e17eb] px-4 py-2 text-white shadow-sm transition hover:bg-[#4512c2] hover:scale-105 hover:shadow-lg"
+              className="rounded-md bg-[#5e17eb] px-4 py-2 !text-white shadow-sm transition hover:bg-[#4512c2] hover:scale-105 hover:shadow-lg"
             >
               Buy Pro
             </a>
             <a
               href="/contact"
-              className="rounded-md bg-[#5e17eb] px-4 py-2 text-white shadow-sm transition hover:bg-[#4512c2] hover:scale-105 hover:shadow-lg"
+              className="rounded-md bg-[#5e17eb] px-4 py-2 !text-white shadow-sm transition hover:bg-[#4512c2] hover:scale-105 hover:shadow-lg"
             >
               Questions?
             </a>

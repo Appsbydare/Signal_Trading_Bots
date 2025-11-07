@@ -15,7 +15,7 @@ export default function ContactPage() {
           <p className="mb-2 font-medium">Email support</p>
           <a
             href="mailto:support@signaltradingbots.com"
-            className="inline-block rounded-md bg-[#5e17eb] px-3 py-2 text-white shadow-sm transition hover:bg-[#4512c2] hover:scale-105 hover:shadow-lg"
+            className="inline-block rounded-md bg-[#5e17eb] px-3 py-2 !text-white shadow-sm transition hover:bg-[#4512c2] hover:scale-105 hover:shadow-lg"
           >
             support@signaltradingbots.com
           </a>
@@ -30,7 +30,7 @@ export default function ContactPage() {
             href="https://docs.google.com/forms/d/e/1FAIpQLSclVvR_Rwz-kdAUdbBRsIr2FxVn2n2RkCY0UP-oLjaLlCAIuA/viewform?usp=header"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block rounded-md bg-[#5e17eb] px-4 py-2 text-white shadow-sm transition hover:bg-[#4512c2] hover:scale-105 hover:shadow-lg"
+            className="inline-block rounded-md bg-[#5e17eb] px-4 py-2 !text-white shadow-sm transition hover:bg-[#4512c2] hover:scale-105 hover:shadow-lg"
           >
             Open Contact Form
           </a>
