@@ -1,6 +1,8 @@
 "use client";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
+import XmLogo from "../../broker_logos/XM-Logo.webp";
 
 export default function Home() {
   return (
@@ -94,48 +96,126 @@ export default function Home() {
           <div className="mb-8 overflow-hidden">
             <div className="broker-scroll-left flex gap-4">
               {[
-                { name: "XM Group", description: "Forex trading and trading in other leveraged products involves substantial risk." },
-                { name: "PrimeXBT", description: "Trading involves substantial risk and may not be suitable for all investors." },
-                { name: "Trade Nation", description: "Financial Spread Bets and CFDs are complex instruments with high risk." },
-                { name: "HF Markets", description: "Risk Warning: Trading leveraged products such as CFDs carries significant risk." },
+                {
+                  name: "XM Group",
+                  description:
+                    "Forex trading and trading in other leveraged products involves substantial risk.",
+                  referralLink: "https://www.xmglobal.com/referral?token=GxGWLVScWveRbMRJ8v1pbQ",
+                  logo: XmLogo,
+                },
+                {
+                  name: "PrimeXBT",
+                  description: "Trading involves substantial risk and may not be suitable for all investors.",
+                  logo: undefined,
+                },
+                {
+                  name: "Trade Nation",
+                  description: "Financial Spread Bets and CFDs are complex instruments with high risk.",
+                  logo: undefined,
+                },
+                {
+                  name: "HF Markets",
+                  description: "Risk Warning: Trading leveraged products such as CFDs carries significant risk.",
+                  logo: undefined,
+                },
               ].map((broker, index) => (
                 <div
                   key={`row1-${index}`}
                   className="broker-card flex min-w-[300px] flex-shrink-0 flex-col rounded-lg bg-zinc-800 p-6 text-white"
                 >
                   <div className="mb-4 flex items-center gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded bg-zinc-700 text-xs text-zinc-400">
-                      Logo
+                    <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded bg-zinc-700 text-xs text-zinc-400">
+                      {broker.logo ? (
+                        <Image
+                          src={broker.logo}
+                          alt={`${broker.name} logo`}
+                          width={64}
+                          height={64}
+                          className="h-full w-full object-contain"
+                        />
+                      ) : (
+                        "Logo"
+                      )}
                     </div>
                     <h3 className="text-lg font-semibold">{broker.name}</h3>
                   </div>
                   <p className="mb-4 text-sm text-zinc-300">{broker.description}</p>
-                  <button className="mt-auto rounded-md bg-[#5e17eb] px-4 py-2 text-white !text-white transition hover:bg-[#4512c2]">
-                    Open Account
-                  </button>
+                  {broker.referralLink ? (
+                    <Link
+                      href={broker.referralLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-auto rounded-md bg-[#5e17eb] px-4 py-2 text-center text-white !text-white transition hover:bg-[#4512c2]"
+                    >
+                      Open Account
+                    </Link>
+                  ) : (
+                    <button className="mt-auto rounded-md bg-[#5e17eb] px-4 py-2 text-white !text-white transition hover:bg-[#4512c2]">
+                      Open Account
+                    </button>
+                  )}
                 </div>
               ))}
               {/* Duplicate for seamless loop */}
               {[
-                { name: "XM Group", description: "Forex trading and trading in other leveraged products involves substantial risk." },
-                { name: "PrimeXBT", description: "Trading involves substantial risk and may not be suitable for all investors." },
-                { name: "Trade Nation", description: "Financial Spread Bets and CFDs are complex instruments with high risk." },
-                { name: "HF Markets", description: "Risk Warning: Trading leveraged products such as CFDs carries significant risk." },
+                {
+                  name: "XM Group",
+                  description:
+                    "Forex trading and trading in other leveraged products involves substantial risk.",
+                  referralLink: "https://www.xmglobal.com/referral?token=GxGWLVScWveRbMRJ8v1pbQ",
+                  logo: XmLogo,
+                },
+                {
+                  name: "PrimeXBT",
+                  description: "Trading involves substantial risk and may not be suitable for all investors.",
+                  logo: undefined,
+                },
+                {
+                  name: "Trade Nation",
+                  description: "Financial Spread Bets and CFDs are complex instruments with high risk.",
+                  logo: undefined,
+                },
+                {
+                  name: "HF Markets",
+                  description: "Risk Warning: Trading leveraged products such as CFDs carries significant risk.",
+                  logo: undefined,
+                },
               ].map((broker, index) => (
                 <div
                   key={`row1-dup-${index}`}
                   className="broker-card flex min-w-[300px] flex-shrink-0 flex-col rounded-lg bg-zinc-800 p-6 text-white"
                 >
                   <div className="mb-4 flex items-center gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded bg-zinc-700 text-xs text-zinc-400">
-                      Logo
+                    <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded bg-zinc-700 text-xs text-zinc-400">
+                      {broker.logo ? (
+                        <Image
+                          src={broker.logo}
+                          alt={`${broker.name} logo`}
+                          width={64}
+                          height={64}
+                          className="h-full w-full object-contain"
+                        />
+                      ) : (
+                        "Logo"
+                      )}
                     </div>
                     <h3 className="text-lg font-semibold">{broker.name}</h3>
                   </div>
                   <p className="mb-4 text-sm text-zinc-300">{broker.description}</p>
-                  <button className="mt-auto rounded-md bg-[#5e17eb] px-4 py-2 text-white !text-white transition hover:bg-[#4512c2]">
-                    Open Account
-                  </button>
+                  {broker.referralLink ? (
+                    <Link
+                      href={broker.referralLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-auto rounded-md bg-[#5e17eb] px-4 py-2 text-center text-white !text-white transition hover:bg-[#4512c2]"
+                    >
+                      Open Account
+                    </Link>
+                  ) : (
+                    <button className="mt-auto rounded-md bg-[#5e17eb] px-4 py-2 text-white !text-white transition hover:bg-[#4512c2]">
+                      Open Account
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -145,18 +225,44 @@ export default function Home() {
           <div className="overflow-hidden">
             <div className="broker-scroll-right flex gap-4">
               {[
-                { name: "IC Markets", description: "IC Markets Global is the trading name of Raw Trading Ltd." },
-                { name: "ATFX", description: "ATFX is a leading forex broker trusted by traders worldwide." },
-                { name: "FxPro", description: "Risk Warning: Contracts for Difference (CFDs) carry a high level of risk." },
-                { name: "Pepperstone", description: "CFDs are complex instruments and come with a high risk of losing money." },
+                {
+                  name: "IC Markets",
+                  description: "IC Markets Global is the trading name of Raw Trading Ltd.",
+                  logo: undefined,
+                },
+                {
+                  name: "ATFX",
+                  description: "ATFX is a leading forex broker trusted by traders worldwide.",
+                  logo: undefined,
+                },
+                {
+                  name: "FxPro",
+                  description: "Risk Warning: Contracts for Difference (CFDs) carry a high level of risk.",
+                  logo: undefined,
+                },
+                {
+                  name: "Pepperstone",
+                  description: "CFDs are complex instruments and come with a high risk of losing money.",
+                  logo: undefined,
+                },
               ].map((broker, index) => (
                 <div
                   key={`row2-${index}`}
                   className="broker-card flex min-w-[300px] flex-shrink-0 flex-col rounded-lg bg-zinc-800 p-6 text-white"
                 >
                   <div className="mb-4 flex items-center gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded bg-zinc-700 text-xs text-zinc-400">
-                      Logo
+                    <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded bg-zinc-700 text-xs text-zinc-400">
+                      {broker.logo ? (
+                        <Image
+                          src={broker.logo}
+                          alt={`${broker.name} logo`}
+                          width={64}
+                          height={64}
+                          className="h-full w-full object-contain"
+                        />
+                      ) : (
+                        "Logo"
+                      )}
                     </div>
                     <h3 className="text-lg font-semibold">{broker.name}</h3>
                   </div>
@@ -168,18 +274,44 @@ export default function Home() {
               ))}
               {/* Duplicate for seamless loop */}
               {[
-                { name: "IC Markets", description: "IC Markets Global is the trading name of Raw Trading Ltd." },
-                { name: "ATFX", description: "ATFX is a leading forex broker trusted by traders worldwide." },
-                { name: "FxPro", description: "Risk Warning: Contracts for Difference (CFDs) carry a high level of risk." },
-                { name: "Pepperstone", description: "CFDs are complex instruments and come with a high risk of losing money." },
+                {
+                  name: "IC Markets",
+                  description: "IC Markets Global is the trading name of Raw Trading Ltd.",
+                  logo: undefined,
+                },
+                {
+                  name: "ATFX",
+                  description: "ATFX is a leading forex broker trusted by traders worldwide.",
+                  logo: undefined,
+                },
+                {
+                  name: "FxPro",
+                  description: "Risk Warning: Contracts for Difference (CFDs) carry a high level of risk.",
+                  logo: undefined,
+                },
+                {
+                  name: "Pepperstone",
+                  description: "CFDs are complex instruments and come with a high risk of losing money.",
+                  logo: undefined,
+                },
               ].map((broker, index) => (
                 <div
                   key={`row2-dup-${index}`}
                   className="broker-card flex min-w-[300px] flex-shrink-0 flex-col rounded-lg bg-zinc-800 p-6 text-white"
                 >
                   <div className="mb-4 flex items-center gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded bg-zinc-700 text-xs text-zinc-400">
-                      Logo
+                    <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded bg-zinc-700 text-xs text-zinc-400">
+                      {broker.logo ? (
+                        <Image
+                          src={broker.logo}
+                          alt={`${broker.name} logo`}
+                          width={64}
+                          height={64}
+                          className="h-full w-full object-contain"
+                        />
+                      ) : (
+                        "Logo"
+                      )}
                     </div>
                     <h3 className="text-lg font-semibold">{broker.name}</h3>
                   </div>
