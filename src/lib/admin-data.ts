@@ -3,6 +3,7 @@
 
 export interface AdminItem {
   id: number;
+  controlName: string;
   title: string;
   url: string;
 }
@@ -10,6 +11,7 @@ export interface AdminItem {
 // YouTube Help Data
 let _youtubeHelpData: AdminItem[] = Array.from({ length: 16 }, (_, i) => ({
   id: i + 1,
+  controlName: `Help${i + 1}`,
   title: "",
   url: "",
 }));
@@ -17,6 +19,7 @@ let _youtubeHelpData: AdminItem[] = Array.from({ length: 16 }, (_, i) => ({
 // News Data
 let _newsData: AdminItem[] = Array.from({ length: 16 }, (_, i) => ({
   id: i + 1,
+  controlName: `News${i + 1}`,
   title: "",
   url: "",
 }));

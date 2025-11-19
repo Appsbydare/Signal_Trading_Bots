@@ -44,3 +44,6 @@ next-env.d.ts
 *_wallets_output.txt
 *_wallets.txt
 *.wallet
+
+# uploaded images
+/public/uploads

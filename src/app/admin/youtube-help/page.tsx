@@ -4,13 +4,14 @@ import { useState, useEffect } from "react";
 
 interface AdminItem {
   id: number;
+  controlName: string;
   title: string;
   url: string;
 }
 
 export default function YouTubeHelpAdminPage() {
   const [items, setItems] = useState<AdminItem[]>(
-    Array.from({ length: 16 }, (_, i) => ({ id: i + 1, title: "", url: "" }))
+    Array.from({ length: 16 }, (_, i) => ({ id: i + 1, controlName: `Help${i + 1}`, title: "", url: "" }))
   );
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -39,7 +40,7 @@ export default function YouTubeHelpAdminPage() {
     }
   };
 
-  const handleChange = (index: number, field: "title" | "url", value: string) => {
+  const handleChange = (index: number, field: "controlName" | "title" | "url", value: string) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
     setItems(newItems);
@@ -101,6 +102,17 @@ export default function YouTubeHelpAdminPage() {
           <div key={item.id} className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
             <div className="mb-2 text-sm font-semibold text-zinc-700">Item {index + 1}</div>
             <div className="space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-zinc-700">Control Name</label>
+                <input
+                  type="text"
+                  value={item.controlName}
+                  onChange={(e) => handleChange(index, "controlName", e.target.value)}
+                  className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
+                  placeholder={`Help${index + 1}`}
+                />
+                <p className="mt-1 text-xs text-zinc-500">This name maps to the control/widget in your application</p>
+              </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-zinc-700">Title</label>
                 <input

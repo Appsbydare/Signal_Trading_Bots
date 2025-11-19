@@ -26,9 +26,9 @@ export async function POST(request: NextRequest) {
 
     // Validate each item
     for (let i = 0; i < items.length; i++) {
-      if (typeof items[i].title !== "string" || typeof items[i].url !== "string") {
+      if (typeof items[i].title !== "string" || typeof items[i].url !== "string" || typeof items[i].controlName !== "string") {
         return NextResponse.json(
-          { error: `Invalid data at index ${i}. Title and URL must be strings.` },
+          { error: `Invalid data at index ${i}. Title, URL, and controlName must be strings.` },
           { status: 400 }
         );
       }
@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
     // Update data
     const updatedItems = items.map((item: any, index: number) => ({
       id: index + 1,
+      controlName: item.controlName || `News${index + 1}`,
       title: item.title || "",
       url: item.url || "",
     }));
