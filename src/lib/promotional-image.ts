@@ -1,13 +1,23 @@
-// Storage for promotional image filename
-// In production, replace with a database
+// Storage for promotional image (base64 encoded)
+// In production, replace with a database or cloud storage
 
-let promotionalImageFilename: string | null = null;
-
-export function getPromotionalImageFilename(): string | null {
-  return promotionalImageFilename;
+interface PromotionalImageData {
+  data: string; // base64 encoded image
+  contentType: string; // MIME type
+  filename: string; // original filename
 }
 
-export function setPromotionalImageFilename(filename: string | null): void {
-  promotionalImageFilename = filename;
+let promotionalImage: PromotionalImageData | null = null;
+
+export function getPromotionalImage(): PromotionalImageData | null {
+  return promotionalImage;
+}
+
+export function setPromotionalImage(data: string, contentType: string, filename: string): void {
+  promotionalImage = { data, contentType, filename };
+}
+
+export function clearPromotionalImage(): void {
+  promotionalImage = null;
 }
 

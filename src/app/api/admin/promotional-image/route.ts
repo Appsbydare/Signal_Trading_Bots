@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
-import { setPromotionalImageFilename, getPromotionalImageFilename } from "@/lib/promotional-image";
-
-// Configure runtime for file system operations
-export const runtime = "nodejs";
+import { setPromotionalImage, getPromotionalImage, clearPromotionalImage } from "@/lib/promotional-image";
 
 // GET - Get current promotional image info
 export async function GET(request: NextRequest) {
   try {
-    const filename = getPromotionalImageFilename();
+    const image = getPromotionalImage();
     return NextResponse.json({ 
-      filename,
-      url: filename ? `/api/app/promotional-image` : null
+      hasImage: !!image,
+      filename: image?.filename || null,
+      contentType: image?.contentType || null,
+      url: image ? `/api/app/promotional-image` : null
     });
   } catch (error) {
     console.error("Promotional image fetch error:", error);
@@ -49,54 +45,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = join(process.cwd(), "public", "uploads");
-    try {
-      if (!existsSync(uploadsDir)) {
-        await mkdir(uploadsDir, { recursive: true });
-      }
-    } catch (error: any) {
-      console.error("Error creating uploads directory:", error);
-      return NextResponse.json({ 
-        error: "Failed to create upload directory",
-        details: process.env.NODE_ENV === "development" ? error?.message : undefined
-      }, { status: 500 });
-    }
+    // Convert file to base64
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const base64Data = buffer.toString("base64");
+    const dataUrl = `data:${file.type};base64,${base64Data}`;
 
-    // Generate unique filename
+    // Generate filename
     const timestamp = Date.now();
     const extension = file.name.split(".").pop() || "jpg";
     const filename = `promotional-image-${timestamp}.${extension}`;
-    const filepath = join(uploadsDir, filename);
 
-    // Convert file to buffer and save
-    try {
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      await writeFile(filepath, buffer);
-    } catch (error: any) {
-      console.error("Error writing file:", error);
-      return NextResponse.json({ 
-        error: "Failed to save image file",
-        details: process.env.NODE_ENV === "development" ? error?.message : undefined
-      }, { status: 500 });
-    }
-
-    // Delete old image if exists
-    const oldFilename = getPromotionalImageFilename();
-    if (oldFilename) {
-      try {
-        const oldFilepath = join(uploadsDir, oldFilename);
-        const { unlink } = await import("fs/promises");
-        await unlink(oldFilepath);
-      } catch (error) {
-        // Old file might not exist, ignore error
-        console.warn("Could not delete old image:", error);
-      }
-    }
-
-    // Update stored filename
-    setPromotionalImageFilename(filename);
+    // Store image data
+    setPromotionalImage(dataUrl, file.type, filename);
 
     return NextResponse.json({
       success: true,
@@ -117,21 +78,7 @@ export async function POST(request: NextRequest) {
 // DELETE - Remove promotional image
 export async function DELETE(request: NextRequest) {
   try {
-    const filename = getPromotionalImageFilename();
-    if (filename) {
-      const uploadsDir = join(process.cwd(), "public", "uploads");
-      const filepath = join(uploadsDir, filename);
-      
-      try {
-        const { unlink } = await import("fs/promises");
-        await unlink(filepath);
-      } catch (error) {
-        console.warn("Could not delete image file:", error);
-      }
-      
-      setPromotionalImageFilename(null);
-    }
-
+    clearPromotionalImage();
     return NextResponse.json({ success: true, message: "Image deleted successfully" });
   } catch (error) {
     console.error("Promotional image delete error:", error);

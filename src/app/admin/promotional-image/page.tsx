@@ -195,13 +195,6 @@ export default function PromotionalImageAdminPage() {
 
         {/* Actions */}
         <div className="flex gap-4">
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="rounded-md bg-[#5e17eb] px-6 py-2 text-white transition hover:bg-[#4512c2] disabled:opacity-50"
-          >
-            {uploading ? "Uploading..." : "Choose File"}
-          </button>
           {currentImage && (
             <button
               onClick={handleDelete}
