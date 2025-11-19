@@ -9,7 +9,8 @@ export async function GET(request: NextRequest) {
       hasImage: !!image,
       filename: image?.filename || null,
       contentType: image?.contentType || null,
-      url: image ? `/api/app/promotional-image` : null
+      imageUrl: image ? `/api/app/promotional-image` : null,
+      redirectUrl: image?.url || null
     });
   } catch (error) {
     console.error("Promotional image fetch error:", error);
@@ -22,6 +23,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get("image") as File | null;
+    const url = (formData.get("url") as string) || "";
 
     if (!file) {
       return NextResponse.json({ error: "No image file provided" }, { status: 400 });
@@ -56,8 +58,8 @@ export async function POST(request: NextRequest) {
     const extension = file.name.split(".").pop() || "jpg";
     const filename = `promotional-image-${timestamp}.${extension}`;
 
-    // Store image data
-    setPromotionalImage(dataUrl, file.type, filename);
+    // Store image data with URL
+    setPromotionalImage(dataUrl, file.type, filename, url);
 
     return NextResponse.json({
       success: true,
@@ -72,6 +74,31 @@ export async function POST(request: NextRequest) {
       error: "Failed to upload image",
       details: process.env.NODE_ENV === "development" ? errorMessage : undefined
     }, { status: 500 });
+  }
+}
+
+// PATCH - Update redirect URL only
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { url } = body;
+
+    const image = getPromotionalImage();
+    if (!image) {
+      return NextResponse.json({ error: "No image found. Please upload an image first." }, { status: 400 });
+    }
+
+    // Update URL only
+    setPromotionalImage(image.data, image.contentType, image.filename, url || "");
+
+    return NextResponse.json({ 
+      success: true, 
+      message: "URL updated successfully",
+      redirectUrl: url || ""
+    });
+  } catch (error) {
+    console.error("Promotional image URL update error:", error);
+    return NextResponse.json({ error: "Failed to update URL" }, { status: 500 });
   }
 }
 

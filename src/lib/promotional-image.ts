@@ -5,6 +5,7 @@ interface PromotionalImageData {
   data: string; // base64 encoded image
   contentType: string; // MIME type
   filename: string; // original filename
+  url: string; // URL to redirect when image is clicked
 }
 
 let promotionalImage: PromotionalImageData | null = null;
@@ -13,8 +14,8 @@ export function getPromotionalImage(): PromotionalImageData | null {
   return promotionalImage;
 }
 
-export function setPromotionalImage(data: string, contentType: string, filename: string): void {
-  promotionalImage = { data, contentType, filename };
+export function setPromotionalImage(data: string, contentType: string, filename: string, url: string): void {
+  promotionalImage = { data, contentType, filename, url };
 }
 
 export function clearPromotionalImage(): void {

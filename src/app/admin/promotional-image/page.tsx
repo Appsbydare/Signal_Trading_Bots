@@ -5,9 +5,11 @@ import Image from "next/image";
 
 export default function PromotionalImageAdminPage() {
   const [currentImage, setCurrentImage] = useState<string | null>(null);
+  const [currentUrl, setCurrentUrl] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [savingUrl, setSavingUrl] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -22,11 +24,13 @@ export default function PromotionalImageAdminPage() {
       const response = await fetch("/api/admin/promotional-image");
       if (response.ok) {
         const data = await response.json();
-        if (data.url) {
+        if (data.imageUrl) {
           // Add timestamp to prevent caching
-          setCurrentImage(`${data.url}?t=${Date.now()}`);
+          setCurrentImage(`${data.imageUrl}?t=${Date.now()}`);
+          setCurrentUrl(data.redirectUrl || "");
         } else {
           setCurrentImage(null);
+          setCurrentUrl("");
         }
       }
     } catch (error) {
@@ -65,6 +69,7 @@ export default function PromotionalImageAdminPage() {
     try {
       const formData = new FormData();
       formData.append("image", file);
+      formData.append("url", currentUrl);
 
       const response = await fetch("/api/admin/promotional-image", {
         method: "POST",
@@ -92,6 +97,33 @@ export default function PromotionalImageAdminPage() {
     }
   };
 
+  const handleSaveUrl = async () => {
+    setSavingUrl(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch("/api/admin/promotional-image", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: currentUrl }),
+      });
+
+      if (response.ok) {
+        setMessage({ type: "success", text: "URL saved successfully!" });
+      } else {
+        const error = await response.json();
+        setMessage({ type: "error", text: error.error || "Failed to save URL" });
+      }
+    } catch (error) {
+      console.error("Failed to save URL:", error);
+      setMessage({ type: "error", text: "Failed to save URL" });
+    } finally {
+      setSavingUrl(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete the current promotional image?")) {
       return;
@@ -108,6 +140,7 @@ export default function PromotionalImageAdminPage() {
       if (response.ok) {
         setMessage({ type: "success", text: "Image deleted successfully!" });
         setCurrentImage(null);
+        setCurrentUrl("");
       } else {
         const error = await response.json();
         setMessage({ type: "error", text: error.error || "Failed to delete image" });
@@ -155,13 +188,21 @@ export default function PromotionalImageAdminPage() {
                 unoptimized
               />
             </div>
-            <div className="text-sm text-zinc-600">
+            <div className="space-y-2 text-sm text-zinc-600">
               <p>
                 <strong>API Endpoint:</strong>{" "}
                 <code className="rounded bg-zinc-100 px-2 py-1">
                   https://www.signaltradingbots.com/api/app/promotional-image
                 </code>
               </p>
+              {currentUrl && (
+                <p>
+                  <strong>Redirect URL:</strong>{" "}
+                  <a href={currentUrl} target="_blank" rel="noopener noreferrer" className="text-[#5e17eb] hover:underline">
+                    {currentUrl}
+                  </a>
+                </p>
+              )}
             </div>
           </div>
         ) : (
@@ -190,19 +231,43 @@ export default function PromotionalImageAdminPage() {
                 Supported formats: JPEG, PNG, GIF, WebP. Maximum file size: 5MB
               </p>
             </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-zinc-700">
+                Redirect URL (when image is clicked)
+              </label>
+              <input
+                type="url"
+                value={currentUrl}
+                onChange={(e) => setCurrentUrl(e.target.value)}
+                placeholder="https://example.com"
+                className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
+              />
+              <p className="mt-2 text-xs text-zinc-500">
+                Enter the URL where users will be redirected when they click on the image
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Actions */}
         <div className="flex gap-4">
           {currentImage && (
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="rounded-md border border-red-300 bg-white px-6 py-2 text-red-700 transition hover:bg-red-50 disabled:opacity-50"
-            >
-              {deleting ? "Deleting..." : "Delete Image"}
-            </button>
+            <>
+              <button
+                onClick={handleSaveUrl}
+                disabled={savingUrl}
+                className="rounded-md bg-[#5e17eb] px-6 py-2 text-white transition hover:bg-[#4512c2] disabled:opacity-50"
+              >
+                {savingUrl ? "Saving..." : "Save URL"}
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="rounded-md border border-red-300 bg-white px-6 py-2 text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+              >
+                {deleting ? "Deleting..." : "Delete Image"}
+              </button>
+            </>
           )}
           <button
             onClick={loadCurrentImage}
