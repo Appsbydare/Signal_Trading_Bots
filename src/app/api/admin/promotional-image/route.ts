@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
+import { existsSync } from "fs";
 import { setPromotionalImageFilename, getPromotionalImageFilename } from "@/lib/promotional-image";
+
+// Configure runtime for file system operations
+export const runtime = "nodejs";
 
 // GET - Get current promotional image info
 export async function GET(request: NextRequest) {
@@ -48,9 +52,15 @@ export async function POST(request: NextRequest) {
     // Create uploads directory if it doesn't exist
     const uploadsDir = join(process.cwd(), "public", "uploads");
     try {
-      await mkdir(uploadsDir, { recursive: true });
-    } catch (error) {
-      // Directory might already exist, ignore error
+      if (!existsSync(uploadsDir)) {
+        await mkdir(uploadsDir, { recursive: true });
+      }
+    } catch (error: any) {
+      console.error("Error creating uploads directory:", error);
+      return NextResponse.json({ 
+        error: "Failed to create upload directory",
+        details: process.env.NODE_ENV === "development" ? error?.message : undefined
+      }, { status: 500 });
     }
 
     // Generate unique filename
@@ -60,9 +70,17 @@ export async function POST(request: NextRequest) {
     const filepath = join(uploadsDir, filename);
 
     // Convert file to buffer and save
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    await writeFile(filepath, buffer);
+    try {
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      await writeFile(filepath, buffer);
+    } catch (error: any) {
+      console.error("Error writing file:", error);
+      return NextResponse.json({ 
+        error: "Failed to save image file",
+        details: process.env.NODE_ENV === "development" ? error?.message : undefined
+      }, { status: 500 });
+    }
 
     // Delete old image if exists
     const oldFilename = getPromotionalImageFilename();
@@ -86,9 +104,13 @@ export async function POST(request: NextRequest) {
       url: `/api/app/promotional-image`,
       message: "Image uploaded successfully",
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Promotional image upload error:", error);
-    return NextResponse.json({ error: "Failed to upload image" }, { status: 500 });
+    const errorMessage = error?.message || "Failed to upload image";
+    return NextResponse.json({ 
+      error: "Failed to upload image",
+      details: process.env.NODE_ENV === "development" ? errorMessage : undefined
+    }, { status: 500 });
   }
 }
 

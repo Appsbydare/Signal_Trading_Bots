@@ -3,6 +3,9 @@ import { readFile } from "fs/promises";
 import { join } from "path";
 import { getPromotionalImageFilename } from "@/lib/promotional-image";
 
+// Configure runtime for file system operations
+export const runtime = "nodejs";
+
 // GET - Serve promotional image
 export async function GET(request: NextRequest) {
   try {
