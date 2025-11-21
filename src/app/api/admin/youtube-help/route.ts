@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { youtubeHelpData, setYouTubeHelpData } from "@/lib/admin-data";
+import { getYouTubeHelpData, setYouTubeHelpData } from "@/lib/admin-data";
 
 // GET - Retrieve YouTube help data (admin)
 export async function GET(request: NextRequest) {
   try {
-    return NextResponse.json({ items: youtubeHelpData });
+    const items = await getYouTubeHelpData();
+    return NextResponse.json({ items });
   } catch (error) {
     console.error("YouTube help fetch error:", error);
     return NextResponse.json({ error: "Failed to fetch YouTube help data" }, { status: 500 });
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
       url: item.url || "",
     }));
     
-    setYouTubeHelpData(updatedItems);
+    await setYouTubeHelpData(updatedItems);
 
     return NextResponse.json({ success: true, items: updatedItems });
   } catch (error) {

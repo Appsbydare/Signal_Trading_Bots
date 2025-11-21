@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { newsData } from "@/lib/admin-data";
+import { getNewsData } from "@/lib/admin-data";
 
 // GET - Retrieve News data for the application
 export async function GET(request: NextRequest) {
   try {
+    const items = await getNewsData();
     // Filter out empty items for the app
-    const filteredItems = newsData.filter((item) => item.title && item.url);
+    const filteredItems = items.filter((item) => item.title && item.url);
     return NextResponse.json({ items: filteredItems });
   } catch (error) {
     console.error("App News fetch error:", error);

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { newsData, setNewsData } from "@/lib/admin-data";
+import { getNewsData, setNewsData } from "@/lib/admin-data";
 
 // GET - Retrieve News data (admin)
 export async function GET(request: NextRequest) {
   try {
-    return NextResponse.json({ items: newsData });
+    const items = await getNewsData();
+    return NextResponse.json({ items });
   } catch (error) {
     console.error("News fetch error:", error);
     return NextResponse.json({ error: "Failed to fetch News data" }, { status: 500 });
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
       url: item.url || "",
     }));
     
-    setNewsData(updatedItems);
+    await setNewsData(updatedItems);
 
     return NextResponse.json({ success: true, items: updatedItems });
   } catch (error) {
