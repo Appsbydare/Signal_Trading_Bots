@@ -9,7 +9,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "No promotional image available" }, { status: 404 });
     }
 
-    return new NextResponse(image.buffer, {
+    // Send as Blob to satisfy BodyInit types
+    const blob = new Blob([image.buffer], { type: image.contentType || "image/jpeg" });
+    return new NextResponse(blob, {
       headers: {
         "Content-Type": image.contentType || "image/jpeg",
         "Cache-Control": "no-cache, no-store, must-revalidate",
