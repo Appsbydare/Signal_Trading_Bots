@@ -6,49 +6,89 @@ import Image from "next/image";
 export default function PromotionalImageAdminPage() {
   const [currentImage, setCurrentImage] = useState<string | null>(null);
   const [currentUrl, setCurrentUrl] = useState<string>("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [savingUrl, setSavingUrl] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load current image on mount
   useEffect(() => {
     loadCurrentImage();
+    
+    // Cleanup preview URL on unmount
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
   }, []);
 
   const loadCurrentImage = async () => {
     setLoading(true);
+    setImageLoadError(false);
     try {
-      const response = await fetch("/api/admin/promotional-image");
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+      const response = await fetch("/api/admin/promotional-image", {
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
       if (response.ok) {
         const data = await response.json();
-        if (data.imageUrl) {
-          // Add timestamp to prevent caching
-          setCurrentImage(`${data.imageUrl}?t=${Date.now()}`);
+        const imageSource = data.imageUrl || data.apiEndpoint || null;
+        if (imageSource) {
+          // Add timestamp to prevent caching - use fresh timestamp each time
+          const freshTimestamp = Date.now();
+          setCurrentImage(`${imageSource}?t=${freshTimestamp}&v=${freshTimestamp}`);
           setCurrentUrl(data.redirectUrl || "");
+          setImageLoadError(false);
         } else {
           setCurrentImage(null);
           setCurrentUrl("");
+          setImageLoadError(false);
         }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setImageLoadError(true);
+        setMessage({ type: "error", text: errorData.error || "Failed to load image data" });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to load image:", error);
-      setMessage({ type: "error", text: "Failed to load current image" });
+      setImageLoadError(true);
+      if (error.name === "AbortError") {
+        setMessage({ type: "error", text: "Request timed out. Please try again." });
+      } else {
+        setMessage({ type: "error", text: "Failed to load current image. Please check your connection and try again." });
+      }
+      setCurrentImage(null);
+      setCurrentUrl("");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      return;
+    }
 
     // Validate file type
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
       setMessage({ type: "error", text: "Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed." });
+      setSelectedFile(null);
+      setPreviewUrl(null);
       return;
     }
 
@@ -56,71 +96,80 @@ export default function PromotionalImageAdminPage() {
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
       setMessage({ type: "error", text: "File size too large. Maximum size is 5MB." });
+      setSelectedFile(null);
+      setPreviewUrl(null);
       return;
     }
 
-    await uploadImage(file);
+    // Create preview URL
+    setSelectedFile(file);
+    const preview = URL.createObjectURL(file);
+    setPreviewUrl(preview);
+    setMessage(null);
   };
 
-  const uploadImage = async (file: File) => {
-    setUploading(true);
+  const handleSave = async () => {
+    // If no file selected and no current image, just save URL
+    if (!selectedFile && !currentImage) {
+      setMessage({ type: "error", text: "Please select an image to upload" });
+      return;
+    }
+
+    setSaving(true);
     setMessage(null);
 
     try {
       const formData = new FormData();
-      formData.append("image", file);
+      
+      // If a new file is selected, include it
+      if (selectedFile) {
+        formData.append("image", selectedFile);
+      }
       formData.append("url", currentUrl);
 
+      // Use POST if new image, PATCH if only URL update
+      const method = selectedFile ? "POST" : "PATCH";
       const response = await fetch("/api/admin/promotional-image", {
-        method: "POST",
-        body: formData,
+        method,
+        body: method === "POST" ? formData : JSON.stringify({ url: currentUrl }),
+        headers: method === "PATCH" ? { "Content-Type": "application/json" } : {},
       });
 
       if (response.ok) {
         const data = await response.json();
-        setMessage({ type: "success", text: data.message || "Image uploaded successfully!" });
-        // Reload to show new image
+        setMessage({ type: "success", text: data.message || "Saved successfully!" });
+        
+        // Clear selected file and preview
+        if (selectedFile) {
+          setSelectedFile(null);
+          if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
+          }
+          if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+          }
+        }
+        
+        // Clear current image and preview to force reload
+        setCurrentImage(null);
+        if (previewUrl) {
+          URL.revokeObjectURL(previewUrl);
+          setPreviewUrl(null);
+        }
+        
+        // Force reload with a delay to ensure file is fully written to disk
+        await new Promise(resolve => setTimeout(resolve, 1000));
         await loadCurrentImage();
       } else {
         const error = await response.json();
-        setMessage({ type: "error", text: error.error || "Failed to upload image" });
+        setMessage({ type: "error", text: error.error || "Failed to save" });
       }
     } catch (error) {
-      console.error("Failed to upload image:", error);
-      setMessage({ type: "error", text: "Failed to upload image" });
+      console.error("Failed to save:", error);
+      setMessage({ type: "error", text: "Failed to save. Please try again." });
     } finally {
-      setUploading(false);
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    }
-  };
-
-  const handleSaveUrl = async () => {
-    setSavingUrl(true);
-    setMessage(null);
-
-    try {
-      const response = await fetch("/api/admin/promotional-image", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url: currentUrl }),
-      });
-
-      if (response.ok) {
-        setMessage({ type: "success", text: "URL saved successfully!" });
-      } else {
-        const error = await response.json();
-        setMessage({ type: "error", text: error.error || "Failed to save URL" });
-      }
-    } catch (error) {
-      console.error("Failed to save URL:", error);
-      setMessage({ type: "error", text: "Failed to save URL" });
-    } finally {
-      setSavingUrl(false);
+      setSaving(false);
     }
   };
 
@@ -176,17 +225,30 @@ export default function PromotionalImageAdminPage() {
           <div className="flex items-center justify-center rounded-lg border border-zinc-200 bg-white p-12">
             <p className="text-zinc-600">Loading...</p>
           </div>
-        ) : currentImage ? (
+        ) : currentImage || previewUrl ? (
           <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-zinc-700">Current Promotional Image</h2>
+            <h2 className="mb-4 text-lg font-semibold text-zinc-700">
+              {previewUrl ? "New Image Preview" : "Current Promotional Image"}
+            </h2>
             <div className="relative mb-4 aspect-video w-full overflow-hidden rounded-md border border-zinc-200 bg-zinc-100">
-              <Image
-                src={currentImage}
-                alt="Promotional Image"
-                fill
-                className="object-contain"
-                unoptimized
-              />
+              {imageLoadError && !previewUrl ? (
+                <div className="flex h-full items-center justify-center bg-red-50">
+                  <p className="text-red-600">Failed to load image</p>
+                </div>
+              ) : (
+                <Image
+                  src={previewUrl || currentImage || ""}
+                  alt="Promotional Image"
+                  fill
+                  className="object-contain"
+                  unoptimized
+                  onError={() => {
+                    if (!previewUrl) {
+                      setImageLoadError(true);
+                    }
+                  }}
+                />
+              )}
             </div>
             <div className="space-y-2 text-sm text-zinc-600">
               <p>
@@ -224,7 +286,7 @@ export default function PromotionalImageAdminPage() {
                 type="file"
                 accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                 onChange={handleFileSelect}
-                disabled={uploading}
+                disabled={saving}
                 className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm file:mr-4 file:rounded-md file:border-0 file:bg-[#5e17eb] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-[#4512c2] disabled:opacity-50"
               />
               <p className="mt-2 text-xs text-zinc-500">
@@ -251,27 +313,25 @@ export default function PromotionalImageAdminPage() {
 
         {/* Actions */}
         <div className="flex gap-4">
+          <button
+            onClick={handleSave}
+            disabled={saving || (!selectedFile && !currentImage)}
+            className="rounded-md bg-[#5e17eb] px-6 py-2 text-white transition hover:bg-[#4512c2] disabled:opacity-50"
+          >
+            {saving ? "Saving..." : "Save"}
+          </button>
           {currentImage && (
-            <>
-              <button
-                onClick={handleSaveUrl}
-                disabled={savingUrl}
-                className="rounded-md bg-[#5e17eb] px-6 py-2 text-white transition hover:bg-[#4512c2] disabled:opacity-50"
-              >
-                {savingUrl ? "Saving..." : "Save URL"}
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="rounded-md border border-red-300 bg-white px-6 py-2 text-red-700 transition hover:bg-red-50 disabled:opacity-50"
-              >
-                {deleting ? "Deleting..." : "Delete Image"}
-              </button>
-            </>
+            <button
+              onClick={handleDelete}
+              disabled={deleting || saving}
+              className="rounded-md border border-red-300 bg-white px-6 py-2 text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+            >
+              {deleting ? "Deleting..." : "Delete Image"}
+            </button>
           )}
           <button
             onClick={loadCurrentImage}
-            disabled={loading}
+            disabled={loading || saving}
             className="rounded-md border border-zinc-300 bg-white px-6 py-2 text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50"
           >
             {loading ? "Loading..." : "Refresh"}

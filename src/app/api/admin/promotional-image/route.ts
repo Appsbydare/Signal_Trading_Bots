@@ -1,16 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { setPromotionalImage, getPromotionalImage, clearPromotionalImage } from "@/lib/promotional-image";
+import {
+  setPromotionalImage,
+  getPromotionalImage,
+  clearPromotionalImage,
+  updatePromotionalImageUrl,
+} from "@/lib/promotional-image";
 
 // GET - Get current promotional image info
 export async function GET(request: NextRequest) {
   try {
-    const image = getPromotionalImage();
-    return NextResponse.json({ 
+    const image = await getPromotionalImage(true);
+    return NextResponse.json({
       hasImage: !!image,
       filename: image?.filename || null,
       contentType: image?.contentType || null,
-      imageUrl: image ? `/api/app/promotional-image` : null,
-      redirectUrl: image?.url || null
+      imageUrl: image?.imageUrl || null,
+      redirectUrl: image?.redirectUrl || null,
+      apiEndpoint: "/api/app/promotional-image",
     });
   } catch (error) {
     console.error("Promotional image fetch error:", error);
@@ -47,25 +53,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert file to base64
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const base64Data = buffer.toString("base64");
-    const dataUrl = `data:${file.type};base64,${base64Data}`;
 
-    // Generate filename
-    const timestamp = Date.now();
-    const extension = file.name.split(".").pop() || "jpg";
-    const filename = `promotional-image-${timestamp}.${extension}`;
+    await setPromotionalImage(buffer, file.type, file.name, url);
 
-    // Store image data with URL
-    setPromotionalImage(dataUrl, file.type, filename, url);
+    const saved = await getPromotionalImage(true);
 
     return NextResponse.json({
       success: true,
-      filename,
-      url: `/api/app/promotional-image`,
+      filename: saved?.filename || file.name,
+      url: saved?.imageUrl || "/api/app/promotional-image",
+      apiEndpoint: "/api/app/promotional-image",
+      imageUrl: saved?.imageUrl || null,
       message: "Image uploaded successfully",
+      redirectUrl: saved?.redirectUrl || url || "",
     });
   } catch (error: any) {
     console.error("Promotional image upload error:", error);
@@ -83,18 +85,17 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const { url } = body;
 
-    const image = getPromotionalImage();
+    const image = await getPromotionalImage(true);
     if (!image) {
       return NextResponse.json({ error: "No image found. Please upload an image first." }, { status: 400 });
     }
 
-    // Update URL only
-    setPromotionalImage(image.data, image.contentType, image.filename, url || "");
+    await updatePromotionalImageUrl(url || "");
 
     return NextResponse.json({ 
       success: true, 
       message: "URL updated successfully",
-      redirectUrl: url || ""
+      redirectUrl: url || "",
     });
   } catch (error) {
     console.error("Promotional image URL update error:", error);
@@ -105,7 +106,7 @@ export async function PATCH(request: NextRequest) {
 // DELETE - Remove promotional image
 export async function DELETE(request: NextRequest) {
   try {
-    clearPromotionalImage();
+    await clearPromotionalImage();
     return NextResponse.json({ success: true, message: "Image deleted successfully" });
   } catch (error) {
     console.error("Promotional image delete error:", error);
