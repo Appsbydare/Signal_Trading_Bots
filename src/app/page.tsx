@@ -339,6 +339,7 @@ export default function Home() {
     },
   ];
 
+  const faqs = [
     {
       question: "Do I need a VPS?",
       answer:
