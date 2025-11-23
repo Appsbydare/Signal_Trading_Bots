@@ -13,7 +13,7 @@ type ResourceContent = {
 export const resourceArticlesContent: Record<string, ResourceContent> = {
   "telegram-to-mt5-guide": {
     intro:
-      "This guide walks through everything you need to turn Telegram messages into MT5 orders with zero guesswork. Use it as a checklist for onboarding clients or documenting your own trading stack.",
+      "This guide walks through everything you need to turn Telegram messages into MT5 orders with zero guesswork. Use it as a practical checklist for onboarding clients or documenting your own trading stack so nothing is left unclear.",
     sections: [
       {
         heading: "1. What you need before automating",
@@ -72,11 +72,11 @@ export const resourceArticlesContent: Record<string, ResourceContent> = {
       },
     ],
     conclusion:
-      "Automating Telegram signals is a process, not a magic switch. Documenting your parsing rules and risk guardrails up front means you can scale to additional channels or clients without re-learning the same lessons. When you are ready to move beyond demo, reach out and we’ll review your configuration together.",
+      "Automating Telegram signals is a process, not a magic switch. Documenting your parsing rules and risk guardrails up front means you can scale to additional channels or clients without re-learning the same lessons. When you are ready to move beyond demo, reach out and we’ll review your configuration together and suggest tweaks based on real trade history.",
   },
   "prop-firm-copier": {
     intro:
-      "Funded accounts change the rules. This playbook shows how to configure SignalTradingBots so prop firm challenges respect their drawdown, stealth, and execution constraints.",
+      "Funded accounts change the rules. This playbook shows how to configure SignalTradingBots so prop firm challenges respect their drawdown, stealth, and execution constraints, without adding extra complexity to your day-to-day trading.",
     sections: [
       {
         heading: "1. Know the limits before copying",
@@ -128,11 +128,11 @@ export const resourceArticlesContent: Record<string, ResourceContent> = {
       },
     ],
     conclusion:
-      "Prop firm challenges reward discipline. With the right guardrails enabled and a clear audit trail, automation becomes an ally instead of a liability. Start on demo, replicate your prop firm rules in the strategy editor, and you’ll be ready when the next challenge window opens.",
+      "Prop firm challenges reward discipline. With the right guardrails enabled and a clear audit trail, automation becomes an ally instead of a liability. Start on demo, replicate your prop firm rules in the strategy editor, and refine settings as you gather data so you are ready when the next challenge window opens.",
   },
   "vps-for-mt5-automation": {
     intro:
-      "A stable VPS is just as important as the copier itself. Here’s how to choose, configure, and monitor one for 24/7 MT5 automation.",
+      "A stable VPS is just as important as the copier itself. Here’s how to choose, configure, and monitor one for 24/7 MT5 automation without constantly logging in to check on things.",
     sections: [
       {
         heading: "1. VPS specs that actually matter",
@@ -185,7 +185,7 @@ export const resourceArticlesContent: Record<string, ResourceContent> = {
       },
     ],
     conclusion:
-      "Treat the VPS like mission-critical infrastructure. A stable, well-monitored environment means every Telegram message can translate into an MT5 order without manual babysitting.",
+      "Treat the VPS like mission-critical infrastructure. A stable, well-monitored environment means every Telegram message can translate into an MT5 order without manual babysitting, and issues are caught before they impact live trades.",
   },
 };
 
