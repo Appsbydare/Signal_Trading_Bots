@@ -1,12 +1,14 @@
 "use client";
-import { useState } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import XmLogo from "../../broker_logos/XM-Logo.webp";
 
 export default function Home() {
-  const [showFullFeatureComparison, setShowFullFeatureComparison] = useState(false);
+  const [showFullFeatureComparison, setShowFullFeatureComparison] = useState<
+    Record<string, boolean>
+  >({});
   const features = [
     {
       title: "24/7 automation",
@@ -113,59 +115,129 @@ export default function Home() {
     },
   ];
 
-  const featureHighlightCategories = [
+  const featureCategories = [
     {
-      title: "Core execution",
-      caption: "How signals are read and trades are fired.",
-      points: [
-        "Competitors often rely on AI/vision to parse any format, including images.",
-        "SignalTradingBots uses flexible, rules‑based parsing with keyword + regex logic tuned for FX, GOLD and crypto.",
-        "Unique price‑range entry mode can wait for price to reach your zone and place multi‑TP pending orders with expiry.",
+      id: "execution",
+      title: "Execution & parsing",
+      caption: "How signals are understood and turned into trades.",
+      features: [
+        {
+          label: "Execution speed",
+          competitors: "Market leaders advertise 70–300ms execution depending on VPS and broker.",
+          ours: "Desktop MT5 API with low‑latency execution; exact milliseconds depend on your VPS and broker routing.",
+          advantage: false,
+        },
+        {
+          label: "AI / image signal parsing",
+          competitors: "Use AI / Vision / OCR engines to parse screenshots and any text layout.",
+          ours: "Deliberately text‑only: configurable keyword + regex rules tuned for FX, GOLD, crypto formats you control.",
+          advantage: true,
+        },
+        {
+          label: "Flexible text formats",
+          competitors: "Handle most formats but often hide mapping logic behind black‑box AI.",
+          ours: "Per‑strategy parsing rules so each signal channel can have its own BUY/SELL, SL/TP, and entry extraction logic.",
+          advantage: true,
+        },
+        {
+          label: "Trailing take‑profit & breakeven",
+          competitors: "Built‑in trailing and breakeven, usually with a single rule set.",
+          ours: "Central BreakevenManager per strategy with multi‑level trailing TP/SL and automatic SL‑to‑entry behaviour.",
+          advantage: true,
+        },
       ],
     },
     {
+      id: "platform",
       title: "Platform & setup",
       caption: "Where it runs and how hard it is to configure.",
-      points: [
-        "Most tools are Windows apps plus MT4/MT5 EAs that must be installed in every terminal.",
-        "SignalTradingBots is a pure Windows desktop app that talks directly to MT5 – no EA deployment required.",
-        "Algo Trading can be toggled from the app via MT5 hotkeys, reducing setup friction for non‑technical traders.",
+      features: [
+        {
+          label: "Architecture",
+          competitors: "Windows desktop controller + MT4/MT5 EAs that must be installed into each terminal.",
+          ours: "Pure Windows desktop app connecting directly to MT5; no EA deployment or per‑terminal scripts.",
+          advantage: true,
+        },
+        {
+          label: "Other platform support (MT4, cTrader, DXTrade…)",
+          competitors: "Some cover 4–5 trading platforms via separate EAs or connectors.",
+          ours: "Not required – SignalTradingBots focuses on MT5 and handles all automation through your MT5 terminal.",
+          advantage: true,
+        },
+        {
+          label: "Algo trading switch",
+          competitors: "User must manually enable algo/auto‑trading in MT4/MT5 and keep it on.",
+          ours: "Attempts to toggle MT5 “Algo Trading” automatically via hotkeys and window focus during setup.",
+          advantage: true,
+        },
+        {
+          label: "VPS friendliness",
+          competitors: "Designed for VPS but still require EA installs and MT4/MT5 configuration.",
+          ours: "One Windows installer on a VPS with MT5 running – fewer moving parts to manage or break.",
+          advantage: true,
+        },
       ],
     },
     {
-      title: "Order management",
-      caption: "How trades are managed after entry.",
-      points: [
-        "Competitors support multiple TPs, trailing and breakeven; your app matches this with up to 10 trades per signal.",
-        "Central BreakevenManager coordinates multi‑TP, breakeven and multi‑level trailing stop logic per strategy.",
-        "Price‑range mode lets you combine pending orders with advanced SL/TP behaviour in one configuration.",
+      id: "orders-risk",
+      title: "Orders, risk & prop‑firm tools",
+      caption: "How positions are opened, managed and protected.",
+      features: [
+        {
+          label: "Multi‑TP & partial close",
+          competitors: "Support explicit partial closes and multiple TP levels.",
+          ours: "Up to 10 trades per signal, each with its own TP – partial closes are handled via multiple positions instead of one big order.",
+          advantage: true,
+        },
+        {
+          label: "Price‑range entries & pending orders",
+          competitors: "Standard pending orders with basic expiry controls.",
+          ours: "Price‑range entry mode that waits for price to reach your zone and places multi‑TP pending orders with configurable expiry.",
+          advantage: true,
+        },
+        {
+          label: "Daily loss / profit guardrails",
+          competitors: "Dedicated “prop firm modes” with daily and sometimes overall limits.",
+          ours: "Per‑strategy daily loss and profit targets that can trigger No New Entries, Immediate Exit, or full stop of the bot.",
+          advantage: true,
+        },
+        {
+          label: "Hidden comments & discretion",
+          competitors: "Offer options to hide provider details in trade comments.",
+          ours: "MT5 comments are strategy/magic‑based only; signal provider or channel names are never written to trades.",
+          advantage: true,
+        },
       ],
     },
     {
-      title: "Risk & prop‑firm tools",
-      caption: "Protecting accounts and meeting prop rules.",
-      points: [
-        "Top copiers advertise dedicated “prop firm modes” with daily and overall loss controls.",
-        "SignalTradingBots offers per‑strategy daily loss and profit guardrails with actions like No New Entries or Immediate Exit.",
-        "MT5 trade comments avoid exposing signal provider names, helping keep copier usage discreet.",
-      ],
-    },
-    {
-      title: "Visibility & analytics",
-      caption: "Understanding what the copier is doing.",
-      points: [
-        "Many tools provide basic logs; your app adds a full Audit tab with parse/execute status and latency per signal.",
-        "Dashboard tab tracks daily P&L, account metrics and per‑strategy stats so you can quickly see performance.",
-        "Analytics can follow MT5 server midnight or your local timezone, which is useful for risk reporting.",
-      ],
-    },
-    {
-      title: "Support & in‑app help",
-      caption: "Getting started and staying up to date.",
-      points: [
-        "Competitors lean heavily on web docs and Telegram groups.",
-        "SignalTradingBots bakes a Help tab into the desktop app, pulling news, promo banners and YouTube tutorials.",
-        "A 30‑day trial is enforced inside the app, so traders can test with demo accounts before committing.",
+      id: "analytics-support",
+      title: "Analytics, audit & support experience",
+      caption: "How you see what’s happening and learn from it.",
+      features: [
+        {
+          label: "Dashboard & daily progress",
+          competitors: "Some provide profit charts or simple account stats.",
+          ours: "Dashboard tab shows daily P&L, equity/balance, per‑strategy stats, and cumulative totals so you can track progress at a glance.",
+          advantage: true,
+        },
+        {
+          label: "Channel‑wise strategies & comparison",
+          competitors: "Per‑channel or per‑provider settings exist, but scoring is often hidden.",
+          ours: "Build custom strategies per signal channel with dedicated parsing and risk rules, plus panels that compare strategy performance.",
+          advantage: true,
+        },
+        {
+          label: "Per‑signal Audit tab",
+          competitors: "May log activity, but rarely expose a full audit trail per signal.",
+          ours: "Dedicated Audit tab records parse/validate/execute status, latency and full detail for every processed signal.",
+          advantage: true,
+        },
+        {
+          label: "Detailed logs & in‑app help",
+          competitors: "Rely on simple logs and external web docs or Telegram groups.",
+          ours: "Rich Logs tab with filters plus an in‑app Help tab that pulls news, promo banners and YouTube tutorials directly into the desktop app.",
+          advantage: true,
+        },
       ],
     },
   ];
@@ -479,7 +551,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* High-level feature comparison vs competitors */}
+          {/* High-level feature comparison vs competitors (4 categories, each expandable) */}
           <div className="mt-12 space-y-6">
             <div className="text-center">
               <h3 className="mb-2 text-lg font-semibold md:text-xl">
@@ -491,63 +563,71 @@ export default function Home() {
                 matrix for SignalTradingBots.
               </p>
             </div>
-            <div className="grid gap-6 md:grid-cols-2">
-              {featureHighlightCategories.map((cat) => (
+            <div className="space-y-5">
+              {featureCategories.map((cat) => (
                 <div
-                  key={cat.title}
-                  className="flex flex-col rounded-xl border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-2)] p-5 shadow-sm"
+                  key={cat.id}
+                  className="rounded-xl border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-2)] p-5 shadow-sm"
                 >
-                  <div className="mb-2">
-                    <h4 className="text-sm font-semibold text-zinc-50">
-                      {cat.title}
-                    </h4>
-                    <p className="text-xs text-zinc-400">{cat.caption}</p>
+                  <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <h4 className="text-sm font-semibold text-zinc-50">
+                        {cat.title}
+                      </h4>
+                      <p className="text-xs text-zinc-400">{cat.caption}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowFullFeatureComparison((prev) => ({
+                          ...prev,
+                          [cat.id]: !prev[cat.id],
+                        }))
+                      }
+                      className="mt-1 inline-flex items-center justify-center rounded-full border border-[var(--border-on-dark-strong)] bg-black/30 px-3 py-1.5 text-[0.7rem] font-medium text-zinc-200 transition hover:border-[var(--brand-blue-soft)] hover:text-white md:mt-0"
+                    >
+                      {showFullFeatureComparison[cat.id]
+                        ? "Hide full list"
+                        : "Show full list"}
+                    </button>
                   </div>
-                  <ul className="mt-2 space-y-1.5 text-xs text-zinc-300">
-                    {cat.points.slice(0, 3).map((point) => (
-                      <li key={point} className="flex gap-2">
-                        <span className="mt-[5px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--brand-blue-soft)]" />
-                        <span>{point}</span>
-                      </li>
-                    ))}
-                  </ul>
+
+                  <div className="grid gap-3 text-xs text-zinc-300 md:grid-cols-3">
+                    <div className="font-semibold text-[0.7rem] uppercase tracking-wide text-zinc-400">
+                      Feature
+                    </div>
+                    <div className="font-semibold text-[0.7rem] uppercase tracking-wide text-zinc-400">
+                      Typical competitors
+                    </div>
+                    <div className="font-semibold text-[0.7rem] uppercase tracking-wide text-[var(--brand-blue-soft)]">
+                      SignalTradingBots
+                    </div>
+                    {cat.features
+                      .slice(
+                        0,
+                        showFullFeatureComparison[cat.id] ? cat.features.length : 3,
+                      )
+                      .map((f) => (
+                        <React.Fragment key={f.label}>
+                          <div className="font-medium text-zinc-100">
+                            {f.label}
+                          </div>
+                          <div className="text-zinc-400">{f.competitors}</div>
+                          <div
+                            className={
+                              f.advantage
+                                ? "rounded-lg bg-[rgba(37,99,235,0.15)] px-3 py-2 text-zinc-100 ring-1 ring-[rgba(37,99,235,0.4)]"
+                                : "text-zinc-200"
+                            }
+                          >
+                            {f.ours}
+                          </div>
+                        </React.Fragment>
+                      ))}
+                  </div>
                 </div>
               ))}
             </div>
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() =>
-                  setShowFullFeatureComparison((prev) => !prev)
-                }
-                className="inline-flex items-center justify-center rounded-full border border-[var(--border-on-dark-strong)] bg-black/30 px-4 py-2 text-xs font-medium text-zinc-200 transition hover:border-[var(--brand-blue-soft)] hover:text-white"
-              >
-                {showFullFeatureComparison
-                  ? "Hide full feature comparison"
-                  : "See full feature comparison details"}
-              </button>
-            </div>
-
-            {showFullFeatureComparison && (
-              <div className="mt-4 rounded-xl border border-[var(--border-on-dark-strong)] bg-black/40 p-5 text-xs text-zinc-300">
-                <p className="mb-3 text-[0.7rem] uppercase tracking-wide text-zinc-400">
-                  Full comparison (condensed summary)
-                </p>
-                <p className="mb-3">
-                  The full matrix covers execution speed, AI/image parsing, platform
-                  support (MT4/MT5/cTrader/DXTrade/TradeLocker), order types, risk tools,
-                  prop‑firm features, analytics, technical architecture and pricing. It is
-                  based on public information from competitor websites and internal
-                  specifications for SignalTradingBots.
-                </p>
-                <p>
-                  For deeper due‑diligence or partner discussions, we can share the
-                  complete feature comparison document that breaks down each category in
-                  detail. On this page we focus on the high‑level points that matter most
-                  when choosing a Telegram to MT5 copier.
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </section>
