@@ -42,12 +42,21 @@ export const metadata: Metadata = {
     siteName: "signaltradingbots",
     locale: "en_US",
     type: "website",
+    images: [
+      {
+        url: "/Tradingbot.png",
+        width: 1200,
+        height: 630,
+        alt: "signaltradingbots hero",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Telegram to MT5 Trading Bot | Automate Forex Signals",
     description:
       "Automate MT5 trades from Telegram signals with configurable strategies and risk management.",
+    images: ["/Tradingbot.png"],
   },
 };
 

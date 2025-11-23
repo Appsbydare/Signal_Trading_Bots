@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import XmLogo from "../../broker_logos/XM-Logo.webp";
+import { resourceArticles } from "@/data/resources";
 
 export default function Home() {
   const [showFullFeatureComparison, setShowFullFeatureComparison] = useState<
@@ -339,6 +340,7 @@ export default function Home() {
   ];
 
   const faqs = [
+  const featuredResources = resourceArticles.slice(0, 3);
     {
       question: "Do I need a VPS?",
       answer:
@@ -433,6 +435,55 @@ export default function Home() {
                 />
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Resources teaser (LIGHT) */}
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-16">
+        <div className="mx-auto max-w-6xl px-6 space-y-6">
+          <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--brand-blue-deep)]">
+                Resources
+              </p>
+              <h3 className="text-2xl font-semibold text-[var(--text-main)] md:text-3xl">
+                Learn the playbooks behind reliable automation
+              </h3>
+              <p className="max-w-2xl text-sm text-[var(--text-muted)] md:text-base">
+                Articles covering Telegram → MT5 setup, prop firm guardrails, and VPS best
+                practices. All content is written for traders who prefer clarity over hype.
+              </p>
+            </div>
+            <Link
+              href="/resources"
+              className="inline-flex items-center justify-center rounded-full border border-[var(--border-subtle)] px-4 py-2 text-xs font-semibold text-[var(--text-main)] transition hover:border-[var(--brand-blue-soft)] hover:text-[var(--brand-blue-deep)]"
+            >
+              View all resources
+            </Link>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {featuredResources.map((article) => (
+              <Link
+                key={article.id}
+                href={`/resources#${article.id}`}
+                className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-light-2)] p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+              >
+                <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[var(--brand-blue-deep)]">
+                  <span>{article.category}</span>
+                  <span className="text-[var(--text-muted)]">· {article.readTime}</span>
+                </div>
+                <h4 className="mb-2 text-base font-semibold text-[var(--text-main)]">
+                  {article.title}
+                </h4>
+                <p className="text-xs text-[var(--text-muted)]">
+                  {article.description}
+                </p>
+                <div className="mt-4 text-[0.65rem] uppercase tracking-wide text-[var(--text-muted)]">
+                  Keyword: {article.primaryKeyword}
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
