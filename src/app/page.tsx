@@ -299,6 +299,46 @@ export default function Home() {
   ];
 
   const faqs = [
+  const executionFlow = [
+    {
+      title: "Telegram signals",
+      description: "Bot listens to your configured channels via Pyrogram/Telethon.",
+      icon: "📩",
+    },
+    {
+      title: "SignalTradingBots app",
+      description: "Rules map each signal to strategies, TP/SL logic, and risk guardrails.",
+      icon: "🤖",
+    },
+    {
+      title: "MT5 terminal",
+      description: "Orders are executed on your MT5 terminal running on Windows or VPS.",
+      icon: "📈",
+    },
+  ];
+
+  const securityHighlights = [
+    "Runs on your own Windows PC or VPS – we never hold broker logins.",
+    "MT5 trade comments never expose your signal providers or channels.",
+    "Recommended workflow: start on demo, then go live once you trust the setup.",
+    "Keep VPS monitored; if MT5 closes, the bot pauses to avoid unmanaged trades.",
+  ];
+
+  const supportItems = [
+    {
+      title: "Email & Telegram support",
+      description: "support@signaltradingbots.com with typical 12–24h response windows.",
+    },
+    {
+      title: "Guided onboarding",
+      description: "We help map your channels, configure strategies, and verify MT5 connectivity.",
+    },
+    {
+      title: "In-app help center",
+      description: "News, promo banners, and YouTube walkthroughs are available directly inside the desktop app.",
+    },
+  ];
+
     {
       question: "Do I need a VPS?",
       answer:
@@ -656,6 +696,48 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Execution flow & security reminders (LIGHT) */}
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-16">
+        <div className="mx-auto max-w-6xl px-6 space-y-10">
+          <div className="text-center">
+            <h3 className="mb-2 text-2xl font-semibold text-[var(--text-main)] md:text-3xl">
+              How execution works and how you stay in control
+            </h3>
+            <p className="mx-auto max-w-3xl text-sm text-[var(--text-muted)] md:text-base">
+              A simple three-step flow: Telegram signals → SignalTradingBots desktop app →
+              your MT5 terminal. Everything runs on hardware you manage.
+            </p>
+          </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {executionFlow.map((step) => (
+              <div
+                key={step.title}
+                className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-light-2)] p-5 text-center shadow-sm"
+              >
+                <div className="mb-3 text-3xl">{step.icon}</div>
+                <h4 className="mb-2 text-sm font-semibold text-[var(--text-main)]">
+                  {step.title}
+                </h4>
+                <p className="text-xs text-[var(--text-muted)]">{step.description}</p>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-2xl border border-[var(--border-subtle)] bg-white/90 p-6 shadow-sm">
+            <div className="mb-3 text-sm font-semibold text-[var(--text-main)]">
+              Security & risk reminders
+            </div>
+            <ul className="grid gap-3 text-xs text-[var(--text-muted)] md:grid-cols-2">
+              {securityHighlights.map((item) => (
+                <li key={item} className="flex gap-2">
+                  <span className="mt-[5px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--brand-blue)]" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Preview (LIGHT) */}
       <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16">
         <div className="mx-auto max-w-6xl px-6">
@@ -740,9 +822,40 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FAQ Preview (LIGHT) */}
+      {/* Support highlight + FAQ (LIGHT) */}
       <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16">
         <div className="mx-auto max-w-6xl px-6">
+          <div className="mb-10 rounded-2xl border border-[var(--border-subtle)] bg-white/90 p-6 shadow-sm">
+            <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h3 className="text-xl font-semibold text-[var(--text-main)]">
+                  Personal support when you need it
+                </h3>
+                <p className="text-sm text-[var(--text-muted)]">
+                  We know MT5 automation can feel technical, so we stay close during setup
+                  and scaling.
+                </p>
+              </div>
+              <Link
+                href="/contact"
+                className="inline-flex items-center justify-center rounded-full border border-[var(--border-subtle)] px-4 py-2 text-xs font-medium text-[var(--text-main)] transition hover:border-[var(--brand-blue-soft)] hover:text-[var(--brand-blue-deep)]"
+              >
+                Contact support
+              </Link>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {supportItems.map((item) => (
+                <div key={item.title} className="rounded-lg bg-[var(--bg-light-2)] p-4">
+                  <h4 className="mb-1 text-sm font-semibold text-[var(--text-main)]">
+                    {item.title}
+                  </h4>
+                  <p className="text-xs text-[var(--text-muted)]">{item.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* FAQ preview */}
           <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
             <div>
               <h2 className="mb-3 text-2xl font-semibold text-[var(--text-main)] md:text-3xl">
