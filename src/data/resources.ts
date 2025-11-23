@@ -6,6 +6,7 @@ export type ResourceArticle = {
   readTime: string;
   status: "available" | "coming_soon";
   primaryKeyword: string;
+  lastUpdated: string;
 };
 
 export const resourceArticles: ResourceArticle[] = [
@@ -16,8 +17,9 @@ export const resourceArticles: ResourceArticle[] = [
       "Requirements checklist, mapping signal formats, demo-first workflow, and risk guardrails so you can trust every automation step.",
     category: "How-to",
     readTime: "8 min read",
-    status: "coming_soon",
+    status: "available",
     primaryKeyword: "telegram to mt5 automation",
+    lastUpdated: "November 2024",
   },
   {
     id: "prop-firm-copier",
@@ -25,9 +27,10 @@ export const resourceArticles: ResourceArticle[] = [
     description:
       "Daily loss limits, hidden comments, and other tactics to keep your copier compliant while attempting funded challenges.",
     category: "Prop Firms",
-    readTime: "6 min read",
-    status: "coming_soon",
+    readTime: "7 min read",
+    status: "available",
     primaryKeyword: "prop firm telegram copier",
+    lastUpdated: "November 2024",
   },
   {
     id: "vps-for-mt5-automation",
@@ -35,9 +38,10 @@ export const resourceArticles: ResourceArticle[] = [
     description:
       "Latency, uptime, Windows licensing, and monitoring tips so your copier stays online 24/7 without surprises.",
     category: "Infrastructure",
-    readTime: "5 min read",
-    status: "coming_soon",
+    readTime: "6 min read",
+    status: "available",
     primaryKeyword: "mt5 vps automation",
+    lastUpdated: "November 2024",
   },
 ];
 
