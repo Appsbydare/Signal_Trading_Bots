@@ -257,7 +257,7 @@ export default function Home() {
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="rounded-lg border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-3)] p-6"
+                className="rounded-lg border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-3)] p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(15,23,42,0.75)] hover:border-[var(--brand-blue-soft)]"
               >
                 <h3 className="mb-2 text-base font-semibold">{feature.title}</h3>
                 <p className="text-sm text-zinc-400">{feature.description}</p>
@@ -283,7 +283,7 @@ export default function Home() {
             {steps.map((step, index) => (
               <div
                 key={step.title}
-                className="flex flex-col rounded-lg bg-white/70 p-4 text-left shadow-sm"
+                className="flex flex-col rounded-lg bg-white/70 p-4 text-left shadow-sm transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg"
               >
                 <span className="mb-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--brand-blue)] text-xs font-semibold text-white">
                   {index + 1}
@@ -310,7 +310,7 @@ export default function Home() {
               strategy.
             </p>
           </div>
-          <div className="overflow-hidden rounded-xl border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-2)]">
+          <div className="overflow-hidden rounded-xl border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-2)] shadow-sm">
             <div className="grid grid-cols-3 border-b border-[var(--border-on-dark-strong)] bg-black/20 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-zinc-400 md:px-6">
               <div>Aspect</div>
               <div className="text-center">Manual</div>
@@ -345,7 +345,7 @@ export default function Home() {
             {pricingPlans.map((plan) => (
               <div
                 key={plan.name}
-                className={`flex flex-col rounded-xl border bg-white/80 p-6 text-left shadow-sm ${
+                className={`flex flex-col rounded-xl border bg-white/80 p-6 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${
                   plan.featured
                     ? "border-[var(--brand-blue)] shadow-md"
                     : "border-[var(--border-subtle)]"
@@ -400,7 +400,7 @@ export default function Home() {
             {testimonials.map((t) => (
               <div
                 key={t.name}
-                className="flex flex-col rounded-xl border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-3)] p-6"
+                className="flex flex-col rounded-xl border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-3)] p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(15,23,42,0.75)] hover:border-[var(--brand-blue-soft)]"
               >
                 <p className="mb-4 text-sm text-zinc-200">&ldquo;{t.quote}&rdquo;</p>
                 <div className="mt-auto text-sm">
@@ -437,7 +437,7 @@ export default function Home() {
             {faqs.map((item) => (
               <div
                 key={item.question}
-                className="rounded-lg border border-[var(--border-subtle)] bg-white/80 p-4"
+                className="rounded-lg border border-[var(--border-subtle)] bg-white/80 p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-[var(--brand-blue-soft)]"
               >
                 <h3 className="mb-1 text-sm font-semibold text-[var(--text-main)]">
                   {item.question}
@@ -485,7 +485,7 @@ export default function Home() {
               ].map((broker, index) => (
                 <div
                   key={`row1-${index}`}
-                  className="broker-card flex min-w-[300px] flex-shrink-0 flex-col rounded-lg bg-zinc-800 p-6 text-white"
+                  className="broker-card flex min-w-[300px] flex-shrink-0 flex-col rounded-lg bg-zinc-800 p-6 text-white shadow-sm transition-transform duration-200 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(15,23,42,0.85)]"
                 >
                   <div className="mb-4 flex items-center gap-4">
                     <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded bg-zinc-700 text-xs text-zinc-400">
@@ -550,7 +550,7 @@ export default function Home() {
               ].map((broker, index) => (
                 <div
                   key={`row2-${index}`}
-                  className="broker-card flex min-w-[300px] flex-shrink-0 flex-col rounded-lg bg-zinc-800 p-6 text-white"
+                  className="broker-card flex min-w-[300px] flex-shrink-0 flex-col rounded-lg bg-zinc-800 p-6 text-white shadow-sm transition-transform duration-200 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(15,23,42,0.85)]"
                 >
                   <div className="mb-4 flex items-center gap-4">
                     <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded bg-zinc-700 text-xs text-zinc-400">
