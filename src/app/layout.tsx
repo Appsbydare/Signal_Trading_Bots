@@ -31,6 +31,9 @@ export const metadata: Metadata = {
     "Automate MT5 trades from Telegram signals with configurable strategies (TP/SL, order type, lot sizing). Simple, professional, and affordable.",
   metadataBase: new URL("https://www.signaltradingbots.com"),
   alternates: { canonical: "/" },
+  icons: {
+    icon: "/favicon.ico",
+  },
   openGraph: {
     title: "signaltradingbots | Telegram → MT5 Automation",
     description:
