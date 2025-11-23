@@ -324,9 +324,9 @@ export default function Home() {
   return (
     <>
       {/* Notice Banner */}
-      <div className="bg-[var(--bg-light-2)] py-4">
-        <div className="mx-auto max-w-6xl px-6 text-center">
-          <p className="text-sm font-medium text-[var(--brand-blue-deep)]">
+      <div className="py-2">
+        <div className="mx-auto max-w-6xl px-4 text-center">
+          <p className="text-xs font-medium text-[var(--brand-blue-deep)]">
             Service will be commencing on <strong>26th November</strong>
           </p>
         </div>
@@ -334,19 +334,19 @@ export default function Home() {
 
       {/* Hero Section - Full Width (LIGHT) */}
       <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-12 px-6 md:flex-row md:items-start">
-          <div className="flex-1 space-y-6">
+        <div className="mx-auto flex max-w-6xl flex-col items-start gap-10 px-6">
+          <div className="space-y-6">
             <motion.h1
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: -40 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
-              className="reveal brand-heading text-4xl font-semibold tracking-tight md:text-5xl"
+              className="reveal brand-heading text-4xl font-semibold tracking-tight md:text-6xl lg:text-7xl"
             >
               Automate MT5 trades directly from Telegram signals
             </motion.h1>
             <motion.p
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.15, duration: 0.5 }}
               className="reveal max-w-xl text-sm text-[var(--text-muted)] md:text-base"
             >
@@ -393,22 +393,26 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div className="flex-1">
-            <div className="brand-callout relative rounded-xl bg-white/80 p-6 shadow-sm">
-              <h3 className="mb-3 text-sm font-semibold text-[var(--text-main)]">
-                How the bot fits into your trading
-              </h3>
-              <p className="mb-4 text-sm text-[var(--text-muted)]">
-                Choose your signal provider, configure your rules once, and let the bot
-                handle the execution on MT5. You stay in control of risk and broker
-                selection at all times.
-              </p>
-              <ul className="space-y-2 text-xs text-[var(--text-muted)]">
-                <li>• Works with MT5 EAs and supported brokers</li>
-                <li>• Designed for running on Windows or VPS</li>
-                <li>• Start safely on a demo account first</li>
-              </ul>
-            </div>
+        </div>
+      </section>
+
+      {/* How the bot fits card (LIGHT, under hero) */}
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] pb-8">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="brand-callout relative mx-auto max-w-xl rounded-xl bg-white/80 p-6 shadow-sm">
+            <h3 className="mb-3 text-sm font-semibold text-[var(--text-main)]">
+              How the bot fits into your trading
+            </h3>
+            <p className="mb-4 text-sm text-[var(--text-muted)]">
+              Choose your signal provider, configure your rules once, and let the bot
+              handle the execution on MT5. You stay in control of risk and broker
+              selection at all times.
+            </p>
+            <ul className="space-y-2 text-xs text-[var(--text-muted)]">
+              <li>• Works with MT5 EAs and supported brokers</li>
+              <li>• Designed for running on Windows or VPS</li>
+              <li>• Start safely on a demo account first</li>
+            </ul>
           </div>
         </div>
       </section>
