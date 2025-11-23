@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export const metadata = {
   title: "Products | signaltradingbots",
   description: "Choose a plan that fits your needs.",
@@ -15,17 +17,23 @@ export default function ProductsPage() {
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-sm font-medium text-[#5e17eb]">Compatible with:</span>
-          <img
+          <Image
             src="/telegram-badge.svg"
             alt="Telegram Compatible"
             title="Works with Telegram signals"
+            width={32}
+            height={32}
             className="h-8 w-8 transition hover:scale-110"
+            loading="lazy"
           />
-          <img
+          <Image
             src="/mt5-badge.svg"
             alt="MT5 Supported"
             title="Executes trades via MetaTrader 5"
+            width={32}
+            height={32}
             className="h-8 w-8 transition hover:scale-110"
+            loading="lazy"
           />
         </div>
         <div className="grid gap-6 sm:grid-cols-3">
@@ -59,17 +67,23 @@ export default function ProductsPage() {
         <div className="rounded-lg border border-[#5e17eb] bg-white/90 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
           <div className="mb-3 flex items-center gap-2">
             <h2 className="reveal text-lg font-medium">Starter</h2>
-            <img
+            <Image
               src="/telegram-badge.svg"
               alt="Telegram Compatible"
               title="Works with Telegram signals"
+              width={24}
+              height={24}
               className="h-6 w-6 transition hover:scale-110"
+              loading="lazy"
             />
-            <img
+            <Image
               src="/mt5-badge.svg"
               alt="MT5 Supported"
               title="Executes trades via MetaTrader 5"
+              width={24}
+              height={24}
               className="h-6 w-6 transition hover:scale-110"
+              loading="lazy"
             />
           </div>
           <p className="text-sm text-zinc-600">$29/month</p>
@@ -96,17 +110,23 @@ export default function ProductsPage() {
         <div className="rounded-lg border border-[#5e17eb] bg-white/90 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
           <div className="mb-3 flex items-center gap-2">
             <h2 className="reveal text-lg font-medium">Pro</h2>
-            <img
+            <Image
               src="/telegram-badge.svg"
               alt="Telegram Compatible"
               title="Works with Telegram signals"
+              width={24}
+              height={24}
               className="h-6 w-6 transition hover:scale-110"
+              loading="lazy"
             />
-            <img
+            <Image
               src="/mt5-badge.svg"
               alt="MT5 Supported"
               title="Executes trades via MetaTrader 5"
+              width={24}
+              height={24}
               className="h-6 w-6 transition hover:scale-110"
+              loading="lazy"
             />
           </div>
           <p className="text-sm text-zinc-600">$49/month</p>

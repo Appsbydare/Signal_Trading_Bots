@@ -6,6 +6,23 @@
   --brand: #5e17eb;
   --brand-dark: #4312b8;
   --brand-soft: #f4f0ff;
+
+  /* Section background + blue palette for alternating light/dark layout */
+  --bg-light-1: #f9fafb;
+  --bg-light-2: #e5f0ff;
+  --bg-dark-1: #020617;
+  --bg-dark-2: #0b1120;
+  --bg-dark-3: #111827;
+
+  --brand-blue: #2563eb;
+  --brand-blue-soft: #60a5fa;
+  --brand-blue-deep: #1d4ed8;
+
+  --text-main: #0f172a;
+  --text-muted: #6b7280;
+  --text-on-dark: #e5e7eb;
+  --border-subtle: #e5e7eb;
+  --border-on-dark: #1f2937;
 }
 
 @theme inline {

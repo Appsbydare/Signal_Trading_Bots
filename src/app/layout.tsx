@@ -26,18 +26,18 @@ const bebasNeue = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "signaltradingbots | Telegram → MT5 Automation",
+  title: "Telegram to MT5 Trading Bot | Automate Forex Signals | signaltradingbots",
   description:
-    "Automate MT5 trades from Telegram signals with configurable strategies (TP/SL, order type, lot sizing). Simple, professional, and affordable.",
+    "Automate MT5 trades from Telegram signals with multi-TP, SL, and risk-based lot sizing. Run it on Windows or VPS and start safely with a demo account.",
   metadataBase: new URL("https://www.signaltradingbots.com"),
   alternates: { canonical: "/" },
   icons: {
     icon: "/favicon.ico",
   },
   openGraph: {
-    title: "signaltradingbots | Telegram → MT5 Automation",
+    title: "Telegram to MT5 Trading Bot | Automate Forex Signals",
     description:
-      "Automate MT5 trades from Telegram signals with configurable strategies.",
+      "Turn Telegram trading signals into automated MT5 orders with configurable strategies and risk controls.",
     url: "https://www.signaltradingbots.com",
     siteName: "signaltradingbots",
     locale: "en_US",
@@ -45,9 +45,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "signaltradingbots | Telegram → MT5 Automation",
+    title: "Telegram to MT5 Trading Bot | Automate Forex Signals",
     description:
-      "Automate MT5 trades from Telegram signals with configurable strategies.",
+      "Automate MT5 trades from Telegram signals with configurable strategies and risk management.",
   },
 };
 
