@@ -83,6 +83,9 @@ export default function RootLayout({
               />
             </Link>
             <nav className="flex items-center gap-6 text-sm">
+              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/resources">
+                Resources
+              </Link>
               <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/products">Products</Link>
               <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/specs">Specs</Link>
               <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/faq">FAQ</Link>
