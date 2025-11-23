@@ -551,83 +551,85 @@ export default function Home() {
             </div>
           </div>
 
-          {/* High-level feature comparison vs competitors (4 categories, each expandable) */}
-          <div className="mt-12 space-y-6">
-            <div className="text-center">
-              <h3 className="mb-2 text-lg font-semibold md:text-xl">
-                Key feature comparison vs leading Telegram copiers
-              </h3>
-              <p className="mx-auto max-w-3xl text-sm text-zinc-400 md:text-base">
-                These highlights are based on public information from major competitors
-                like TSC, TSCopier and Telegram Copier, plus the full internal feature
-                matrix for SignalTradingBots.
-              </p>
-            </div>
-            <div className="space-y-5">
-              {featureCategories.map((cat) => (
-                <div
-                  key={cat.id}
-                  className="rounded-xl border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-2)] p-5 shadow-sm"
-                >
-                  <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <h4 className="text-sm font-semibold text-zinc-50">
-                        {cat.title}
-                      </h4>
-                      <p className="text-xs text-zinc-400">{cat.caption}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowFullFeatureComparison((prev) => ({
-                          ...prev,
-                          [cat.id]: !prev[cat.id],
-                        }))
-                      }
-                      className="mt-1 inline-flex items-center justify-center rounded-full border border-[var(--border-on-dark-strong)] bg-black/30 px-3 py-1.5 text-[0.7rem] font-medium text-zinc-200 transition hover:border-[var(--brand-blue-soft)] hover:text-white md:mt-0"
-                    >
-                      {showFullFeatureComparison[cat.id]
-                        ? "Hide full list"
-                        : "Show full list"}
-                    </button>
-                  </div>
+        </div>
+      </section>
 
-                  <div className="grid gap-3 text-xs text-zinc-300 md:grid-cols-3">
-                    <div className="font-semibold text-[0.7rem] uppercase tracking-wide text-zinc-400">
-                      Feature
-                    </div>
-                    <div className="font-semibold text-[0.7rem] uppercase tracking-wide text-zinc-400">
-                      Typical competitors
-                    </div>
-                    <div className="font-semibold text-[0.7rem] uppercase tracking-wide text-[var(--brand-blue-soft)]">
-                      SignalTradingBots
-                    </div>
-                    {cat.features
-                      .slice(
-                        0,
-                        showFullFeatureComparison[cat.id] ? cat.features.length : 3,
-                      )
-                      .map((f) => (
-                        <React.Fragment key={f.label}>
-                          <div className="font-medium text-zinc-100">
-                            {f.label}
-                          </div>
-                          <div className="text-zinc-400">{f.competitors}</div>
-                          <div
-                            className={
-                              f.advantage
-                                ? "rounded-lg bg-[rgba(37,99,235,0.15)] px-3 py-2 text-zinc-100 ring-1 ring-[rgba(37,99,235,0.4)]"
-                                : "text-zinc-200"
-                            }
-                          >
-                            {f.ours}
-                          </div>
-                        </React.Fragment>
-                      ))}
+      {/* High-level feature comparison vs competitors (LIGHT, 4 categories, each expandable) */}
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mb-8 text-center">
+            <h3 className="mb-2 text-2xl font-semibold text-[var(--text-main)] md:text-3xl">
+              Key feature comparison vs leading Telegram copiers
+            </h3>
+            <p className="mx-auto max-w-3xl text-sm text-[var(--text-muted)] md:text-base">
+              Based on public specs from tools like TSC, TSCopier and Telegram Copier,
+              plus the full internal feature matrix for SignalTradingBots.
+            </p>
+          </div>
+          <div className="space-y-6">
+            {featureCategories.map((cat) => (
+              <div
+                key={cat.id}
+                className="rounded-xl border border-[var(--border-subtle)] bg-white/90 p-5 shadow-sm"
+              >
+                <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h4 className="text-sm font-semibold text-[var(--text-main)]">
+                      {cat.title}
+                    </h4>
+                    <p className="text-xs text-[var(--text-muted)]">{cat.caption}</p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowFullFeatureComparison((prev) => ({
+                        ...prev,
+                        [cat.id]: !prev[cat.id],
+                      }))
+                    }
+                    className="mt-1 inline-flex items-center justify-center rounded-full border border-[var(--border-subtle)] bg-white px-3 py-1.5 text-[0.7rem] font-medium text-[var(--text-main)] shadow-sm transition hover:border-[var(--brand-blue-soft)] hover:text-[var(--brand-blue-deep)] md:mt-0"
+                  >
+                    {showFullFeatureComparison[cat.id]
+                      ? "Hide full list"
+                      : "Show full list"}
+                  </button>
                 </div>
-              ))}
-            </div>
+
+                <div className="grid gap-3 text-xs text-[var(--text-muted)] md:grid-cols-3">
+                  <div className="font-semibold text-[0.7rem] uppercase tracking-wide text-[var(--text-muted)]">
+                    Feature
+                  </div>
+                  <div className="font-semibold text-[0.7rem] uppercase tracking-wide text-[var(--text-muted)]">
+                    Typical competitors
+                  </div>
+                  <div className="font-semibold text-[0.7rem] uppercase tracking-wide text-[var(--brand-blue-deep)]">
+                    SignalTradingBots
+                  </div>
+                  {cat.features
+                    .slice(
+                      0,
+                      showFullFeatureComparison[cat.id] ? cat.features.length : 3,
+                    )
+                    .map((f) => (
+                      <React.Fragment key={f.label}>
+                        <div className="font-medium text-[var(--text-main)]">
+                          {f.label}
+                        </div>
+                        <div>{f.competitors}</div>
+                        <div
+                          className={
+                            f.advantage
+                              ? "rounded-lg bg-[rgba(37,99,235,0.06)] px-3 py-2 text-[var(--text-main)] ring-1 ring-[rgba(37,99,235,0.3)]"
+                              : "text-[var(--text-main)]"
+                          }
+                        >
+                          {f.ours}
+                        </div>
+                      </React.Fragment>
+                    ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
