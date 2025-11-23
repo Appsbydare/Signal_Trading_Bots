@@ -118,6 +118,7 @@ export default function Home() {
   const featureCategories = [
     {
       id: "execution",
+      icon: "⚡",
       title: "Execution & parsing",
       caption: "How signals are understood and turned into trades.",
       features: [
@@ -149,6 +150,7 @@ export default function Home() {
     },
     {
       id: "platform",
+      icon: "🖥️",
       title: "Platform & setup",
       caption: "Where it runs and how hard it is to configure.",
       features: [
@@ -180,6 +182,7 @@ export default function Home() {
     },
     {
       id: "orders-risk",
+      icon: "🛡️",
       title: "Orders, risk & prop‑firm tools",
       caption: "How positions are opened, managed and protected.",
       features: [
@@ -211,6 +214,7 @@ export default function Home() {
     },
     {
       id: "analytics-support",
+      icon: "📊",
       title: "Analytics, audit & support experience",
       caption: "How you see what’s happening and learn from it.",
       features: [
@@ -574,8 +578,9 @@ export default function Home() {
               >
                 <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <h4 className="text-sm font-semibold text-[var(--text-main)]">
-                      {cat.title}
+                    <h4 className="flex items-center gap-2 text-sm font-semibold text-[var(--text-main)]">
+                      <span className="text-base">{cat.icon}</span>
+                      <span>{cat.title}</span>
                     </h4>
                     <p className="text-xs text-[var(--text-muted)]">{cat.caption}</p>
                   </div>
@@ -596,13 +601,13 @@ export default function Home() {
                 </div>
 
                 <div className="grid gap-3 text-xs text-[var(--text-muted)] md:grid-cols-3">
-                  <div className="font-semibold text-[0.7rem] uppercase tracking-wide text-[var(--text-muted)]">
+                  <div className="rounded-l-md bg-[rgba(37,99,235,0.06)] px-3 py-2 text-[0.7rem] font-semibold uppercase tracking-wide text-[var(--text-main)]">
                     Feature
                   </div>
-                  <div className="font-semibold text-[0.7rem] uppercase tracking-wide text-[var(--text-muted)]">
+                  <div className="bg-[rgba(37,99,235,0.06)] px-3 py-2 text-[0.7rem] font-semibold uppercase tracking-wide text-[var(--text-main)]">
                     Typical competitors
                   </div>
-                  <div className="font-semibold text-[0.7rem] uppercase tracking-wide text-[var(--brand-blue-deep)]">
+                  <div className="rounded-r-md bg-[rgba(37,99,235,0.08)] px-3 py-2 text-[0.7rem] font-semibold uppercase tracking-wide text-[var(--brand-blue-deep)]">
                     SignalTradingBots
                   </div>
                   {cat.features
@@ -612,18 +617,30 @@ export default function Home() {
                     )
                     .map((f) => (
                       <React.Fragment key={f.label}>
-                        <div className="font-medium text-[var(--text-main)]">
+                        <div className="border-b border-[rgba(148,163,184,0.25)] pb-2 pt-1 font-medium text-[var(--text-main)] last:border-b-0">
                           {f.label}
                         </div>
-                        <div>{f.competitors}</div>
+                        <div className="border-b border-[rgba(148,163,184,0.25)] pb-2 pt-1 last:border-b-0">
+                          {f.competitors}
+                        </div>
                         <div
                           className={
                             f.advantage
-                              ? "rounded-lg bg-[rgba(37,99,235,0.06)] px-3 py-2 text-[var(--text-main)] ring-1 ring-[rgba(37,99,235,0.3)]"
-                              : "text-[var(--text-main)]"
+                              ? "border-b border-[rgba(148,163,184,0.25)] pb-2 pt-1 text-[var(--text-main)] last:border-b-0"
+                              : "border-b border-[rgba(148,163,184,0.25)] pb-2 pt-1 text-[var(--text-main)] last:border-b-0"
                           }
                         >
-                          {f.ours}
+                          <span
+                            className={
+                              f.advantage
+                                ? "inline-flex items-center gap-1 rounded-full bg-[rgba(37,99,235,0.08)] px-2 py-1 text-xs font-medium text-[var(--brand-blue-deep)] ring-1 ring-[rgba(37,99,235,0.25)]"
+                                : ""
+                            }
+                          >
+                            {f.advantage && <span>⭐</span>}
+                            <span>{f.ours}</span>
+                          </span>
+                          {!f.advantage && <span>{!f.advantage && !f.ours ? "" : ""}</span>}
                         </div>
                       </React.Fragment>
                     ))}
