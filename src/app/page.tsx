@@ -161,7 +161,7 @@ export default function Home() {
       </div>
 
       {/* Hero Section - Full Width (LIGHT) */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-1)] py-16">
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-12 px-6 md:flex-row md:items-start">
           <div className="flex-1 space-y-6">
             <motion.h1
@@ -268,7 +268,7 @@ export default function Home() {
       </section>
 
       {/* How It Works (LIGHT) */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-1)] py-16">
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-8 text-center">
             <h2 className="mb-3 text-2xl font-semibold text-[var(--text-main)] md:text-3xl">
@@ -330,7 +330,7 @@ export default function Home() {
       </section>
 
       {/* Pricing Preview (LIGHT) */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-1)] py-16">
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-8 text-center">
             <h2 className="mb-3 text-2xl font-semibold text-[var(--text-main)] md:text-3xl">
@@ -414,7 +414,7 @@ export default function Home() {
       </section>
 
       {/* FAQ Preview (LIGHT) */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-1)] py-16">
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
             <div>
