@@ -74,6 +74,34 @@ export default function Home() {
     },
   ];
 
+  const eaComparisonRows = [
+    {
+      label: "Setup steps",
+      ea: "Install MT4/MT5 EA plugin, configure each terminal, then link to the copier app.",
+      ours: "Install one Windows app, connect Telegram and MT5 once, and start copying.",
+    },
+    {
+      label: "Components required",
+      ea: "Desktop controller + separate EA scripts inside every MT4/MT5 terminal.",
+      ours: "Single desktop application that talks directly to your MT5 terminal.",
+    },
+    {
+      label: "Updates & maintenance",
+      ea: "Keep both the desktop app and all installed EAs up to date across terminals.",
+      ours: "Update just one desktop app when new versions are released.",
+    },
+    {
+      label: "Changing brokers or accounts",
+      ea: "Re‑install or re‑link EAs when switching accounts or terminals.",
+      ours: "Update MT5 login details in Settings; no EA re‑installation needed.",
+    },
+    {
+      label: "Who it suits best",
+      ea: "More comfortable for advanced or technically confident traders.",
+      ours: "Designed for traders who want a simpler setup with guided support.",
+    },
+  ];
+
   const pricingPlans = [
     {
       name: "Starter",
@@ -301,29 +329,59 @@ export default function Home() {
       {/* Manual vs Bot Comparison (DARK) */}
       <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-dark-3)] py-16 text-[var(--text-on-dark)]">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-8 text-center">
-            <h2 className="mb-3 text-2xl font-semibold md:text-3xl">
-              Manual copying vs automation
-            </h2>
-            <p className="mx-auto max-w-2xl text-sm text-zinc-400 md:text-base">
-              See where automation adds value while you still control risk, broker, and
-              strategy.
-            </p>
-          </div>
-          <div className="overflow-hidden rounded-xl border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-2)] shadow-sm">
-            <div className="grid grid-cols-3 border-b border-[var(--border-on-dark-strong)] bg-black/20 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-zinc-400 md:px-6">
-              <div>Aspect</div>
-              <div className="text-center">Manual</div>
-              <div className="text-center">With bot</div>
+          <div className="mb-10 space-y-6">
+            <div className="text-center">
+              <h2 className="mb-3 text-2xl font-semibold md:text-3xl">
+                Manual copying vs automation
+              </h2>
+              <p className="mx-auto max-w-2xl text-sm text-zinc-400 md:text-base">
+                See where automation adds value while you still control risk, broker, and
+                strategy.
+              </p>
             </div>
-            <div className="divide-y divide-[var(--border-on-dark-strong)]">
-              {comparisonRows.map((row) => (
-                <div key={row.label} className="grid grid-cols-3 gap-4 px-4 py-4 md:px-6">
-                  <div className="text-sm font-medium">{row.label}</div>
-                  <div className="text-sm text-zinc-400">{row.manual}</div>
-                  <div className="text-sm text-zinc-200">{row.bot}</div>
-                </div>
-              ))}
+            <div className="overflow-hidden rounded-xl border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-2)] shadow-sm">
+              <div className="grid grid-cols-3 border-b border-[var(--border-on-dark-strong)] bg-black/20 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-zinc-400 md:px-6">
+                <div>Aspect</div>
+                <div className="text-center">Manual</div>
+                <div className="text-center">With bot</div>
+              </div>
+              <div className="divide-y divide-[var(--border-on-dark-strong)]">
+                {comparisonRows.map((row) => (
+                  <div key={row.label} className="grid grid-cols-3 gap-4 px-4 py-4 md:px-6">
+                    <div className="text-sm font-medium">{row.label}</div>
+                    <div className="text-sm text-zinc-400">{row.manual}</div>
+                    <div className="text-sm text-zinc-200">{row.bot}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="text-center">
+              <h3 className="mb-2 text-lg font-semibold md:text-xl">
+                Desktop app vs EA‑based copiers
+              </h3>
+              <p className="mx-auto max-w-2xl text-sm text-zinc-400 md:text-base">
+                Many competitors require both a desktop controller and MT4/MT5 EA plugins.
+                SignalTradingBots keeps things simple with a single desktop application.
+              </p>
+            </div>
+            <div className="overflow-hidden rounded-xl border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-2)] shadow-sm">
+              <div className="grid grid-cols-3 border-b border-[var(--border-on-dark-strong)] bg-black/20 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-zinc-400 md:px-6">
+                <div>Aspect</div>
+                <div className="text-center">Typical EA‑based copier</div>
+                <div className="text-center">SignalTradingBots app</div>
+              </div>
+              <div className="divide-y divide-[var(--border-on-dark-strong)]">
+                {eaComparisonRows.map((row) => (
+                  <div key={row.label} className="grid grid-cols-3 gap-4 px-4 py-4 md:px-6">
+                    <div className="text-sm font-medium">{row.label}</div>
+                    <div className="text-sm text-zinc-400">{row.ea}</div>
+                    <div className="text-sm text-zinc-200">{row.ours}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
