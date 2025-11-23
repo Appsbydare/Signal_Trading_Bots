@@ -337,18 +337,18 @@ export default function Home() {
         <div className="mx-auto flex max-w-6xl flex-col items-start gap-10 px-6">
           <div className="space-y-6">
             <motion.h1
-              initial={{ opacity: 0, x: -40 }}
+              initial={{ opacity: 0, x: -80 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className="reveal brand-heading text-4xl font-semibold tracking-tight md:text-7xl lg:text-8xl"
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="reveal brand-heading max-w-5xl text-4xl font-semibold leading-tight tracking-tight md:text-7xl lg:text-[clamp(5rem,9vw,9rem)]"
             >
               <span className="block">Automate MT5 trades</span>
               <span className="block">directly from Telegram signals</span>
             </motion.h1>
             <motion.p
-              initial={{ opacity: 0 }}
+              initial={{ opacity: 0, x: 60 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.15, duration: 0.5 }}
+              transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
               className="reveal max-w-xl text-sm text-[var(--text-muted)] md:text-base"
             >
               Configure multi‑TP and SL logic, order types, and lot sizing once. The bot
