@@ -298,7 +298,6 @@ export default function Home() {
     },
   ];
 
-  const faqs = [
   const executionFlow = [
     {
       title: "Telegram signals",
