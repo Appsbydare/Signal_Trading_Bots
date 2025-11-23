@@ -340,9 +340,10 @@ export default function Home() {
               initial={{ opacity: 0, x: -40 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
-              className="reveal brand-heading text-4xl font-semibold tracking-tight md:text-6xl lg:text-7xl"
+              className="reveal brand-heading text-4xl font-semibold tracking-tight md:text-7xl lg:text-8xl"
             >
-              Automate MT5 trades directly from Telegram signals
+              <span className="block">Automate MT5 trades</span>
+              <span className="block">directly from Telegram signals</span>
             </motion.h1>
             <motion.p
               initial={{ opacity: 0 }}
