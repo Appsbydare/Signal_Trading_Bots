@@ -53,21 +53,25 @@ export default function Home() {
 
   const comparisonRows = [
     {
+      icon: "⚡",
       label: "Execution speed",
       manual: "You manually copy signals when you are online.",
       bot: "Orders are placed automatically within seconds of the signal.",
     },
     {
+      icon: "⏰",
       label: "Missed trades",
       manual: "Easy to miss late‑night or work‑time signals.",
       bot: "Runs 24/7 on VPS so signals are not missed.",
     },
     {
+      icon: "🎯",
       label: "Consistency",
       manual: "Decisions can be emotional and inconsistent.",
       bot: "Rules are followed exactly as configured every time.",
     },
     {
+      icon: "🧠",
       label: "Workload",
       manual: "You monitor chats and place every trade by hand.",
       bot: "You focus on strategy while execution is automated.",
@@ -76,26 +80,31 @@ export default function Home() {
 
   const eaComparisonRows = [
     {
+      icon: "⚙️",
       label: "Setup steps",
       ea: "Install MT4/MT5 EA plugin, configure each terminal, then link to the copier app.",
       ours: "Install one Windows app, connect Telegram and MT5 once, and start copying.",
     },
     {
+      icon: "🧩",
       label: "Components required",
       ea: "Desktop controller + separate EA scripts inside every MT4/MT5 terminal.",
       ours: "Single desktop application that talks directly to your MT5 terminal.",
     },
     {
+      icon: "🔄",
       label: "Updates & maintenance",
       ea: "Keep both the desktop app and all installed EAs up to date across terminals.",
       ours: "Update just one desktop app when new versions are released.",
     },
     {
+      icon: "🔁",
       label: "Changing brokers or accounts",
       ea: "Re‑install or re‑link EAs when switching accounts or terminals.",
       ours: "Update MT5 login details in Settings; no EA re‑installation needed.",
     },
     {
+      icon: "👤",
       label: "Who it suits best",
       ea: "More comfortable for advanced or technically confident traders.",
       ours: "Designed for traders who want a simpler setup with guided support.",
@@ -330,6 +339,10 @@ export default function Home() {
       <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-dark-3)] py-16 text-[var(--text-on-dark)]">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-10 space-y-6">
+            <div className="mx-auto max-w-3xl rounded-full border border-[var(--border-on-dark-strong)] bg-[rgba(15,23,42,0.9)] px-6 py-3 text-center text-xs font-medium tracking-wide text-zinc-300">
+              Understand why traders move away from manual copying and complex EA setups
+              towards a single, easier desktop app.
+            </div>
             <div className="text-center">
               <h2 className="mb-3 text-2xl font-semibold md:text-3xl">
                 Manual copying vs automation
@@ -340,17 +353,27 @@ export default function Home() {
               </p>
             </div>
             <div className="overflow-hidden rounded-xl border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-2)] shadow-sm">
-              <div className="grid grid-cols-3 border-b border-[var(--border-on-dark-strong)] bg-black/20 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-zinc-400 md:px-6">
-                <div>Aspect</div>
+              <div className="grid grid-cols-3 border-b border-[var(--border-on-dark-strong)] bg-black/30 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-zinc-400 md:px-6">
+                <div className="text-left">Aspect</div>
                 <div className="text-center">Manual</div>
-                <div className="text-center">With bot</div>
+                <div className="text-center text-[var(--brand-blue-soft)]">With bot</div>
               </div>
               <div className="divide-y divide-[var(--border-on-dark-strong)]">
                 {comparisonRows.map((row) => (
-                  <div key={row.label} className="grid grid-cols-3 gap-4 px-4 py-4 md:px-6">
-                    <div className="text-sm font-medium">{row.label}</div>
-                    <div className="text-sm text-zinc-400">{row.manual}</div>
-                    <div className="text-sm text-zinc-200">{row.bot}</div>
+                  <div
+                    key={row.label}
+                    className="grid grid-cols-3 gap-4 px-4 py-4 md:px-6 md:py-5"
+                  >
+                    <div className="flex items-start gap-2 text-sm font-medium">
+                      <span className="mt-[1px] text-base">{row.icon}</span>
+                      <span>{row.label}</span>
+                    </div>
+                    <div className="text-sm text-zinc-400">
+                      {row.manual}
+                    </div>
+                    <div className="rounded-lg bg-[rgba(37,99,235,0.15)] px-3 py-2 text-sm text-zinc-100 ring-1 ring-[rgba(37,99,235,0.4)]">
+                      {row.bot}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -368,17 +391,29 @@ export default function Home() {
               </p>
             </div>
             <div className="overflow-hidden rounded-xl border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-2)] shadow-sm">
-              <div className="grid grid-cols-3 border-b border-[var(--border-on-dark-strong)] bg-black/20 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-zinc-400 md:px-6">
-                <div>Aspect</div>
+              <div className="grid grid-cols-3 border-b border-[var(--border-on-dark-strong)] bg-black/30 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-zinc-400 md:px-6">
+                <div className="text-left">Aspect</div>
                 <div className="text-center">Typical EA‑based copier</div>
-                <div className="text-center">SignalTradingBots app</div>
+                <div className="text-center text-[var(--brand-blue-soft)]">
+                  SignalTradingBots app
+                </div>
               </div>
               <div className="divide-y divide-[var(--border-on-dark-strong)]">
                 {eaComparisonRows.map((row) => (
-                  <div key={row.label} className="grid grid-cols-3 gap-4 px-4 py-4 md:px-6">
-                    <div className="text-sm font-medium">{row.label}</div>
-                    <div className="text-sm text-zinc-400">{row.ea}</div>
-                    <div className="text-sm text-zinc-200">{row.ours}</div>
+                  <div
+                    key={row.label}
+                    className="grid grid-cols-3 gap-4 px-4 py-4 md:px-6 md:py-5"
+                  >
+                    <div className="flex items-start gap-2 text-sm font-medium">
+                      <span className="mt-[1px] text-base">{row.icon}</span>
+                      <span>{row.label}</span>
+                    </div>
+                    <div className="text-sm text-zinc-400">
+                      {row.ea}
+                    </div>
+                    <div className="rounded-lg bg-[rgba(37,99,235,0.15)] px-3 py-2 text-sm text-zinc-100 ring-1 ring-[rgba(37,99,235,0.4)]">
+                      {row.ours}
+                    </div>
                   </div>
                 ))}
               </div>
