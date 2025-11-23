@@ -23,6 +23,7 @@
   --text-on-dark: #e5e7eb;
   --border-subtle: #e5e7eb;
   --border-on-dark: #1f2937;
+  --border-on-dark-strong: rgba(37, 99, 235, 0.55);
 }
 
 @theme inline {
@@ -117,9 +118,14 @@ h3 {
 }
 
 .brand-callout {
-  border: 1px solid rgba(94, 23, 235, 0.35);
-  background: linear-gradient(135deg, rgba(94, 23, 235, 0.12), rgba(94, 23, 235, 0.05) 45%, rgba(255, 255, 255, 0));
-  box-shadow: 0 12px 28px rgba(94, 23, 235, 0.12);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  background: linear-gradient(
+    135deg,
+    rgba(37, 99, 235, 0.12),
+    rgba(37, 99, 235, 0.06) 45%,
+    rgba(255, 255, 255, 0)
+  );
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.18);
 }
 
 /* Broker List Scrolling Animations */

@@ -257,7 +257,7 @@ export default function Home() {
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="rounded-lg border border-[var(--border-on-dark)] bg-[var(--bg-dark-3)] p-6"
+                className="rounded-lg border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-3)] p-6"
               >
                 <h3 className="mb-2 text-base font-semibold">{feature.title}</h3>
                 <p className="text-sm text-zinc-400">{feature.description}</p>
@@ -268,7 +268,7 @@ export default function Home() {
       </section>
 
       {/* How It Works (LIGHT) */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16">
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-1)] py-16">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-8 text-center">
             <h2 className="mb-3 text-2xl font-semibold text-[var(--text-main)] md:text-3xl">
@@ -310,13 +310,13 @@ export default function Home() {
               strategy.
             </p>
           </div>
-          <div className="overflow-hidden rounded-xl border border-[var(--border-on-dark)] bg-[var(--bg-dark-2)]">
-            <div className="grid grid-cols-3 border-b border-[var(--border-on-dark)] bg-black/20 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-zinc-400 md:px-6">
+          <div className="overflow-hidden rounded-xl border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-2)]">
+            <div className="grid grid-cols-3 border-b border-[var(--border-on-dark-strong)] bg-black/20 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-zinc-400 md:px-6">
               <div>Aspect</div>
               <div className="text-center">Manual</div>
               <div className="text-center">With bot</div>
             </div>
-            <div className="divide-y divide-[var(--border-on-dark)]">
+            <div className="divide-y divide-[var(--border-on-dark-strong)]">
               {comparisonRows.map((row) => (
                 <div key={row.label} className="grid grid-cols-3 gap-4 px-4 py-4 md:px-6">
                   <div className="text-sm font-medium">{row.label}</div>
@@ -400,7 +400,7 @@ export default function Home() {
             {testimonials.map((t) => (
               <div
                 key={t.name}
-                className="flex flex-col rounded-xl border border-[var(--border-on-dark)] bg-[var(--bg-dark-3)] p-6"
+                className="flex flex-col rounded-xl border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-3)] p-6"
               >
                 <p className="mb-4 text-sm text-zinc-200">&ldquo;{t.quote}&rdquo;</p>
                 <div className="mt-auto text-sm">
