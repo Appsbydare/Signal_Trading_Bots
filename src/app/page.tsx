@@ -1,10 +1,12 @@
 "use client";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import XmLogo from "../../broker_logos/XM-Logo.webp";
 
 export default function Home() {
+  const [showFullFeatureComparison, setShowFullFeatureComparison] = useState(false);
   const features = [
     {
       title: "24/7 automation",
@@ -108,6 +110,63 @@ export default function Home() {
       label: "Who it suits best",
       ea: "More comfortable for advanced or technically confident traders.",
       ours: "Designed for traders who want a simpler setup with guided support.",
+    },
+  ];
+
+  const featureHighlightCategories = [
+    {
+      title: "Core execution",
+      caption: "How signals are read and trades are fired.",
+      points: [
+        "Competitors often rely on AI/vision to parse any format, including images.",
+        "SignalTradingBots uses flexible, rules‑based parsing with keyword + regex logic tuned for FX, GOLD and crypto.",
+        "Unique price‑range entry mode can wait for price to reach your zone and place multi‑TP pending orders with expiry.",
+      ],
+    },
+    {
+      title: "Platform & setup",
+      caption: "Where it runs and how hard it is to configure.",
+      points: [
+        "Most tools are Windows apps plus MT4/MT5 EAs that must be installed in every terminal.",
+        "SignalTradingBots is a pure Windows desktop app that talks directly to MT5 – no EA deployment required.",
+        "Algo Trading can be toggled from the app via MT5 hotkeys, reducing setup friction for non‑technical traders.",
+      ],
+    },
+    {
+      title: "Order management",
+      caption: "How trades are managed after entry.",
+      points: [
+        "Competitors support multiple TPs, trailing and breakeven; your app matches this with up to 10 trades per signal.",
+        "Central BreakevenManager coordinates multi‑TP, breakeven and multi‑level trailing stop logic per strategy.",
+        "Price‑range mode lets you combine pending orders with advanced SL/TP behaviour in one configuration.",
+      ],
+    },
+    {
+      title: "Risk & prop‑firm tools",
+      caption: "Protecting accounts and meeting prop rules.",
+      points: [
+        "Top copiers advertise dedicated “prop firm modes” with daily and overall loss controls.",
+        "SignalTradingBots offers per‑strategy daily loss and profit guardrails with actions like No New Entries or Immediate Exit.",
+        "MT5 trade comments avoid exposing signal provider names, helping keep copier usage discreet.",
+      ],
+    },
+    {
+      title: "Visibility & analytics",
+      caption: "Understanding what the copier is doing.",
+      points: [
+        "Many tools provide basic logs; your app adds a full Audit tab with parse/execute status and latency per signal.",
+        "Dashboard tab tracks daily P&L, account metrics and per‑strategy stats so you can quickly see performance.",
+        "Analytics can follow MT5 server midnight or your local timezone, which is useful for risk reporting.",
+      ],
+    },
+    {
+      title: "Support & in‑app help",
+      caption: "Getting started and staying up to date.",
+      points: [
+        "Competitors lean heavily on web docs and Telegram groups.",
+        "SignalTradingBots bakes a Help tab into the desktop app, pulling news, promo banners and YouTube tutorials.",
+        "A 30‑day trial is enforced inside the app, so traders can test with demo accounts before committing.",
+      ],
     },
   ];
 
@@ -418,6 +477,77 @@ export default function Home() {
                 ))}
               </div>
             </div>
+          </div>
+
+          {/* High-level feature comparison vs competitors */}
+          <div className="mt-12 space-y-6">
+            <div className="text-center">
+              <h3 className="mb-2 text-lg font-semibold md:text-xl">
+                Key feature comparison vs leading Telegram copiers
+              </h3>
+              <p className="mx-auto max-w-3xl text-sm text-zinc-400 md:text-base">
+                These highlights are based on public information from major competitors
+                like TSC, TSCopier and Telegram Copier, plus the full internal feature
+                matrix for SignalTradingBots.
+              </p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2">
+              {featureHighlightCategories.map((cat) => (
+                <div
+                  key={cat.title}
+                  className="flex flex-col rounded-xl border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-2)] p-5 shadow-sm"
+                >
+                  <div className="mb-2">
+                    <h4 className="text-sm font-semibold text-zinc-50">
+                      {cat.title}
+                    </h4>
+                    <p className="text-xs text-zinc-400">{cat.caption}</p>
+                  </div>
+                  <ul className="mt-2 space-y-1.5 text-xs text-zinc-300">
+                    {cat.points.slice(0, 3).map((point) => (
+                      <li key={point} className="flex gap-2">
+                        <span className="mt-[5px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--brand-blue-soft)]" />
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() =>
+                  setShowFullFeatureComparison((prev) => !prev)
+                }
+                className="inline-flex items-center justify-center rounded-full border border-[var(--border-on-dark-strong)] bg-black/30 px-4 py-2 text-xs font-medium text-zinc-200 transition hover:border-[var(--brand-blue-soft)] hover:text-white"
+              >
+                {showFullFeatureComparison
+                  ? "Hide full feature comparison"
+                  : "See full feature comparison details"}
+              </button>
+            </div>
+
+            {showFullFeatureComparison && (
+              <div className="mt-4 rounded-xl border border-[var(--border-on-dark-strong)] bg-black/40 p-5 text-xs text-zinc-300">
+                <p className="mb-3 text-[0.7rem] uppercase tracking-wide text-zinc-400">
+                  Full comparison (condensed summary)
+                </p>
+                <p className="mb-3">
+                  The full matrix covers execution speed, AI/image parsing, platform
+                  support (MT4/MT5/cTrader/DXTrade/TradeLocker), order types, risk tools,
+                  prop‑firm features, analytics, technical architecture and pricing. It is
+                  based on public information from competitor websites and internal
+                  specifications for SignalTradingBots.
+                </p>
+                <p>
+                  For deeper due‑diligence or partner discussions, we can share the
+                  complete feature comparison document that breaks down each category in
+                  detail. On this page we focus on the high‑level points that matter most
+                  when choosing a Telegram to MT5 copier.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </section>
