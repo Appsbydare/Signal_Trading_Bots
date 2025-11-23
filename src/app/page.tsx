@@ -467,7 +467,7 @@ export default function Home() {
             {featuredResources.map((article) => (
               <Link
                 key={article.id}
-                href={`/resources#${article.id}`}
+                href={`/resources/${article.id}`}
                 className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-light-2)] p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
               >
                 <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[var(--brand-blue-deep)]">
