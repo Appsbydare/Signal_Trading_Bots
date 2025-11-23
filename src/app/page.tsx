@@ -339,8 +339,9 @@ export default function Home() {
     },
   ];
 
-  const faqs = [
   const featuredResources = resourceArticles.slice(0, 3);
+
+  const faqs = [
     {
       question: "Do I need a VPS?",
       answer:
