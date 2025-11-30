@@ -16,7 +16,7 @@ function ensureConfig() {
   }
 }
 
-function getSupabaseClient(): SupabaseClient {
+export function getSupabaseClient(): SupabaseClient {
   ensureConfig();
 
   if (!supabaseClient) {
