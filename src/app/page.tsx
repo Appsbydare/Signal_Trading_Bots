@@ -370,7 +370,7 @@ export default function Home() {
       <div className="py-2">
         <div className="mx-auto max-w-6xl px-4 text-center">
           <p className="text-xs font-medium text-[var(--brand-blue-deep)]">
-            Service will be commencing on <strong>26th November</strong>
+            Service will be commencing on <strong>8th December 2025</strong>
           </p>
         </div>
       </div>
