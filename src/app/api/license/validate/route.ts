@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { licenseConfig } from "@/src/lib/license-config";
+import { licenseConfig } from "@/lib/license-config";
 import {
   createSession,
   getActiveSessionForLicense,
   getLicenseByKey,
   refreshSession,
-} from "@/src/lib/license-db";
-import { ensureHttps, verifyRequestSignature } from "@/src/lib/license-security";
+} from "@/lib/license-db";
+import { ensureHttps, verifyRequestSignature } from "@/lib/license-security";
 
 function jsonError(status: number, message: string, errorCode: string, data: unknown = {}) {
   return NextResponse.json(
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     } else if (expired) {
       // Different device but old session -> deactivate old and create new
       // Mark existing inactive and create new record
-      await import("@/src/lib/license-db").then(async ({ deactivateSession }) => {
+      await import("@/lib/license-db").then(async ({ deactivateSession }) => {
         await deactivateSession(session!.session_id);
       });
       const sessionId = `SESSION-${crypto.randomUUID()}`;

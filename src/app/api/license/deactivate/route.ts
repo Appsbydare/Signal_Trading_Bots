@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { deactivateSession, getSessionById } from "@/src/lib/license-db";
-import { ensureHttps, verifyRequestSignature } from "@/src/lib/license-security";
+import { deactivateSession, getSessionById } from "@/lib/license-db";
+import { ensureHttps, verifyRequestSignature } from "@/lib/license-security";
 
 function jsonError(status: number, message: string, errorCode: string, data: unknown = {}) {
   return NextResponse.json(
