@@ -99,7 +99,7 @@ export default function RootLayout({
                 Contact
               </Link>
               <Link
-                className="rounded-md bg-white/10 px-4 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-white/20"
+                className="rounded-md bg-[#5e17eb] px-4 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#4512c2]"
                 href="/login"
               >
                 Sign in
