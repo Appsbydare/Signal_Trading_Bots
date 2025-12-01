@@ -6,6 +6,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SchemaOrg from "./schema-org";
 import Analytics from "./analytics";
+import TawkToWidget from "@/components/TawkToWidget";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -112,6 +113,7 @@ export default function RootLayout({
 
         <SchemaOrg />
         <Analytics />
+        <TawkToWidget />
 
         <footer className="mt-10 border-t border-[#5e17eb]/25 bg-zinc-950 py-10 text-sm text-zinc-300">
           <div className="mx-auto max-w-6xl px-6">
