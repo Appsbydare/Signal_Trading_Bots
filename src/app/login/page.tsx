@@ -1,17 +1,15 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import type { FormEvent } from "react";
+import { useState } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const from = searchParams.get("from") || "/portal";
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -33,7 +31,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push(from);
+      router.push("/portal");
       router.refresh();
     } catch (err) {
       console.error("Login failed", err);
