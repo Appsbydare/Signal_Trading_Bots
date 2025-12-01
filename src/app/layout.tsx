@@ -86,10 +86,24 @@ export default function RootLayout({
               <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/resources">
                 Resources
               </Link>
-              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/products">Products</Link>
-              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/specs">Specs</Link>
-              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/faq">FAQ</Link>
-              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/contact">Contact</Link>
+              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/products">
+                Products
+              </Link>
+              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/specs">
+                Specs
+              </Link>
+              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/faq">
+                FAQ
+              </Link>
+              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/contact">
+                Contact
+              </Link>
+              <Link
+                className="rounded-md bg-white/10 px-4 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-white/20"
+                href="/login"
+              >
+                Sign in
+              </Link>
             </nav>
           </div>
         </header>
