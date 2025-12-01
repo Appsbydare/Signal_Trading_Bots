@@ -29,6 +29,22 @@ export interface LicenseSessionRow {
   active: boolean;
 }
 
+export async function getLicensesForEmail(email: string): Promise<LicenseRow[]> {
+  const client = getSupabaseClient();
+  const { data, error } = await client
+    .from("licenses")
+    .select("*")
+    .eq("email", email.toLowerCase())
+    .order("created_at", { ascending: false })
+    .returns<LicenseRow[]>();
+
+  if (error) {
+    throw error;
+  }
+
+  return data ?? [];
+}
+
 export async function getLicenseByKey(licenseKey: string): Promise<LicenseRow | null> {
   const client = getSupabaseClient();
   const { data, error } = await client

@@ -1,0 +1,55 @@
+import "server-only";
+
+import { cookies } from "next/headers";
+
+import { ADMIN_COOKIE_NAME, CUSTOMER_COOKIE_NAME, verifyAuthToken } from "./auth-tokens";
+
+export interface CurrentCustomer {
+  id: number;
+  email: string;
+}
+
+export interface CurrentAdmin {
+  id: number;
+  email: string;
+  role: string;
+}
+
+export async function getCurrentCustomer(): Promise<CurrentCustomer | null> {
+  const cookieStore = cookies();
+  const token = cookieStore.get(CUSTOMER_COOKIE_NAME)?.value;
+  if (!token) {
+    return null;
+  }
+
+  const payload = await verifyAuthToken(token);
+  if (!payload || payload.role !== "customer") {
+    return null;
+  }
+
+  return {
+    id: Number(payload.sub),
+    email: payload.email,
+  };
+}
+
+export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
+  const cookieStore = cookies();
+  const token = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
+  if (!token) {
+    return null;
+  }
+
+  const payload = await verifyAuthToken(token);
+  if (!payload || payload.role !== "admin") {
+    return null;
+  }
+
+  return {
+    id: Number(payload.sub),
+    email: payload.email,
+    role: payload.role,
+  };
+}
+
+
