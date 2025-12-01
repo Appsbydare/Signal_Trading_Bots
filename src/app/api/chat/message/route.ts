@@ -53,17 +53,34 @@ export async function POST(request: NextRequest) {
   const agent =
     agents.length > 0 ? agents[Math.floor(Math.random() * agents.length)] : null;
 
-  // Try to find a FAQ-based answer
-  const faq = await findBestFaqMatch(text);
-
   let replyText: string;
+  const normalized = text.toLowerCase();
+  const greetingPhrases = [
+    "hi",
+    "hello",
+    "hey",
+    "good morning",
+    "good afternoon",
+    "good evening",
+  ];
+  const isGreeting = greetingPhrases.some(
+    (g) => normalized === g || normalized.startsWith(`${g} `),
+  );
 
-  if (faq) {
-    replyText = faq.answer;
-  } else {
+  if (isGreeting) {
     replyText =
-      "Thanks for your question. I don't have an exact predefined answer for this yet, " +
-      "but your feedback is important. Please provide as much detail as possible so our team can help.";
+      "Nice to meet you. How can I help with SignalTradingBots today? You can ask about installation, licensing, strategies, or troubleshooting.";
+  } else {
+    // Try to find a FAQ-based answer
+    const faq = await findBestFaqMatch(text);
+
+    if (faq) {
+      replyText = faq.answer;
+    } else {
+      replyText =
+        "Thanks for your question. I don't have an exact predefined answer for this yet, " +
+        "but your feedback is important. Please provide as much detail as possible so our team can help.";
+    }
   }
 
   const decoratedReply =

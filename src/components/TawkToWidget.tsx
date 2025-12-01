@@ -5,8 +5,13 @@ import { useEffect } from "react";
 const PROPERTY_ID = process.env.NEXT_PUBLIC_TAWKTO_PROPERTY_ID;
 const WIDGET_ID = process.env.NEXT_PUBLIC_TAWKTO_WIDGET_ID;
 
-export default function TawkToWidget() {
+interface TawkToWidgetProps {
+  active: boolean;
+}
+
+export default function TawkToWidget({ active }: TawkToWidgetProps) {
   useEffect(() => {
+    if (!active) return;
     if (!PROPERTY_ID || !WIDGET_ID) {
       return;
     }
@@ -24,11 +29,7 @@ export default function TawkToWidget() {
     s1.setAttribute("crossorigin", "*");
 
     document.body.appendChild(s1);
-
-    return () => {
-      s1.remove();
-    };
-  }, []);
+  }, [active]);
 
   return null;
 }

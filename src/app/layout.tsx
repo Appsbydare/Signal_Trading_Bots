@@ -6,8 +6,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SchemaOrg from "./schema-org";
 import Analytics from "./analytics";
-import TawkToWidget from "@/components/TawkToWidget";
 import VirtualSupportChat from "@/components/VirtualSupportChat";
+import HumanAgentChatLink from "@/components/HumanAgentChatLink";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -114,7 +114,6 @@ export default function RootLayout({
 
         <SchemaOrg />
         <Analytics />
-        <TawkToWidget />
         <VirtualSupportChat />
 
         <footer className="mt-10 border-t border-[#5e17eb]/25 bg-zinc-950 py-10 text-sm text-zinc-300">
@@ -174,6 +173,9 @@ export default function RootLayout({
                     >
                       support@signaltradingbots.com
                     </a>
+                  </li>
+                  <li>
+                    <HumanAgentChatLink />
                   </li>
                 </ul>
               </div>
