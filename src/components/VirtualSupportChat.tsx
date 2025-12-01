@@ -34,6 +34,7 @@ export default function VirtualSupportChat() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [initialising, setInitialising] = useState(false);
+  const [ticketInfo, setTicketInfo] = useState<{ id: number; subject: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -120,6 +121,34 @@ export default function VirtualSupportChat() {
     }
   }
 
+  async function handleEscalate() {
+    if (!conversationId || loading) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/chat/escalate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversationId }),
+      });
+      const data = await res.json();
+      if (data && data.success && data.ticket) {
+        setTicketInfo({ id: data.ticket.id, subject: data.ticket.subject });
+
+        const systemMessage: ChatMessage = {
+          id: Date.now(),
+          sender_type: "system",
+          sender_agent_id: null,
+          content: `We've created support ticket #${data.ticket.id} for this conversation. You will receive updates by email if one is on file.`,
+          created_at: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, systemMessage]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <>
       {/* Toggle button */}
@@ -167,7 +196,12 @@ export default function VirtualSupportChat() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="border-t border-zinc-200 bg-white px-3 py-2">
+          <div className="border-t border-zinc-200 bg-white px-3 py-2 space-y-1">
+            {ticketInfo && (
+              <div className="rounded-md bg-emerald-50 px-2 py-1 text-[0.7rem] text-emerald-700">
+                Ticket #{ticketInfo.id} created – you can also track it from your customer portal.
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <input
                 type="text"
@@ -192,6 +226,14 @@ export default function VirtualSupportChat() {
                 Send
               </button>
             </div>
+            <button
+              type="button"
+              onClick={() => void handleEscalate()}
+              disabled={loading || !conversationId}
+              className="mt-1 text-[0.7rem] text-[#5e17eb] underline-offset-2 hover:underline disabled:text-zinc-400"
+            >
+              Escalate to a human support ticket
+            </button>
           </div>
         </div>
       )}

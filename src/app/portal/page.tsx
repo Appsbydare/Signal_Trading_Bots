@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCurrentCustomer } from "@/lib/auth-server";
 import { getLicensesForEmail } from "@/lib/license-db";
 import { getPromotionalImage } from "@/lib/promotional-image";
+import { listTicketsForCustomer } from "@/lib/tickets-db";
 
 export const metadata = {
   title: "Customer Portal | signaltradingbots",
@@ -35,9 +36,10 @@ export default async function PortalPage() {
     );
   }
 
-  const [licenses, promo] = await Promise.all([
+  const [licenses, promo, tickets] = await Promise.all([
     getLicensesForEmail(customer.email),
     getPromotionalImage(),
+    listTicketsForCustomer(customer.id),
   ]);
 
   return (
@@ -220,14 +222,47 @@ export default async function PortalPage() {
         )}
       </section>
 
-      {/* Support chat note */}
-      <section className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-4 text-xs text-zinc-600">
-        If you need help, use the support chat widget in the bottom-right corner of the page
-        (powered by Tawk.to), or{" "}
-        <Link href="/contact" className="font-medium text-[#5e17eb] hover:underline">
-          contact us here
-        </Link>
-        .
+      {/* Support tickets */}
+      <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div>
+            <h2 className="text-base font-semibold text-zinc-900">Support tickets</h2>
+            <p className="text-xs text-zinc-500">
+              Tickets created from the virtual support chat or by our team on your behalf.
+            </p>
+          </div>
+        </div>
+        {tickets.length === 0 ? (
+          <div className="rounded-md bg-zinc-50 p-4 text-xs text-zinc-600">
+            No tickets found yet. If a question is beyond the virtual agents, you can escalate from
+            the chat widget and track it here.
+          </div>
+        ) : (
+          <div className="overflow-x-auto text-xs">
+            <table className="min-w-full divide-y divide-zinc-200">
+              <thead className="bg-zinc-50">
+                <tr>
+                  <th className="px-3 py-2 text-left font-semibold text-zinc-500">Ticket #</th>
+                  <th className="px-3 py-2 text-left font-semibold text-zinc-500">Subject</th>
+                  <th className="px-3 py-2 text-left font-semibold text-zinc-500">Status</th>
+                  <th className="px-3 py-2 text-left font-semibold text-zinc-500">Created</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-200">
+                {tickets.map((t) => (
+                  <tr key={t.id}>
+                    <td className="px-3 py-2 text-zinc-800">#{t.id}</td>
+                    <td className="px-3 py-2 text-zinc-800">{t.subject}</td>
+                    <td className="px-3 py-2 text-zinc-800 capitalize">{t.status}</td>
+                    <td className="px-3 py-2 text-zinc-800">
+                      {new Date(t.created_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </div>
   );

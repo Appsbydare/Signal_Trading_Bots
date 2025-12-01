@@ -46,6 +46,21 @@ export async function getCustomerByEmail(email: string): Promise<CustomerRow | n
   return data ?? null;
 }
 
+export async function getCustomerById(id: number): Promise<CustomerRow | null> {
+  const client = getSupabaseClient();
+  const { data, error } = await client
+    .from("customers")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle<CustomerRow>();
+
+  if (error) {
+    throw error;
+  }
+
+  return data ?? null;
+}
+
 export async function createCustomer(params: {
   email: string;
   password: string;
