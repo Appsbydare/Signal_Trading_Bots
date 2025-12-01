@@ -82,9 +82,9 @@ export default async function AdminDashboardPage() {
       </section>
 
       <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-3 text-base font-semibold text-zinc-900">Content tools</h2>
+        <h2 className="mb-3 text-base font-semibold text-zinc-900">Content & support tools</h2>
         <p className="mb-4 text-xs text-zinc-600">
-          Jump into the admin screens that power the in-app help and promotions.
+          Manage what customers see in the Windows app and how the virtual agents respond.
         </p>
         <div className="flex flex-wrap gap-3 text-sm">
           <a
@@ -104,6 +104,30 @@ export default async function AdminDashboardPage() {
             className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-800 hover:bg-zinc-50"
           >
             Promotional image admin
+          </a>
+          <a
+            href="/admin/agents"
+            className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-800 hover:bg-zinc-50"
+          >
+            Virtual agents
+          </a>
+          <a
+            href="/admin/faqs"
+            className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-800 hover:bg-zinc-50"
+          >
+            FAQs
+          </a>
+          <a
+            href="/admin/docs"
+            className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-800 hover:bg-zinc-50"
+          >
+            Knowledge docs
+          </a>
+          <a
+            href="/admin/tickets"
+            className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-zinc-800 hover:bg-zinc-50"
+          >
+            Support tickets
           </a>
         </div>
       </section>
