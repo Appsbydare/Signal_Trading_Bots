@@ -294,18 +294,34 @@ export function ProductsPageClient() {
                     </ul>
                     <div className="mt-auto pt-2">
                       <Link
-                        href="/products"
+                        href={
+                          plan.name === "Starter"
+                            ? "/payment?plan=starter"
+                            : plan.name === "Pro"
+                              ? "/payment?plan=pro"
+                              : "/payment?plan=lifetime"
+                        }
                         className={`inline-flex w-full items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition ${
                           plan.featured
                             ? "bg-[var(--brand-blue)] text-white hover:bg-[var(--brand-blue-deep)]"
                             : "border border-[var(--border-subtle)] text-[var(--text-main)] hover:border-[var(--brand-blue-soft)] hover:text-[var(--brand-blue-deep)]"
                         }`}
                       >
-                        View details
+                        Go to payment
                       </Link>
                     </div>
                   </div>
                 ))}
+              </div>
+              <div className="mt-6 text-center text-sm text-[var(--text-muted)]">
+                Have questions before you buy?{" "}
+                <Link
+                  href="/contact"
+                  className="font-medium text-[var(--brand-blue)] hover:text-[var(--brand-blue-deep)]"
+                >
+                  Contact us
+                </Link>
+                .
               </div>
             </div>
           </section>
