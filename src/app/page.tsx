@@ -362,7 +362,7 @@ export default function Home() {
       </div>
 
       {/* Hero Section - Full Width (LIGHT) */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16">
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-16">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 md:flex-row md:items-center">
           <div className="space-y-6 md:w-1/2">
             <motion.h1
@@ -372,7 +372,9 @@ export default function Home() {
               className="reveal brand-heading max-w-5xl text-4xl font-semibold leading-tight tracking-tight md:text-7xl lg:text-[clamp(5rem,9vw,9rem)]"
             >
               <span className="block">Automate MT5 trades</span>
-              <span className="block">directly from Telegram signals</span>
+              <span className="block text-[var(--brand)]">
+                directly from Telegram signals
+              </span>
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, x: 60 }}
