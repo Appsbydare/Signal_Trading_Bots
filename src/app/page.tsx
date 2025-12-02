@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import XmLogo from "../../broker_logos/XM-Logo.webp";
+import HeroPhone from "../../Hero 1.png";
 import { resourceArticles } from "@/data/resources";
 import { ProductSummaryCards } from "@/components/ProductSummaryCards";
 
@@ -362,8 +363,8 @@ export default function Home() {
 
       {/* Hero Section - Full Width (LIGHT) */}
       <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16">
-        <div className="mx-auto flex max-w-6xl flex-col items-start gap-10 px-6">
-          <div className="space-y-6">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 md:flex-row md:items-center">
+          <div className="space-y-6 md:w-1/2">
             <motion.h1
               initial={{ opacity: 0, x: -80 }}
               animate={{ opacity: 1, x: 0 }}
@@ -421,6 +422,31 @@ export default function Home() {
                 />
               </div>
             </div>
+          </div>
+          <div className="flex justify-center md:w-1/2">
+            <motion.div
+              initial={{ opacity: 0, y: 40, rotate: -8 }}
+              animate={{
+                opacity: 1,
+                y: [0, -6, 0, 4, 0],
+                x: [0, 3, 0, -3, 0],
+                rotate: [-6, -4, -7, -5, -6],
+              }}
+              transition={{
+                duration: 10,
+                ease: "easeInOut",
+                repeat: Infinity,
+                repeatType: "mirror",
+              }}
+              className="relative h-[320px] w-[180px] drop-shadow-[0_24px_70px_rgba(15,23,42,0.45)] md:h-[430px] md:w-[230px]"
+            >
+              <Image
+                src={HeroPhone}
+                alt="Telegram gold trading signals on mobile"
+                className="h-full w-full rounded-[2.25rem] object-contain"
+                priority
+              />
+            </motion.div>
           </div>
         </div>
       </section>
