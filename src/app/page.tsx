@@ -5,34 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import XmLogo from "../../broker_logos/XM-Logo.webp";
 import { resourceArticles } from "@/data/resources";
+import { ProductSummaryCards } from "@/components/ProductSummaryCards";
 
 export default function Home() {
   const [showFullFeatureComparison, setShowFullFeatureComparison] = useState<
     Record<string, boolean>
   >({});
-  const features = [
-    {
-      title: "24/7 automation",
-      description:
-        "Let the bot watch your Telegram channels and execute MT5 trades around the clock.",
-    },
-    {
-      title: "Multi‑TP & SL logic",
-      description:
-        "Configure multiple take‑profit levels, stop loss, and partial closes based on your strategy.",
-    },
-    {
-      title: "Risk‑based sizing",
-      description:
-        "Control position size by fixed lot or percentage risk per trade on supported MT5 brokers.",
-    },
-    {
-      title: "Flexible mapping",
-      description:
-        "Adapt to different Telegram signal formats with configurable mapping rules.",
-    },
-  ];
-
   const steps = [
     {
       title: "Connect Telegram",
@@ -247,37 +225,6 @@ export default function Home() {
     },
   ];
 
-  const pricingPlans = [
-    {
-      name: "Starter",
-      badge: "For testing on demo",
-      features: [
-        "Ideal for demo and small live accounts",
-        "Core Telegram → MT5 automation",
-        "Basic configuration templates",
-      ],
-    },
-    {
-      name: "Pro",
-      badge: "Most popular",
-      featured: true,
-      features: [
-        "Full configuration flexibility",
-        "Priority support during setup",
-        "Best for active signal users",
-      ],
-    },
-    {
-      name: "Lifetime",
-      badge: "One‑time payment",
-      features: [
-        "One license, long‑term usage",
-        "Access to future improvements",
-        "Designed for committed traders",
-      ],
-    },
-  ];
-
   const testimonials = [
     {
       name: "Daniel M.",
@@ -336,6 +283,44 @@ export default function Home() {
     {
       title: "In-app help center",
       description: "News, promo banners, and YouTube walkthroughs are available directly inside the desktop app.",
+    },
+  ];
+
+  const homePricingPlans = [
+    {
+      name: "Starter",
+      badge: "For testing on demo",
+      price: "$29/month",
+      yearlyNote: "Save 10% with yearly billing",
+      features: [
+        "Ideal for demo and small live accounts",
+        "Core Telegram → MT5 automation",
+        "Basic configuration templates",
+      ],
+    },
+    {
+      name: "Pro",
+      badge: "Most popular",
+      featured: true,
+      price: "$49/month",
+      yearlyNote: "Save 10% with yearly billing",
+      features: [
+        "Full configuration flexibility",
+        "Priority support during setup",
+        "Best for active signal users",
+      ],
+    },
+    {
+      name: "Lifetime",
+      badge: "New · One‑time payment",
+      featured: false,
+      price: "$999 one‑time",
+      yearlyNote: "All future versions and features included",
+      features: [
+        "Single payment, long‑term usage",
+        "Access to all future versions and major features",
+        "Best for committed, long‑term traders",
+      ],
     },
   ];
 
@@ -440,6 +425,71 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Pricing & product overview (LIGHT, under hero) */}
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-16">
+        <div className="mx-auto max-w-6xl px-6 space-y-10">
+          <div className="text-center">
+            <h2 className="mb-3 text-2xl font-semibold text-[var(--text-main)] md:text-3xl">
+              Simple packages for every trading stage
+            </h2>
+            <p className="mx-auto max-w-2xl text-sm text-[var(--text-muted)] md:text-base">
+              Start with a monthly plan or secure a one‑time Lifetime license. Starter and Pro
+              include a 10% discount when you choose yearly billing.
+            </p>
+          </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {homePricingPlans.map((plan) => (
+              <div
+                key={plan.name}
+                className={`flex flex-col rounded-xl border bg-white/80 p-6 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${
+                  plan.featured
+                    ? "border-[var(--brand-blue)] shadow-md"
+                    : "border-[var(--border-subtle)]"
+                }`}
+              >
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <h3 className="text-base font-semibold text-[var(--text-main)]">
+                    {plan.name}
+                  </h3>
+                  {plan.badge && (
+                    <span className="rounded-full bg-[var(--brand-blue-soft)]/20 px-3 py-1 text-xs font-medium text-[var(--brand-blue-deep)]">
+                      {plan.badge}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm font-semibold text-[var(--text-main)]">
+                  {plan.price}
+                </p>
+                <p className="mt-1 text-xs font-medium uppercase tracking-wide text-[var(--brand-blue-deep)]">
+                  {plan.yearlyNote}
+                </p>
+                <ul className="mb-4 mt-4 space-y-2 text-sm text-[var(--text-muted)]">
+                  {plan.features.map((item) => (
+                    <li key={item}>• {item}</li>
+                  ))}
+                </ul>
+                <div className="mt-auto pt-2">
+                  <Link
+                    href="/products"
+                    className={`inline-flex w-full items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition ${
+                      plan.featured
+                        ? "bg-[var(--brand-blue)] text-white hover:bg-[var(--brand-blue-deep)]"
+                        : "border border-[var(--border-subtle)] text-[var(--text-main)] hover:border-[var(--brand-blue-soft)] hover:text-[var(--brand-blue-deep)]"
+                    }`}
+                  >
+                    View details
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="pt-4">
+            <ProductSummaryCards />
+          </div>
+        </div>
+      </section>
+
       {/* Resources teaser (LIGHT) */}
       <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-16">
         <div className="mx-auto max-w-6xl px-6 space-y-6">
@@ -484,53 +534,6 @@ export default function Home() {
                   Keyword: {article.primaryKeyword}
                 </div>
               </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How the bot fits card (LIGHT, under hero) */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] pb-8">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="brand-callout relative mx-auto max-w-xl rounded-xl bg-white/80 p-6 shadow-sm">
-            <h3 className="mb-3 text-sm font-semibold text-[var(--text-main)]">
-              How the bot fits into your trading
-            </h3>
-            <p className="mb-4 text-sm text-[var(--text-muted)]">
-              Choose your signal provider, configure your rules once, and let the bot
-              handle the execution on MT5. You stay in control of risk and broker
-              selection at all times.
-            </p>
-            <ul className="space-y-2 text-xs text-[var(--text-muted)]">
-              <li>• Works with MT5 EAs and supported brokers</li>
-              <li>• Designed for running on Windows or VPS</li>
-              <li>• Start safely on a demo account first</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* Key Features (DARK) */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-dark-2)] py-16 text-[var(--text-on-dark)]">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-10 text-center">
-            <h2 className="mb-3 text-2xl font-semibold md:text-3xl">
-              Built for real Telegram signal workflows
-            </h2>
-            <p className="mx-auto max-w-2xl text-sm text-zinc-400 md:text-base">
-              Simple to configure, but powerful enough to handle multiple take‑profits,
-              risk‑based sizing, and different signal formats.
-            </p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-2">
-            {features.map((feature) => (
-              <div
-                key={feature.title}
-                className="rounded-lg border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-3)] p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(15,23,42,0.75)] hover:border-[var(--brand-blue-soft)]"
-              >
-                <h3 className="mb-2 text-base font-semibold">{feature.title}</h3>
-                <p className="text-sm text-zinc-400">{feature.description}</p>
-              </div>
             ))}
           </div>
         </div>
@@ -786,61 +789,6 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Preview (LIGHT) */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-8 text-center">
-            <h2 className="mb-3 text-2xl font-semibold text-[var(--text-main)] md:text-3xl">
-              Simple plans for different trading stages
-            </h2>
-            <p className="mx-auto max-w-2xl text-sm text-[var(--text-muted)] md:text-base">
-              Start on demo, then scale to live once you are comfortable. Pricing details
-              are available on the products and payment pages.
-            </p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {pricingPlans.map((plan) => (
-              <div
-                key={plan.name}
-                className={`flex flex-col rounded-xl border bg-white/80 p-6 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${
-                  plan.featured
-                    ? "border-[var(--brand-blue)] shadow-md"
-                    : "border-[var(--border-subtle)]"
-                }`}
-              >
-                <div className="mb-2 flex items-center justify-between">
-                  <h3 className="text-base font-semibold text-[var(--text-main)]">
-                    {plan.name}
-                  </h3>
-                  {plan.badge && (
-                    <span className="rounded-full bg-[var(--brand-blue-soft)]/20 px-3 py-1 text-xs font-medium text-[var(--brand-blue-deep)]">
-                      {plan.badge}
-                    </span>
-                  )}
-                </div>
-                <ul className="mb-4 mt-3 space-y-2 text-sm text-[var(--text-muted)]">
-                  {plan.features.map((item) => (
-                    <li key={item}>• {item}</li>
-                  ))}
-                </ul>
-                <div className="mt-auto pt-2">
-                  <Link
-                    href="/products"
-                    className={`inline-flex w-full items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition ${
-                      plan.featured
-                        ? "bg-[var(--brand-blue)] text-white hover:bg-[var(--brand-blue-deep)]"
-                        : "border border-[var(--border-subtle)] text-[var(--text-main)] hover:border-[var(--brand-blue-soft)] hover:text-[var(--brand-blue-deep)]"
-                    }`}
-                  >
-                    View details
-                  </Link>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </section>
