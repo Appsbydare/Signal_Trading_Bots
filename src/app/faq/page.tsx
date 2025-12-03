@@ -1,44 +1,51 @@
+import { getPublicFaqs } from "@/lib/faqs-db";
+
 export const metadata = {
   title: "FAQ | signaltradingbots",
   description: "Frequently asked questions about setup, requirements, and usage.",
 };
 
-const faqs = [
-  {
-    q: "What do I need to use this?",
-    a: "Windows 10/11 (64-bit), MetaTrader 5 with a broker that allows EAs, and stable internet.",
-  },
-  {
-    q: "Can I test on demo first?",
-    a: "Yes, we strongly recommend starting on a demo account to understand SL/TP behavior.",
-  },
-  {
-    q: "Do you provide financial advice?",
-    a: "No. This is software only and not financial advice. Trading involves risk.",
-  },
-  {
-    q: "Which assets are supported?",
-    a: "Forex pairs, Gold, Crypto, and major indices (availability varies by broker).",
-  },
-];
+export default async function FAQPage() {
+  const faqs = await getPublicFaqs();
 
-export default function FAQPage() {
+  // Google recommends limiting FAQ rich results to a reasonable number of Q&As.
+  const schemaFaqs = faqs.slice(0, 50);
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: schemaFaqs.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+
   return (
     <div className="space-y-8">
       <h1 className="reveal brand-heading text-2xl font-semibold tracking-tight">FAQ</h1>
       <ul className="space-y-4">
         {faqs.map((item) => (
           <li
-            key={item.q}
+            key={item.id}
             className="rounded-lg border border-[#5e17eb] bg-white/90 p-4 shadow-sm transition hover:-translate-y-[2px] hover:shadow-md"
           >
-            <p className="font-medium">{item.q}</p>
-            <p className="text-sm text-zinc-600">{item.a}</p>
+            <p className="font-medium">{item.question}</p>
+            <p className="text-sm text-zinc-600">{item.answer}</p>
           </li>
         ))}
       </ul>
+
+      {/* SEO: FAQPage structured data for rich results */}
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        suppressHydrationWarning
+      />
     </div>
   );
 }
-
-
