@@ -22,6 +22,7 @@ export async function getPublicFaqs(): Promise<Faq[]> {
     .from("faqs")
     .select("id, question, answer, category, tags, is_active")
     .eq("is_active", true)
+    .order("category", { ascending: true })
     .order("id", { ascending: true });
 
   if (error) {
