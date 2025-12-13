@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { licenseConfig } from "@/lib/license-config";
-import { getSessionById, refreshSession } from "@/lib/license-db";
+import { getSessionById, refreshSession, getLicenseByKey, logValidation } from "@/lib/license-db";
 import { ensureHttps, verifyRequestSignature } from "@/lib/license-security";
 
 function jsonError(status: number, message: string, errorCode: string, data: unknown = {}) {
@@ -46,6 +46,14 @@ export async function POST(request: NextRequest) {
 
   const session = await getSessionById(sessionId);
   if (!session || session.license_key !== licenseKey || session.device_id !== deviceId) {
+    // Log failed heartbeat
+    await logValidation({
+      licenseKey: licenseKey ?? '',
+      deviceId,
+      eventType: 'heartbeat_failed',
+      success: false,
+      errorCode: 'INVALID_SESSION',
+    });
     return jsonError(200, "Invalid session", "INVALID_SESSION");
   }
 
@@ -59,10 +67,23 @@ export async function POST(request: NextRequest) {
     await import("@/lib/license-db").then(async ({ deactivateSession }) => {
       await deactivateSession(sessionId);
     });
+    
+    // Log session expiration
+    await logValidation({
+      licenseKey,
+      deviceId,
+      eventType: 'heartbeat_failed',
+      success: false,
+      errorCode: 'SESSION_EXPIRED',
+    });
+    
     return jsonError(200, "Session has expired", "SESSION_EXPIRED");
   }
 
   await refreshSession(sessionId);
+
+  // Get license to check grace_period_allowed status
+  const license = await getLicenseByKey(licenseKey);
 
   return NextResponse.json({
     success: true,
@@ -70,6 +91,7 @@ export async function POST(request: NextRequest) {
     data: {
       lastSeenAt: new Date().toISOString(),
       sessionActive: true,
+      graceAllowed: (license as any)?.grace_period_allowed ?? true,  // Include grace status
     },
   });
 }

@@ -31,9 +31,18 @@ export default function SchemaOrg() {
     {
       "@context": "https://schema.org",
       "@type": "Organization",
-      name: "signaltradingbots",
+      name: "theDBot LLC",
+      alternateName: "SignalTradingBots",
       url: siteUrl,
       email: "support@signaltradingbots.com",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "1207 Delaware Ave #2685",
+        addressLocality: "Wilmington",
+        addressRegion: "DE",
+        postalCode: "19806",
+        addressCountry: "US"
+      },
       sameAs: ["https://www.signaltradingbots.com/contact"],
     },
     {

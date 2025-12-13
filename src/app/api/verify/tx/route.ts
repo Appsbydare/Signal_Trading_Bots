@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { orders } from "../../orders/create/route";
+import { generateLicenseKey } from "@/lib/license-keys";
+import { createLicense } from "@/lib/license-db";
+import { sendLicenseEmail } from "@/lib/email";
 
 // Verify transaction by TX hash
 export async function POST(request: NextRequest) {
@@ -44,14 +47,62 @@ export async function POST(request: NextRequest) {
     }
 
     if (verified) {
-      // Generate license key (simple example)
-      const licenseKey = `LIC-${order.orderId}-${Date.now()}`;
+      // Generate DBOT-style license key
+      const licenseKey = generateLicenseKey();
+      
+      // Calculate expiry date based on plan
+      const now = new Date();
+      const expiresAt = new Date(now);
+      if (order.plan === "monthly") {
+        expiresAt.setMonth(expiresAt.getMonth() + 1);
+      } else if (order.plan === "yearly") {
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      } else {
+        // Default to yearly if plan not recognized
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      }
+
+      // Insert license into Supabase
+      try {
+        await createLicense({
+          licenseKey,
+          email: order.email,
+          plan: order.plan,
+          expiresAt,
+          paymentId: txHash,
+          amount: order.displayPrice,
+          currency: order.coin === "USDT" ? "USD" : order.coin,
+        });
+      } catch (dbError) {
+        console.error("Failed to create license in database:", dbError);
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Failed to create license. Please contact support with your transaction hash.",
+            txHash,
+          },
+          { status: 500 }
+        );
+      }
+
+      // Send license key email
+      try {
+        await sendLicenseEmail({
+          to: order.email,
+          licenseKey,
+          plan: order.plan,
+          expiresAt: expiresAt.toISOString(),
+        });
+      } catch (emailError) {
+        console.error("Failed to send license email:", emailError);
+        // Don't fail the transaction if email fails - license is already in DB
+      }
+
+      // Update in-memory order
       order.status = "paid";
       order.licenseKey = licenseKey;
       order.txHash = txHash;
       order.verifiedAt = new Date().toISOString();
-
-      // TODO: Send license key email
 
       return NextResponse.json({
         success: true,

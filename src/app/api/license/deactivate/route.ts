@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { deactivateSession, getSessionById } from "@/lib/license-db";
+import { deactivateSession, getSessionById, logValidation } from "@/lib/license-db";
 import { ensureHttps, verifyRequestSignature } from "@/lib/license-security";
 
 function jsonError(status: number, message: string, errorCode: string, data: unknown = {}) {
@@ -48,6 +48,14 @@ export async function POST(request: NextRequest) {
   }
 
   await deactivateSession(sessionId);
+
+  // Log deactivation
+  await logValidation({
+    licenseKey,
+    deviceId: session.device_id,
+    eventType: 'deactivation',
+    success: true,
+  });
 
   return NextResponse.json({
     success: true,

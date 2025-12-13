@@ -85,17 +85,20 @@ export default function RootLayout({
               />
             </Link>
             <nav className="flex items-center gap-6 text-sm">
-              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/resources">
-                Resources
-              </Link>
               <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/products">
                 Products
+              </Link>
+              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/demo">
+                Demo
               </Link>
               <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/specs">
                 Specs
               </Link>
               <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/faq">
                 FAQ
+              </Link>
+              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/resources">
+                Resources
               </Link>
               <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/contact">
                 Contact
@@ -206,7 +209,10 @@ export default function RootLayout({
             {/* Copyright and Disclaimer - Center Aligned */}
             <div className="border-t border-zinc-800 pt-6 text-center">
               <p className="mb-2 text-zinc-400">
-                © {new Date().getFullYear()} signaltradingbots. All rights reserved.
+                © {new Date().getFullYear()} SignalTradingBots, a brand of theDBot LLC. All rights reserved.
+              </p>
+              <p className="mb-3 text-xs text-zinc-500">
+                1207 Delaware Ave #2685, Wilmington, DE 19806
               </p>
               <p className="text-xs text-zinc-500">
                 MetaTrader, MT4, and MT5 are trademarks of MetaQuotes Software Corp. Telegram is a trademark of Telegram FZ-LLC. Trading involves risk; use a demo first. Not financial advice.

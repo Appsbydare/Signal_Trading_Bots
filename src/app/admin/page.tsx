@@ -82,6 +82,21 @@ export default async function AdminDashboardPage() {
       </section>
 
       <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-3 text-base font-semibold text-zinc-900">License & Security</h2>
+        <p className="mb-4 text-xs text-zinc-600">
+          Monitor and manage trading bot licenses, sessions, and security flags.
+        </p>
+        <div className="flex flex-wrap gap-3 text-sm">
+          <a
+            href="/admin/licenses"
+            className="rounded-md border-2 border-[#5e17eb] bg-[#5e17eb] px-6 py-2 font-semibold text-white hover:bg-[#4c0fcc]"
+          >
+            🔐 License Management
+          </a>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
         <h2 className="mb-3 text-base font-semibold text-zinc-900">Content & support tools</h2>
         <p className="mb-4 text-xs text-zinc-600">
           Manage what customers see in the Windows app and how the virtual agents respond.

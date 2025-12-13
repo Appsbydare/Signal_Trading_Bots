@@ -5,6 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import XmLogo from "../../broker_logos/XM-Logo.webp";
 import HeroPhone from "../../Hero 1.png";
+import TelegramLogo from "../../telegram.webp";
+import TradingBotLogo from "../../Tradingbot - Copy.png";
+import MT5Logo from "../../mt5.png";
 import { resourceArticles } from "@/data/resources";
 import { ProductSummaryCards } from "@/components/ProductSummaryCards";
 
@@ -103,12 +106,6 @@ export default function Home() {
       caption: "How signals are understood and turned into trades.",
       features: [
         {
-          label: "Execution speed",
-          competitors: "Market leaders advertise 70–300ms execution depending on VPS and broker.",
-          ours: "Desktop MT5 API with low‑latency execution; exact milliseconds depend on your VPS and broker routing.",
-          advantage: false,
-        },
-        {
           label: "AI / image signal parsing",
           competitors: "Use AI / Vision / OCR engines to parse screenshots and any text layout.",
           ours: "Deliberately text‑only: configurable keyword + regex rules tuned for FX, GOLD, crypto formats you control.",
@@ -125,6 +122,12 @@ export default function Home() {
           competitors: "Built‑in trailing and breakeven, usually with a single rule set.",
           ours: "Central BreakevenManager per strategy with multi‑level trailing TP/SL and automatic SL‑to‑entry behaviour.",
           advantage: true,
+        },
+        {
+          label: "Execution speed",
+          competitors: "Market leaders advertise 70–300ms execution depending on VPS and broker.",
+          ours: "Desktop MT5 API with low‑latency execution; exact milliseconds depend on your VPS and broker routing.",
+          advantage: false,
         },
       ],
     },
@@ -252,16 +255,19 @@ export default function Home() {
       title: "Telegram signals",
       description: "Bot listens to your configured channels via Pyrogram/Telethon.",
       icon: "📩",
+      image: TelegramLogo,
     },
     {
       title: "SignalTradingBots app",
       description: "Rules map each signal to strategies, TP/SL logic, and risk guardrails.",
       icon: "🤖",
+      image: TradingBotLogo,
     },
     {
       title: "MT5 terminal",
       description: "Orders are executed on your MT5 terminal running on Windows or VPS.",
       icon: "📈",
+      image: MT5Logo,
     },
   ];
 
@@ -453,7 +459,488 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing & product overview (LIGHT, under hero) */}
+      {/* How It Works (DARK) - MOVED TO TOP - ENHANCED WITH ANIMATIONS */}
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-black py-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mb-12 text-center">
+            <motion.h2
+              initial={{ opacity: 0, y: -20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-3 text-2xl font-semibold text-white md:text-3xl"
+            >
+              How it works
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: -10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="mx-auto max-w-2xl text-sm text-blue-300 md:text-base"
+            >
+              A clear step‑by‑step flow from Telegram signal to MT5 execution so you know
+              exactly what the bot is doing.
+            </motion.p>
+          </div>
+
+          {/* Process Flow Container */}
+          <div className="relative">
+            {/* Animated Connection Lines with Arrows */}
+            <svg
+              className="absolute left-0 top-1/2 w-full h-32 pointer-events-none"
+              style={{ transform: "translateY(-50%)" }}
+              viewBox="0 0 1200 100"
+              preserveAspectRatio="none"
+            >
+              <defs>
+                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.5" />
+                  <stop offset="50%" stopColor="#3b82f6" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.5" />
+                </linearGradient>
+              </defs>
+
+              {/* Connection Lines and Arrows */}
+              {[0, 1, 2, 3].map((i) => {
+                const x1 = (i + 1) * 20 + 5;
+                const x2 = (i + 2) * 20 - 5;
+                const midX = x1 + (x2 - x1) * 0.5;
+                return (
+                  <g key={`connector-${i}`}>
+                    {/* Animated line */}
+                    <motion.line
+                      x1={`${x1}%`}
+                      y1="50"
+                      x2={`${x2}%`}
+                      y2="50"
+                      stroke="url(#gradient)"
+                      strokeWidth="3"
+                      strokeDasharray="8,4"
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      whileInView={{ pathLength: 1, opacity: 1 }}
+                      transition={{
+                        duration: 0.8,
+                        delay: 0.3 + i * 0.1,
+                      }}
+                      viewport={{ once: false }}
+                    />
+                    {/* Animated Arrow - Larger and More Visible */}
+                    <motion.g
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      transition={{
+                        duration: 0.6,
+                        delay: 0.6 + i * 0.1,
+                      }}
+                      viewport={{ once: false }}
+                    >
+                      {/* Arrow head pointing right */}
+                      <polygon
+                        points={`${midX},35 ${midX + 1.5},50 ${midX},65`}
+                        fill="#3b82f6"
+                        opacity="0.9"
+                      />
+                      <line
+                        x1={`${midX - 1}`}
+                        y1="50"
+                        x2={`${midX + 1.5}`}
+                        y2="50"
+                        stroke="#3b82f6"
+                        strokeWidth="2"
+                        opacity="0.9"
+                      />
+                    </motion.g>
+                  </g>
+                );
+              })}
+            </svg>
+
+            {/* Reordered Step Cards - 2>1, 3>2, 1>3 pattern for first 3 */}
+            <div className="grid gap-6 md:grid-cols-5 relative z-10">
+              {/* Position 1: Step 2 (Configure Strategy) */}
+              {[steps[1], steps[2], steps[0], steps[3], steps[4]].map((step, index) => {
+                const originalIndex = steps.indexOf(step);
+                return (
+                  <motion.div
+                    key={step.title}
+                    initial={{ opacity: 0, y: 30, scale: 0.8 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{
+                      duration: 0.6,
+                      delay: index * 0.25,
+                    }}
+                    viewport={{ once: false }}
+                    className="flex flex-col h-full"
+                  >
+                    <div className="relative h-full">
+                      {/* Pulsing Glow Background */}
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-[#3b82f6]/20 to-[#8b5cf6]/20 rounded-lg blur-xl"
+                        animate={{
+                          opacity: [0.5, 1, 0.5],
+                          scale: [0.95, 1.05, 0.95],
+                        }}
+                        transition={{
+                          duration: 3,
+                          delay: index * 0.2,
+                          repeat: Infinity,
+                        }}
+                      />
+
+                      {/* Card */}
+                      <div className="relative h-full rounded-lg bg-gradient-to-br from-[#3a3a3a] to-[#1f1f1f] p-5 text-left shadow-lg border border-zinc-700/50 hover:border-[#3b82f6]/50 transition-all duration-300 group overflow-hidden flex flex-col">
+                        {/* Animated Border Glow - Left to Right */}
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-[#3b82f6]/0 via-[#3b82f6]/10 to-[#3b82f6]/0 rounded-lg"
+                          animate={{
+                            x: ["-100%", "100%"],
+                          }}
+                          transition={{
+                            duration: 2,
+                            delay: index * 0.15,
+                            repeat: Infinity,
+                          }}
+                        />
+
+                        {/* Content */}
+                        <div className="relative z-10 flex flex-col h-full">
+                          {/* Step Number with Pulse - Centered */}
+                          <div className="flex justify-center mb-3">
+                            <motion.div
+                              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-sm font-bold text-white shadow-lg"
+                              animate={{
+                                boxShadow: [
+                                  "0 0 0 0 rgba(139, 92, 246, 0.7)",
+                                  "0 0 0 10px rgba(139, 92, 246, 0)",
+                                ],
+                              }}
+                              transition={{
+                                duration: 2,
+                                delay: index * 0.2,
+                                repeat: Infinity,
+                              }}
+                            >
+                              {index + 1}
+                            </motion.div>
+                          </div>
+
+                          <h3 className="mb-2 text-center text-sm font-bold text-white uppercase tracking-wider leading-tight">
+                            {step.title}
+                          </h3>
+                          <p className="text-xs text-blue-300 leading-relaxed text-center flex-grow">
+                            {step.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Background Accent Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 -left-48 w-96 h-96 bg-[#3b82f6]/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 -right-48 w-96 h-96 bg-[#8b5cf6]/5 rounded-full blur-3xl" />
+        </div>
+      </section>
+
+      {/* Execution flow & security reminders (LIGHT) - ENHANCED WITH ANIMATIONS */}
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-20">
+        <div className="mx-auto max-w-6xl px-6 space-y-16">
+          <div className="text-center">
+            <motion.h3
+              initial={{ opacity: 0, y: -20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-2 text-3xl font-bold text-slate-900 md:text-4xl"
+            >
+              How execution works and how you stay in control
+            </motion.h3>
+            <motion.p
+              initial={{ opacity: 0, y: -10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="mx-auto max-w-3xl text-base text-slate-600 md:text-lg leading-relaxed"
+            >
+              A simple three-step flow: Telegram signals → SignalTradingBots desktop app →
+              your MT5 terminal. Everything runs on hardware you manage.
+            </motion.p>
+          </div>
+
+          {/* Three-step flow with animated arrows and step badges */}
+          <div className="relative">
+            {/* Animated SVG Arrows and Flow */}
+            <svg
+              className="absolute left-0 top-1/2 w-full h-32 pointer-events-none"
+              style={{ transform: "translateY(-50%)" }}
+              viewBox="0 0 1200 120"
+              preserveAspectRatio="none"
+            >
+              <defs>
+                <linearGradient id="flowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
+                  <stop offset="50%" stopColor="#3b82f6" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.4" />
+                </linearGradient>
+                <filter id="arrowGlow">
+                  <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                  <feMerge>
+                    <feMergeNode in="coloredBlur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Flowing Arrows with Animation */}
+              {[0, 1].map((i) => {
+                const x1 = 20 + i * 40;
+                const x2 = 40 + i * 40;
+                const midX = (x1 + x2) / 2;
+                return (
+                  <g key={`flow-${i}`}>
+                    {/* Thick arrow line */}
+                    <motion.line
+                      x1={`${x1}%`}
+                      y1="60"
+                      x2={`${x2}%`}
+                      y2="60"
+                      stroke="url(#flowGradient)"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      whileInView={{ pathLength: 1, opacity: 1 }}
+                      transition={{
+                        duration: 0.8,
+                        delay: 0.2 + i * 0.2,
+                      }}
+                      viewport={{ once: false }}
+                    />
+                    
+                    {/* Large animated arrowhead */}
+                    <motion.polygon
+                      points={`${midX},40 ${midX + 2},60 ${midX},80`}
+                      fill="#3b82f6"
+                      filter="url(#arrowGlow)"
+                      initial={{ opacity: 0, scale: 0 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      transition={{
+                        duration: 0.4,
+                        delay: 0.6 + i * 0.2,
+                      }}
+                      viewport={{ once: false }}
+                    />
+
+                    {/* Animated flowing dots along arrow */}
+                    {[0, 0.3, 0.6].map((offset) => (
+                      <motion.circle
+                        key={`dot-${i}-${offset}`}
+                        cx={`${x1 + (x2 - x1) * offset}%`}
+                        cy="60"
+                        r="2"
+                        fill="#3b82f6"
+                        initial={{ opacity: 0 }}
+                        whileInView={{ 
+                          opacity: [0.3, 1, 0.3],
+                          cx: [`${x1}%`, `${x2}%`, `${x1}%`]
+                        }}
+                        transition={{
+                          duration: 1.5,
+                          delay: 1 + i * 0.3 + offset * 0.2,
+                          repeat: Infinity,
+                          repeatType: "loop"
+                        }}
+                        viewport={{ once: false }}
+                      />
+                    ))}
+                  </g>
+                );
+              })}
+            </svg>
+
+            {/* Step Cards with Enhanced Design */}
+            <div className="grid gap-8 md:grid-cols-3 relative z-10">
+              {/* Card 1: Telegram Signals */}
+              <motion.div
+                initial={{ opacity: 0, y: 40, scale: 0.8 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0 }}
+                viewport={{ once: false }}
+                whileHover={{ y: -12, boxShadow: "0 20px 40px rgba(37, 99, 235, 0.3)" }}
+                className="relative"
+              >
+                <div className="relative h-full rounded-2xl border-2 border-blue-600 bg-gradient-to-br from-slate-900 to-slate-800 p-8 text-center shadow-lg hover:border-blue-500 transition-all group">
+                  {/* Animated background glow */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl"
+                    transition={{ duration: 0.3 }}
+                  />
+
+                  {/* Icon */}
+                  <motion.div
+                    className="relative z-10 mb-6 flex justify-center"
+                    animate={{ y: [0, -8, 0] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                  >
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-slate-800 border-3 border-blue-500 shadow-md p-3 overflow-hidden">
+                      <Image
+                        src={TelegramLogo}
+                        alt="Telegram"
+                        width={80}
+                        height={80}
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
+                  </motion.div>
+
+                  {/* Content */}
+                  <div className="relative z-10">
+                    <h4 className="mb-3 text-xl font-bold text-white">
+                      Telegram signals
+                    </h4>
+                    <p className="text-sm text-blue-200 leading-relaxed">
+                      Bot listens to your configured channels via Pyrogram/Telethon.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Card 2: SignalTradingBots App */}
+              <motion.div
+                initial={{ opacity: 0, y: 40, scale: 0.8 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.6, delay: 1 }}
+                viewport={{ once: false }}
+                whileHover={{ y: -12, boxShadow: "0 20px 40px rgba(37, 99, 235, 0.3)" }}
+                className="relative"
+              >
+                <div className="relative h-full rounded-2xl border-2 border-blue-700 bg-gradient-to-br from-slate-900 to-slate-800 p-8 text-center shadow-lg hover:border-blue-600 transition-all group">
+                  {/* Animated background glow */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl"
+                    transition={{ duration: 0.3 }}
+                  />
+
+                  {/* Icon */}
+                  <motion.div
+                    className="relative z-10 mb-6 flex justify-center"
+                    animate={{ y: [0, -8, 0] }}
+                    transition={{ duration: 3, delay: 0.1, repeat: Infinity }}
+                  >
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-slate-800 border-3 border-blue-500 shadow-md p-2 overflow-hidden">
+                      <Image
+                        src={TradingBotLogo}
+                        alt="SignalTradingBots"
+                        width={80}
+                        height={80}
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
+                  </motion.div>
+
+                  {/* Content */}
+                  <div className="relative z-10">
+                    <h4 className="mb-3 text-xl font-bold text-white">
+                      SignalTradingBots app
+                    </h4>
+                    <p className="text-sm text-blue-200 leading-relaxed">
+                      Rules map each signal to strategies, TP/SL logic, and risk guardrails.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Card 3: MT5 Terminal */}
+              <motion.div
+                initial={{ opacity: 0, y: 40, scale: 0.8 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.6, delay: 2 }}
+                viewport={{ once: false }}
+                whileHover={{ y: -12, boxShadow: "0 20px 40px rgba(37, 99, 235, 0.3)" }}
+              >
+                <div className="relative h-full rounded-2xl border-2 border-blue-600 bg-gradient-to-br from-slate-900 to-slate-800 p-8 text-center shadow-lg hover:border-blue-500 transition-all group">
+                  {/* Animated background glow */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl"
+                    transition={{ duration: 0.3 }}
+                  />
+
+                  {/* Icon */}
+                  <motion.div
+                    className="relative z-10 mb-6 flex justify-center"
+                    animate={{ y: [0, -8, 0] }}
+                    transition={{ duration: 3, delay: 0.2, repeat: Infinity }}
+                  >
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full border-3 border-blue-500 shadow-md p-3 overflow-hidden">
+                      <Image
+                        src={MT5Logo}
+                        alt="MetaTrader 5"
+                        width={80}
+                        height={80}
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
+                  </motion.div>
+
+                  {/* Content */}
+                  <div className="relative z-10">
+                    <h4 className="mb-3 text-xl font-bold text-white">
+                      MT5 terminal
+                    </h4>
+                    <p className="text-sm text-blue-200 leading-relaxed">
+                      Orders are executed on your MT5 terminal running on Windows or VPS.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Enhanced Security & Risk Reminders Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            viewport={{ once: false }}
+            className="rounded-2xl border-2 border-blue-600 bg-slate-900 p-10 shadow-lg"
+          >
+            <div className="mb-8 flex items-center gap-3">
+              <motion.div
+                className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-2xl shadow-lg border border-blue-400"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                🔒
+              </motion.div>
+              <h3 className="text-2xl font-bold text-white">
+                Security & risk reminders
+              </h3>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              {securityHighlights.map((item, index) => (
+                <motion.div
+                  key={item}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
+                  viewport={{ once: false }}
+                  className="flex gap-4 rounded-xl bg-slate-800 p-4 border border-blue-500/50 hover:border-blue-400 transition-all"
+                  whileHover={{ boxShadow: "0 8px 20px rgba(37, 99, 235, 0.2)" }}
+                >
+                  <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+                    ✓
+                  </div>
+                  <span className="text-sm text-blue-100 leading-relaxed">{item}</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Pricing & product overview (LIGHT) */}
       <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-16">
         <div className="mx-auto max-w-6xl px-6 space-y-10">
           <div className="text-center">
@@ -567,37 +1054,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How It Works (LIGHT) */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-8 text-center">
-            <h2 className="mb-3 text-2xl font-semibold text-[var(--text-main)] md:text-3xl">
-              How it works
-            </h2>
-            <p className="mx-auto max-w-2xl text-sm text-[var(--text-muted)] md:text-base">
-              A clear step‑by‑step flow from Telegram signal to MT5 execution so you know
-              exactly what the bot is doing.
-            </p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-5">
-            {steps.map((step, index) => (
-              <div
-                key={step.title}
-                className="flex flex-col rounded-lg bg-white/70 p-4 text-left shadow-sm transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg"
-              >
-                <span className="mb-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--brand-blue)] text-xs font-semibold text-white">
-                  {index + 1}
-                </span>
-                <h3 className="mb-1 text-sm font-semibold text-[var(--text-main)]">
-                  {step.title}
-                </h3>
-                <p className="text-xs text-[var(--text-muted)]">{step.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Manual vs Bot Comparison (DARK) */}
       <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-dark-3)] py-16 text-[var(--text-on-dark)]">
         <div className="mx-auto max-w-6xl px-6">
@@ -691,10 +1147,10 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-8 text-center">
             <h3 className="mb-2 text-2xl font-semibold text-[var(--text-main)] md:text-3xl">
-              Key feature comparison vs leading Telegram copiers
+              Key feature comparison vs other copiers
             </h3>
             <p className="mx-auto max-w-3xl text-sm text-[var(--text-muted)] md:text-base">
-              Based on public specs from tools like TSC, TSCopier and Telegram Copier,
+              Based on analysis of typical features from other Telegram to MT5 copier tools,
               plus the full internal feature matrix for SignalTradingBots.
             </p>
           </div>
@@ -775,48 +1231,6 @@ export default function Home() {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Execution flow & security reminders (LIGHT) */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-16">
-        <div className="mx-auto max-w-6xl px-6 space-y-10">
-          <div className="text-center">
-            <h3 className="mb-2 text-2xl font-semibold text-[var(--text-main)] md:text-3xl">
-              How execution works and how you stay in control
-            </h3>
-            <p className="mx-auto max-w-3xl text-sm text-[var(--text-muted)] md:text-base">
-              A simple three-step flow: Telegram signals → SignalTradingBots desktop app →
-              your MT5 terminal. Everything runs on hardware you manage.
-            </p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {executionFlow.map((step) => (
-              <div
-                key={step.title}
-                className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-light-2)] p-5 text-center shadow-sm"
-              >
-                <div className="mb-3 text-3xl">{step.icon}</div>
-                <h4 className="mb-2 text-sm font-semibold text-[var(--text-main)]">
-                  {step.title}
-                </h4>
-                <p className="text-xs text-[var(--text-muted)]">{step.description}</p>
-              </div>
-            ))}
-          </div>
-          <div className="rounded-2xl border border-[var(--border-subtle)] bg-white/90 p-6 shadow-sm">
-            <div className="mb-3 text-sm font-semibold text-[var(--text-main)]">
-              Security & risk reminders
-            </div>
-            <ul className="grid gap-3 text-xs text-[var(--text-muted)] md:grid-cols-2">
-              {securityHighlights.map((item) => (
-                <li key={item} className="flex gap-2">
-                  <span className="mt-[5px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--brand-blue)]" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
       </section>
@@ -915,134 +1329,6 @@ export default function Home() {
                 </p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Broker List / Supported brokers (DARK) */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-dark-1)] py-16 text-[var(--text-on-dark)]">
-        <div className="mx-auto max-w-6xl px-6">
-          <h2 className="mb-8 text-center text-2xl font-semibold">Example supported brokers</h2>
-
-          {/* First Row - Moving Left to Right */}
-          <div className="mb-8 overflow-hidden">
-            <div className="broker-scroll-left flex gap-4">
-              {[
-                {
-                  name: "XM Group",
-                  description:
-                    "Forex trading and trading in other leveraged products involves substantial risk.",
-                  referralLink: "https://www.xmglobal.com/referral?token=GxGWLVScWveRbMRJ8v1pbQ",
-                  logo: XmLogo,
-                },
-                {
-                  name: "PrimeXBT",
-                  description: "Trading involves substantial risk and may not be suitable for all investors.",
-                  logo: undefined,
-                },
-                {
-                  name: "Trade Nation",
-                  description: "Financial Spread Bets and CFDs are complex instruments with high risk.",
-                  logo: undefined,
-                },
-                {
-                  name: "HF Markets",
-                  description: "Risk Warning: Trading leveraged products such as CFDs carries significant risk.",
-                  logo: undefined,
-                },
-              ].map((broker, index) => (
-                <div
-                  key={`row1-${index}`}
-                  className="broker-card flex min-w-[300px] flex-shrink-0 flex-col rounded-lg bg-zinc-800 p-6 text-white shadow-sm transition-transform duration-200 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(15,23,42,0.85)]"
-                >
-                  <div className="mb-4 flex items-center gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded bg-zinc-700 text-xs text-zinc-400">
-                      {broker.logo ? (
-                        <Image
-                          src={broker.logo}
-                          alt={`${broker.name} logo`}
-                          width={64}
-                          height={64}
-                          className="h-full w-full object-contain"
-                        />
-                      ) : (
-                        "Logo"
-                      )}
-                    </div>
-                    <h3 className="text-lg font-semibold">{broker.name}</h3>
-                  </div>
-                  <p className="mb-4 text-sm text-zinc-300">{broker.description}</p>
-                  {broker.referralLink ? (
-                    <Link
-                      href={broker.referralLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-auto rounded-md bg-[var(--brand-blue)] px-4 py-2 text-center text-white !text-white transition hover:bg-[var(--brand-blue-deep)]"
-                    >
-                      Open Account
-                    </Link>
-                  ) : (
-                    <button className="mt-auto rounded-md bg-[var(--brand-blue)] px-4 py-2 text-white !text-white transition hover:bg-[var(--brand-blue-deep)]">
-                      Open Account
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Second Row - Moving Right to Left */}
-          <div className="overflow-hidden">
-            <div className="broker-scroll-right flex gap-4">
-              {[
-                {
-                  name: "IC Markets",
-                  description: "IC Markets Global is the trading name of Raw Trading Ltd.",
-                  logo: undefined,
-                },
-                {
-                  name: "ATFX",
-                  description: "ATFX is a leading forex broker trusted by traders worldwide.",
-                  logo: undefined,
-                },
-                {
-                  name: "FxPro",
-                  description: "Risk Warning: Contracts for Difference (CFDs) carry a high level of risk.",
-                  logo: undefined,
-                },
-                {
-                  name: "Pepperstone",
-                  description: "CFDs are complex instruments and come with a high risk of losing money.",
-                  logo: undefined,
-                },
-              ].map((broker, index) => (
-                <div
-                  key={`row2-${index}`}
-                  className="broker-card flex min-w-[300px] flex-shrink-0 flex-col rounded-lg bg-zinc-800 p-6 text-white shadow-sm transition-transform duration-200 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(15,23,42,0.85)]"
-                >
-                  <div className="mb-4 flex items-center gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded bg-zinc-700 text-xs text-zinc-400">
-                      {broker.logo ? (
-                        <Image
-                          src={broker.logo}
-                          alt={`${broker.name} logo`}
-                          width={64}
-                          height={64}
-                          className="h-full w-full object-contain"
-                        />
-                      ) : (
-                        "Logo"
-                      )}
-                    </div>
-                    <h3 className="text-lg font-semibold">{broker.name}</h3>
-                  </div>
-                  <p className="mb-4 text-sm text-zinc-300">{broker.description}</p>
-                  <button className="mt-auto rounded-md bg-[var(--brand-blue)] px-4 py-2 text-white !text-white transition hover:bg-[var(--brand-blue-deep)]">
-                    Open Account
-                  </button>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </section>

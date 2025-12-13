@@ -149,4 +149,70 @@ export async function deactivateSession(sessionId: string): Promise<void> {
   }
 }
 
+export interface LogValidationArgs {
+  licenseKey: string;
+  deviceId?: string;
+  eventType: 'validation' | 'duplicate_detected' | 'deactivation' | 'failed' | 'heartbeat_failed';
+  success: boolean;
+  errorCode?: string;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+export async function logValidation(args: LogValidationArgs): Promise<void> {
+  const client = getSupabaseClient();
+  
+  try {
+    await client.from("license_validation_log").insert({
+      license_key: args.licenseKey,
+      device_id: args.deviceId ?? null,
+      event_type: args.eventType,
+      success: args.success,
+      error_code: args.errorCode ?? null,
+      ip_address: args.ipAddress ?? null,
+      user_agent: args.userAgent ?? null,
+    });
+  } catch (error) {
+    // Don't fail request if logging fails
+    console.error("Failed to log validation:", error);
+  }
+}
+
+export interface CreateLicenseArgs {
+  licenseKey: string;
+  email: string;
+  plan: string;
+  expiresAt: Date;
+  paymentId?: string;
+  amount?: number;
+  currency?: string;
+}
+
+export async function createLicense(args: CreateLicenseArgs): Promise<LicenseRow> {
+  const client = getSupabaseClient();
+  const { data, error } = await client
+    .from("licenses")
+    .insert({
+      license_key: args.licenseKey,
+      email: args.email.toLowerCase(),
+      plan: args.plan,
+      status: "active",
+      expires_at: args.expiresAt.toISOString(),
+      payment_id: args.paymentId ?? null,
+      amount: args.amount ?? null,
+      currency: args.currency ?? "USD",
+    })
+    .select("*")
+    .maybeSingle<LicenseRow>();
+
+  if (error) {
+    throw error;
+  }
+  if (!data) {
+    throw new Error("Failed to create license");
+  }
+
+  return data;
+}
+
 
