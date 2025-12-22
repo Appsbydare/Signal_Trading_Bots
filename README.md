@@ -1,6 +1,8 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🤖 Signal Trading Bots
 
-## Getting Started
+A Next.js-based trading bot platform with license management and payment integration.
+
+## 🚀 Getting Started
 
 First, run the development server:
 
@@ -16,21 +18,56 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📁 Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+STB-19.12/
+├── src/                    # Source code (components, pages, utilities)
+├── public/                 # Static assets (images, SVGs, sitemaps)
+├── docs/                   # 📚 All project documentation
+│   ├── specs/             # Technical specifications
+│   ├── planning/          # Project planning & requirements
+│   └── notes/             # Development notes & references
+├── database/              # Database schemas and migrations
+├── assets/                # Project assets (images, icons)
+├── migrations/            # Database migration files
+├── data/                  # Data files
+├── fonts/                 # Custom fonts
+└── signal_trading_bots/   # Legacy/additional bot code
+```
 
-## Learn More
+## 📚 Documentation
 
-To learn more about Next.js, take a look at the following resources:
+All project documentation is now organized in the `/docs` directory:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Technical Specs**: `/docs/specs/` - API endpoints, backend implementation, license specs
+- **Planning**: `/docs/planning/` - Project plans, requirements, improvements
+- **Notes**: `/docs/notes/` - Development notes, chat logs, error tracking
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+See [docs/README.md](./docs/README.md) for detailed documentation navigation.
 
-## Deploy on Vercel
+## 🛠️ Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Framework**: Next.js 14+ with App Router
+- **Language**: TypeScript
+- **Styling**: CSS (custom)
+- **Database**: SQL-based (see `/database` for schemas)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📖 Learn More
+
+To learn more about Next.js:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial
+
+## 🚢 Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme).
+
+Check out the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## 📝 Recent Changes
+
+- **Codebase Reorganization** (Dec 2025): All documentation moved to `/docs`, assets to `/assets`, database files to `/database`
+- Removed duplicate files
+- Improved project structure for better maintainability
