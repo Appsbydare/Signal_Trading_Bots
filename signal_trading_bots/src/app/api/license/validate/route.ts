@@ -1,0 +1,209 @@
+import { NextRequest, NextResponse } from "next/server";
+
+import { licenseConfig } from "@/lib/license-config";
+import {
+  createSession,
+  getActiveSessionForLicense,
+  getLicenseByKey,
+  refreshSession,
+  logValidation,
+} from "@/lib/license-db";
+import { ensureHttps, verifyRequestSignature } from "@/lib/license-security";
+import { getSupabaseClient } from "@/lib/supabase-storage";
+import { sendNewDeviceEmail, sendDuplicateDetectedEmail } from "@/lib/email";
+
+function jsonError(status: number, message: string, errorCode: string, data: unknown = {}) {
+  return NextResponse.json(
+    {
+      success: false,
+      message,
+      errorCode,
+      data,
+    },
+    { status },
+  );
+}
+
+export async function POST(request: NextRequest) {
+  const httpsOk = ensureHttps(request);
+  if (!httpsOk.ok) {
+    return jsonError(401, `Security verification failed: ${httpsOk.message}`, "SECURITY_ERROR");
+  }
+
+  let payload: any;
+  try {
+    payload = await request.json();
+  } catch {
+    return jsonError(400, "Invalid JSON body", "INVALID_REQUEST");
+  }
+
+  const sec = verifyRequestSignature(payload);
+  if (!sec.ok) {
+    return jsonError(401, `Security verification failed: ${sec.message}`, "SECURITY_ERROR");
+  }
+
+  const { licenseKey, deviceId } = payload as {
+    licenseKey?: string;
+    deviceId?: string;
+    appVersion?: string;
+  };
+
+  if (!licenseKey || !deviceId) {
+    return jsonError(400, "Missing licenseKey or deviceId", "INVALID_REQUEST");
+  }
+
+  const license = await getLicenseByKey(licenseKey);
+  if (!license || license.status !== "active") {
+    // Log failed validation
+    await logValidation({
+      licenseKey,
+      deviceId,
+      eventType: 'failed',
+      success: false,
+      errorCode: 'INVALID_LICENSE',
+      ipAddress: request.headers.get('x-forwarded-for') ?? undefined,
+      userAgent: request.headers.get('user-agent') ?? undefined,
+    });
+    return jsonError(200, "Invalid license key", "INVALID_LICENSE");
+  }
+
+  const now = new Date();
+  const expiresAt = new Date(license.expires_at);
+  if (expiresAt.getTime() <= now.getTime()) {
+    // Log expired license attempt
+    await logValidation({
+      licenseKey,
+      deviceId,
+      eventType: 'failed',
+      success: false,
+      errorCode: 'LICENSE_EXPIRED',
+      ipAddress: request.headers.get('x-forwarded-for') ?? undefined,
+      userAgent: request.headers.get('user-agent') ?? undefined,
+    });
+    return jsonError(200, "License has expired", "LICENSE_EXPIRED");
+  }
+
+  let session = await getActiveSessionForLicense(license.license_key);
+  const nowIso = now.toISOString();
+
+  if (!session) {
+    // No active session -> create one
+    const sessionId = `SESSION-${crypto.randomUUID()}`;
+    session = await createSession({
+      licenseKey: license.license_key,
+      deviceId,
+      sessionId,
+    });
+    
+    // Send new device activation email
+    try {
+      await sendNewDeviceEmail({
+        to: license.email,
+        licenseKey: license.license_key,
+        deviceName: deviceId.substring(0, 16), // Partial device ID for privacy
+        activatedAt: nowIso,
+      });
+    } catch (emailError) {
+      console.error("Failed to send new device email:", emailError);
+      // Don't fail the request if email fails
+    }
+  } else {
+    const lastSeen = new Date(session.last_seen_at);
+    const ageSeconds = (now.getTime() - lastSeen.getTime()) / 1000;
+    const expired = ageSeconds > licenseConfig.heartbeatGraceSeconds;
+
+    if (session.device_id === deviceId) {
+      // Same device -> refresh
+      await refreshSession(session.session_id);
+    } else if (expired) {
+      // Different device but old session -> deactivate old and create new
+      // Mark existing inactive and create new record
+      await import("@/lib/license-db").then(async ({ deactivateSession }) => {
+        await deactivateSession(session!.session_id);
+      });
+      const sessionId = `SESSION-${crypto.randomUUID()}`;
+      session = await createSession({
+        licenseKey: license.license_key,
+        deviceId,
+        sessionId,
+      });
+    } else {
+      // Active session on another device - DUPLICATE DETECTED
+      const supabase = getSupabaseClient();
+      
+      // Mark this license as having duplicate usage
+      await supabase
+        .from("licenses")
+        .update({ 
+          duplicate_detected: true,
+          grace_period_allowed: false 
+        })
+        .eq("license_key", license.license_key);
+      
+      // Log the duplicate attempt
+      await logValidation({
+        licenseKey,
+        deviceId,
+        eventType: 'duplicate_detected',
+        success: false,
+        errorCode: 'LICENSE_IN_USE',
+        ipAddress: request.headers.get('x-forwarded-for') ?? undefined,
+        userAgent: request.headers.get('user-agent') ?? undefined,
+      });
+      
+      // Send duplicate detection email
+      try {
+        await sendDuplicateDetectedEmail({
+          to: license.email,
+          licenseKey,
+          deviceName1: session.device_id.substring(0, 16),
+          deviceName2: deviceId.substring(0, 16),
+        });
+      } catch (emailError) {
+        console.error("Failed to send duplicate detection email:", emailError);
+      }
+      
+      // Active session on another device
+      return jsonError(200, "License is already active on another device", "LICENSE_IN_USE", {
+        activeDeviceId: session.device_id,
+        lastSeenAt: session.last_seen_at,
+        graceAllowed: false,  // Tell app not to grant grace period
+      });
+    }
+  }
+
+  const daysRemaining = Math.max(
+    0,
+    Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
+  );
+
+  // Log successful validation
+  await logValidation({
+    licenseKey,
+    deviceId,
+    eventType: 'validation',
+    success: true,
+    ipAddress: request.headers.get('x-forwarded-for') ?? undefined,
+    userAgent: request.headers.get('user-agent') ?? undefined,
+  });
+
+  return NextResponse.json({
+    success: true,
+    message: "License validated successfully",
+    data: {
+      licenseKey: license.license_key,
+      sessionId: session.session_id,
+      deviceId: session.device_id,
+      status: license.status,
+      plan: license.plan,
+      expiresAt: license.expires_at,
+      daysRemaining,
+      email: license.email,
+      createdAt: license.created_at,
+      lastSeenAt: session.last_seen_at ?? nowIso,
+      graceAllowed: (license as any).grace_period_allowed ?? true,  // Include grace period status
+    },
+  });
+}
+
+

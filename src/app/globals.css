@@ -1,0 +1,175 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --brand: #5e17eb;
+  --brand-dark: #4312b8;
+  --brand-soft: #f4f0ff;
+
+  /* Section background + blue palette for alternating light/dark layout */
+  --bg-light-1: #f9fafb;
+  --bg-light-2: #e5f0ff;
+  --bg-dark-1: #020617;
+  --bg-dark-2: #0b1120;
+  --bg-dark-3: #111827;
+
+  --brand-blue: #2563eb;
+  --brand-blue-soft: #60a5fa;
+  --brand-blue-deep: #1d4ed8;
+
+  --text-main: #0f172a;
+  --text-muted: #6b7280;
+  --text-on-dark: #e5e7eb;
+  --border-subtle: #e5e7eb;
+  --border-on-dark: #1f2937;
+  --border-on-dark-strong: rgba(37, 99, 235, 0.55);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-heading);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+main a:not([class*="bg-"]) {
+  color: var(--brand);
+  transition: color 150ms ease;
+}
+
+main a:not([class*="bg-"]):hover {
+  color: var(--brand-dark);
+}
+
+h1, h2 {
+  font-family: var(--font-heading), sans-serif;
+  letter-spacing: 0.02em;
+}
+
+h1 {
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  line-height: 1.1;
+}
+
+h2 {
+  font-size: clamp(1.5rem, 3.2vw, 2.25rem);
+  line-height: 1.15;
+}
+
+h3 {
+  font-family: var(--font-heading), sans-serif;
+  font-size: clamp(1.25rem, 2.6vw, 1.5rem);
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal {
+  animation: fade-in-up 500ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    animation: none !important;
+  }
+}
+
+.brand-heading {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.6rem;
+}
+
+.brand-heading::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 3.5rem;
+  height: 0.25rem;
+  border-radius: 9999px;
+  background: var(--brand);
+  opacity: 0.9;
+}
+
+.brand-callout {
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  background: linear-gradient(
+    135deg,
+    rgba(37, 99, 235, 0.12),
+    rgba(37, 99, 235, 0.06) 45%,
+    rgba(255, 255, 255, 0)
+  );
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.18);
+}
+
+/* Broker List Scrolling Animations */
+.broker-scroll-left {
+  animation: scroll-left 30s linear infinite;
+}
+
+.broker-scroll-right {
+  animation: scroll-right 30s linear infinite;
+}
+
+.broker-scroll-left:hover,
+.broker-scroll-right:hover {
+  animation-play-state: paused;
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes scroll-right {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* Override h1 font-size for hero typewriter text */
+.hero-typewriter-text {
+  font-size: clamp(2.268rem, 8.505vw, 10.206rem) !important;
+  line-height: 1.1 !important;
+  overflow: hidden !important;
+  display: block !important;
+}
+
+.hero-typewriter-text > div {
+  display: block !important;
+  max-height: clamp(5rem, 19vw, 22.5rem) !important;
+  overflow: hidden !important;
+}

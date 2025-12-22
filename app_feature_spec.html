@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Mini Bot V13.1 – Feature Specification</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      margin: 0;
+      background: #0f1116;
+      color: #f5f6fa;
+      line-height: 1.6;
+    }
+    header {
+      background: linear-gradient(135deg, #6025f5, #8e2de2);
+      padding: 32px 48px;
+      color: #fff;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.25rem;
+    }
+    header p {
+      margin: 8px 0 0;
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+    main {
+      padding: 32px 48px 48px;
+    }
+    section {
+      margin-bottom: 48px;
+      background: #1a1d26;
+      border-radius: 16px;
+      padding: 28px 32px;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 1.5rem;
+      color: #ffd166;
+    }
+    h3 {
+      margin-top: 32px;
+      color: #50c9c3;
+      font-size: 1.2rem;
+    }
+    p {
+      margin: 12px 0;
+    }
+    ul {
+      margin: 12px 0 0 20px;
+    }
+    li {
+      margin: 6px 0;
+    }
+    .emoji {
+      font-size: 1.35rem;
+      margin-right: 6px;
+    }
+    .tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: rgba(80, 201, 195, 0.12);
+      color: #50c9c3;
+      font-size: 0.85rem;
+      margin-right: 8px;
+    }
+    a {
+      color: #8be9fd;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mini Bot V13.1 – Experience Spec 📘</h1>
+    <p>High-level feature guide for every tab and global control. Use this document for QA checklists,
+      onboarding, or quick refreshers before a demo.</p>
+  </header>
+  <main>
+    <section id="overview">
+      <h2><span class="emoji">🚀</span>Overview & Testing Notes</h2>
+      <p>The application is organized into six primary tabs plus a persistent control bar. Each tab focuses on a unique phase of the trading lifecycle—from live execution oversight to audit, analytics, and configuration. Use the <strong>Global Controls</strong> area (top bar) to start/stop the bot, monitor clocks, and confirm license status.</p>
+      <ul>
+        <li><strong>Global controls:</strong> Start/Stop bot, observe status banner, and watch three configurable market clocks.</li>
+        <li><strong>Testing tip:</strong> When verifying UI behavior, ensure PyQt timers are running (bot must be started to update dashboards, logs, and audit feeds).</li>
+        <li><strong>Timezone awareness:</strong> P&amp;L calculations can follow MT5 server midnight or the operator’s system timezone—toggle from the Settings tab.</li>
+      </ul>
+    </section>
+
+    <section id="dashboard">
+      <h2><span class="emoji">📊</span>Dashboard Tab</h2>
+      <p>The command center for live trading performance.</p>
+      <h3>Daily Performance Panels</h3>
+      <ul>
+        <li><span class="tag">Chart</span> Daily Profit chart with date pickers, strategy filter, profit vs. cumulative toggle, and manual refresh.</li>
+        <li><span class="tag">Account</span> Equity/Balances block showing Equity, Balance, Profit, Margin Level, and Free Margin, color coded by gain/loss.</li>
+        <li><span class="tag">Today’s P&amp;L</span> Displays absolute and percentage P&amp;L with automatic color states and timezone label (MT5 server vs. system time).</li>
+      </ul>
+      <h3>Strategy & Position Insights</h3>
+      <ul>
+        <li><span class="tag">Strategy Stats</span> Aggregated win rate, trade counts, profit breakdowns, and active strategy highlights.</li>
+        <li><span class="tag">Open Positions</span> Table covering Ticket, Type, Symbol, Price, SL, TP, and Profit. Includes:
+          <ul>
+            <li>“Close All Open Positions” action (+ optional “skip confirmation” checkbox).</li>
+            <li>Color-tinted profit column and auto-refresh via MT5 polling.</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section id="logs">
+      <h2><span class="emoji">📝</span>Logs Tab</h2>
+      <p>Live log console with filtering and persistence controls.</p>
+      <ul>
+        <li><span class="tag">Live Feed</span> Real-time stream from Loguru + custom handler; errors show raw stack traces while other levels are prettified.</li>
+        <li><span class="tag">Controls</span> Clear, Save, and auto-scroll toggles; timestamp visibility switch; severity filter (All/Success/Info/Warning/Error).</li>
+        <li><span class="tag">Fine filters</span> Additional checkboxes for Errors/Warnings/Info and a text filter for ad-hoc queries.</li>
+        <li><span class="tag">Diagnostics</span> Line count badge and background file monitor keep long sessions in sync.</li>
+      </ul>
+    </section>
+
+    <section id="strategies">
+      <h2><span class="emoji">🎯</span>Strategies Tab</h2>
+      <p>Two-panel experience for managing providers and editing execution logic.</p>
+      <h3>Manage Strategies</h3>
+      <ul>
+        <li><span class="tag">Grid View</span> List strategies with status, channel linkage, win/loss stats, and quick enable/disable toggles.</li>
+        li><span class="tag">Search & Filters</span> Locate strategies via channel name, status, or tags for rapid QA passes.</li>
+        <li><span class="tag">Context Actions</span> Duplicate, delete, export, or activate a strategy directly from the grid.</li>
+      </ul>
+      <h3>Edit Strategy</h3>
+      <ul>
+        <li><span class="tag">Execution Modes</span> Instant vs. Signal entry, each with tailored forms and validation helpers.</li>
+        <li><span class="tag">Trade Parameters</span> Lot counts, TP ladders, trailing-stop matrix, breakeven automation, and dynamic SL adjustments.</li>
+        <li><span class="tag">Risk Management</span> Balance source selector, daily loss guardrails, profit targets, and automated “No New Entries” enforcement.</li>
+        <li><span class="tag">Signal Parsing</span> Keyword builders for BUY/SELL logic, SL/TP detection, entry price extraction, and multi-TP strategy support.</li>
+        <li><span class="tag">Digital Clocks</span> Three live clocks (shared with header) for quick timezone reference while tuning strategies.</li>
+        <li><span class="tag">Persistence</span> Save / reset buttons, plus import/export hooks via Settings for backup or migration.</li>
+      </ul>
+    </section>
+
+    <section id="audit">
+      <h2><span class="emoji">🕵️‍♂️</span>Audit Tab</h2>
+      <p>End-to-end traceability for every signal processed.</p>
+      <ul>
+        <li><span class="tag">Stats Panel</span> Last 7 days overview: total signals, success/failure counts, success rate, and avg processing time.</li>
+        <li><span class="tag">Filters</span> Date pickers, execute/parse status combos, text search, and dedicated buttons for refresh, export CSV, clean-up old rows, and refresh stats.</li>
+        <li><span class="tag">Audit Table</span> Columns for timestamps, symbol, provider, parse status, exec status, exception notes, and latency metrics. Auto-refresh every 5 seconds.</li>
+        <li><span class="tag">Details Pane</span> Rich-text breakdown of the selected audit record (raw signal, parsed payload, execution request, and final response).</li>
+      </ul>
+    </section>
+
+    <section id="settings">
+      <h2><span class="emoji">⚙️</span>Settings Tab</h2>
+      <p>All configuration points in a single scrollable layout.</p>
+      <h3>Integration Settings</h3>
+      <ul>
+        <li><span class="tag">Telegram</span> Choose Pyrogram/Telethon, configure session name, API credentials, phone, channel ID/username.</li>
+        <li><span class="tag">MetaTrader 5</span> Set account login, server, terminal path (with file picker), and open the Asset Symbols dialog.</li>
+      </ul>
+      <h3>Trading Preferences</h3>
+      <ul>
+        <li><span class="tag">Parameters</span> Global lot size, max slippage, and “Enable Algo Trading” toggle.</li>
+        <li><span class="tag">Import/Export</span> Buttons for applying .env bundles and exporting current settings for backup.</li>
+      </ul>
+      <h3>Time & Analytics</h3>
+      <ul>
+        <li><span class="tag">Clock Timezones</span> Three dropdowns map the header clocks to any <code>pytz</code> timezone.</li>
+        <li><span class="tag">Analytics Timezone</span> <strong>“Use system time for analytics”</strong> checkbox + explanatory hint. When checked, Dashboard P&amp;L, risk monitoring, and Risk Manager alerts follow the operator’s local timezone; otherwise MT5 server midnight is used. Changes persist via <code>bot_worker.set_use_system_time_for_analytics()</code>.</li>
+      </ul>
+      <h3>Save & Validation</h3>
+      <ul>
+        <li><span class="tag">Validation</span> MT5 terminal path checker ensures a valid <code>terminal.exe</code> before saving.</li>
+        <li><span class="tag">Save Button</span> Writes to <code>%AppData%/SignalTradingBots/config/.env</code> and pushes live updates to MT5 trader + Telegram client when possible.</li>
+      </ul>
+    </section>
+
+    <section id="help">
+      <h2><span class="emoji">🆘</span>Help / News Tab</h2>
+      <p>Embedded knowledge base powered by the SignalTradingBots web API.</p>
+      <ul>
+        <li><span class="tag">News Feed</span> Blog-style cards fetched from <code>/api/app/news</code>, each with title, summary, and CTA link.</li>
+        <li><span class="tag">Video Guides</span> Pulls tutorial playlist entries from <code>/api/app/youtube-help</code>; clicking opens the video in the default browser.</li>
+        <li><span class="tag">Promotions</span> Optional dynamic hero image with redirect link for campaigns or release notes.</li>
+        <li><span class="tag">Manual Refresh</span> Tab auto-refreshes on open and exposes buttons for force reloading news/help sections.</li>
+      </ul>
+    </section>
+
+    <section id="global-controls">
+      <h2><span class="emoji">🧭</span>Global Controls & Header</h2>
+      <ul>
+        <li><span class="tag">Start / Stop</span> Gradient buttons with shadow states; Stop remains disabled until the bot runs.</li>
+        <li><span class="tag">Status Signals</span> Bot status indicator + snackbar-like log updates when start/stop/licensing events occur.</li>
+        <li><span class="tag">Clock Row</span> Three digital clocks (Impact font) reflect the timezones chosen in Settings; handy for aligning with signal providers.</li>
+      </ul>
+    </section>
+
+    <section id="qa">
+      <h2><span class="emoji">✅</span>QA Checklist Starter</h2>
+      <ul>
+        <li>⚡ <strong>Global</strong>: Verify Start/Stop button states, status bar messaging, and clocks after changing timezones.</li>
+        <li>📈 <strong>Dashboard</strong>: Confirm P&amp;L values match MT5 “Today” totals in both timezone modes.</li>
+        <li>🪵 <strong>Logs</strong>: Trigger Info/Warning/Error events and ensure filters respond immediately.</li>
+        <li>🎛️ <strong>Strategies</strong>: Save a sample strategy, duplicate it, toggle risk limits, and confirm auditing shows corresponding signals.</li>
+        <li>🔍 <strong>Audit</strong>: Filter by date/status, export CSV, and spot-check detail pane content.</li>
+        <li>⚙️ <strong>Settings</strong>: Change MT5 path (invalid/valid), toggle analytics timezone, adjust clock zones, and re-open the app to ensure persistence.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
+
