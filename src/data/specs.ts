@@ -9,7 +9,7 @@ export const specsData = {
     usageGuidance: [
         "Always start on a demo account before trading live capital.",
         "Confirm your broker supports EAs and automated order placement.",
-        "Understand your signal provider's SL / TP style and latency before configuring automation.",
+        "Understand your signal provider’s SL / TP style and latency before configuring automation.",
         "Trading involves significant risk; nothing here is financial advice.",
     ],
     tabs: [
@@ -20,7 +20,7 @@ export const specsData = {
             bullets: [
                 "Daily profit chart with date filters and profit vs. cumulative views.",
                 "Account equity, balance, margin level, and free margin at a glance.",
-                "Today's P&L with clear gain/loss colouring and timezone label.",
+                "Today’s P&L with clear gain/loss colouring and timezone label.",
             ],
         },
         {
@@ -92,4 +92,3 @@ export const specsData = {
         "Change MT5 path and timezones in Settings, restart, and verify persistence.",
     ],
 };
-

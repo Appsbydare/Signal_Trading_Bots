@@ -19,51 +19,12 @@
 
 # production
 /build
-/dist
 
 # misc
 .DS_Store
-.apple_desktop
-.bash_history
-.cache
-.config
-.gradle
-.history
-.npm
-.nvm
-.python-version
-.serverless
-.sh_history
-.stack-work
-.terraform
-.vagrant
+*.pem
 
-# IDEs and Editors
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-.idea/
-*.swp
-*.swo
-*.sublime-project
-*.sublime-workspace
-
-# OS files
-Thumbs.db
-Thumbs.db:encryptable
-ehthumbs.db
-ehthumbs_vista.db
-*.stackdump
-Desktop.ini
-_notes
-dwsync.xml
-
-# Logs
-*.log
-logs
-*.log.*
+# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -71,7 +32,6 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-!.env.example
 
 # vercel
 .vercel
@@ -90,11 +50,3 @@ next-env.d.ts
 
 # data files (keep in git for now, but can be excluded if needed)
 # /data/*.json
-
-# Local workspace/scratch files
-*.txt
-!README.md
-!API_ENDPOINTS.md
-!BACKEND_IMPLEMENTATION.md
-!Featurecomparison.md
-!LICENSE_SPEC.md

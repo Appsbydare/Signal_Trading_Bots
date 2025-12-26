@@ -8,6 +8,8 @@ import SchemaOrg from "./schema-org";
 import Analytics from "./analytics";
 import VirtualSupportChat from "@/components/VirtualSupportChat";
 import HumanAgentChatLink from "@/components/HumanAgentChatLink";
+import Breadcrumb from "@/components/Breadcrumb";
+import Navbar from "@/components/Navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -70,50 +72,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased overflow-x-hidden`}
       >
-        <header className="sticky top-0 z-50 border-b border-[#5e17eb]/40 bg-zinc-950/98 text-zinc-50 shadow-sm">
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-            <Link href="/" className="flex items-center">
-              <Image
-                src="/Tradingbot.png"
-                alt="SIGNAL trading bots"
-                width={90}
-                height={25}
-                className="h-auto w-auto"
-                priority
-              />
-            </Link>
-            <nav className="flex items-center gap-6 text-sm">
-              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/products">
-                Products
-              </Link>
-              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/demo">
-                Demo
-              </Link>
-              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/specs">
-                Specs
-              </Link>
-              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/faq">
-                FAQ
-              </Link>
-              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/resources">
-                Resources
-              </Link>
-              <Link className="text-white/90 transition hover:text-[#d3c5ff]" href="/contact">
-                Contact
-              </Link>
-              <Link
-                className="rounded-md bg-[#5e17eb] px-4 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#4512c2]"
-                href="/login"
-              >
-                Sign in
-              </Link>
-            </nav>
-          </div>
-        </header>
+        <Navbar />
 
-        <main className="mx-auto min-h-[70vh] max-w-6xl px-6 py-12">{children}</main>
+        <main className="mx-auto min-h-[70vh] max-w-6xl px-6 pb-12 pt-0 ">
+          <Breadcrumb />
+          {children}
+        </main>
 
         <SchemaOrg />
         <Analytics />

@@ -56,7 +56,8 @@ main a:not([class*="bg-"]):hover {
   color: var(--brand-dark);
 }
 
-h1, h2 {
+h1,
+h2 {
   font-family: var(--font-heading), sans-serif;
   letter-spacing: 0.02em;
 }
@@ -83,6 +84,7 @@ h3 {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -119,12 +121,10 @@ h3 {
 
 .brand-callout {
   border: 1px solid rgba(37, 99, 235, 0.2);
-  background: linear-gradient(
-    135deg,
-    rgba(37, 99, 235, 0.12),
-    rgba(37, 99, 235, 0.06) 45%,
-    rgba(255, 255, 255, 0)
-  );
+  background: linear-gradient(135deg,
+      rgba(37, 99, 235, 0.12),
+      rgba(37, 99, 235, 0.06) 45%,
+      rgba(255, 255, 255, 0));
   box-shadow: 0 12px 28px rgba(37, 99, 235, 0.18);
 }
 
@@ -146,6 +146,7 @@ h3 {
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(-50%);
   }
@@ -155,6 +156,7 @@ h3 {
   0% {
     transform: translateX(-50%);
   }
+
   100% {
     transform: translateX(0);
   }
@@ -162,14 +164,14 @@ h3 {
 
 /* Override h1 font-size for hero typewriter text */
 .hero-typewriter-text {
-  font-size: clamp(2.268rem, 8.505vw, 10.206rem) !important;
+  font-size: clamp(2.75rem, 9vw, 8rem) !important;
   line-height: 1.1 !important;
-  overflow: hidden !important;
+  overflow: visible !important;
   display: block !important;
 }
 
-.hero-typewriter-text > div {
+.hero-typewriter-text>div {
   display: block !important;
-  max-height: clamp(5rem, 19vw, 22.5rem) !important;
-  overflow: hidden !important;
+  max-height: none !important;
+  overflow: visible !important;
 }

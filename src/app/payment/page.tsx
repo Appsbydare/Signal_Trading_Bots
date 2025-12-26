@@ -1,7 +1,15 @@
 "use client";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
+import { StripeCardForm } from "@/components/StripeCardForm";
+
+// Initialize Stripe (only if key is available)
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+  : null;
 
 function PaymentForm() {
   const searchParams = useSearchParams();
@@ -22,6 +30,72 @@ function PaymentForm() {
   const [selectedCrypto, setSelectedCrypto] = useState<string | null>(null);
 
   const [creatingOrder, setCreatingOrder] = useState(false);
+  
+  // Stripe-specific state
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [stripeOrderId, setStripeOrderId] = useState<string | null>(null);
+  const [showStripeForm, setShowStripeForm] = useState(false);
+  const [loadingStripe, setLoadingStripe] = useState(false);
+
+  // Reset Stripe state when switching away from card payment
+  useEffect(() => {
+    if (selectedPayment !== "card") {
+      setClientSecret(null);
+      setStripeOrderId(null);
+      setShowStripeForm(false);
+      setLoadingStripe(false);
+    }
+  }, [selectedPayment]);
+
+  // Auto-create PaymentIntent when card payment is selected
+  useEffect(() => {
+    if (selectedPayment === "card" && !clientSecret && formData.email && formData.fullName && formData.country) {
+      createStripePaymentIntent();
+    }
+  }, [selectedPayment, formData.email, formData.fullName, formData.country]);
+
+  const createStripePaymentIntent = async () => {
+    if (loadingStripe || clientSecret) return;
+    
+    setLoadingStripe(true);
+    try {
+      const response = await fetch("/api/stripe/create-payment-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan,
+          email: formData.email,
+          fullName: formData.fullName,
+          country: formData.country,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle specific error cases
+        if (response.status === 503) {
+          alert("Payment system is currently unavailable. Please try cryptocurrency payment or contact support.");
+        } else {
+          alert(data.error || "Failed to initialize payment. Please try again.");
+        }
+        return;
+      }
+
+      if (data.clientSecret && data.orderId) {
+        setClientSecret(data.clientSecret);
+        setStripeOrderId(data.orderId);
+        setShowStripeForm(true);
+      } else {
+        alert("Failed to initialize payment. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error creating PaymentIntent:", error);
+      alert("Error initializing payment. Please try cryptocurrency payment or contact support.");
+    } finally {
+      setLoadingStripe(false);
+    }
+  };
 
   // Helper function to get crypto icon
   const getCryptoIcon = (coin: string) => {
@@ -56,36 +130,46 @@ function PaymentForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!agreedToTerms || !selectedPayment || selectedPayment !== "crypto" || !selectedCrypto) return;
+    
+    // For card payments, do nothing - Stripe form handles submission
+    if (selectedPayment === "card") {
+      console.log("Card payment - Stripe form will handle submission");
+      return;
+    }
+    
+    // This only handles crypto payments
+    if (selectedPayment === "crypto") {
+      if (!agreedToTerms || !selectedCrypto) return;
 
-    setCreatingOrder(true);
+      setCreatingOrder(true);
 
-    try {
-      // Create order
-      const response = await fetch("/api/orders/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          plan,
-          email: formData.email,
-          fullName: formData.fullName,
-          country: formData.country,
-          coinNetwork: selectedCrypto,
-        }),
-      });
+      try {
+        // Create crypto order
+        const response = await fetch("/api/orders/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            plan,
+            email: formData.email,
+            fullName: formData.fullName,
+            country: formData.country,
+            coinNetwork: selectedCrypto,
+          }),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (data.orderId) {
-        // Redirect to crypto payment page
-        window.location.href = `/payment-crypto?orderId=${data.orderId}&coin=${data.coin}&network=${data.network}`;
-      } else {
-        alert("Failed to create order. Please try again.");
+        if (data.orderId) {
+          // Redirect to crypto payment page
+          window.location.href = `/payment-crypto?orderId=${data.orderId}&coin=${data.coin}&network=${data.network}`;
+        } else {
+          alert("Failed to create order. Please try again.");
+          setCreatingOrder(false);
+        }
+      } catch (error) {
+        alert("Error creating order. Please try again.");
         setCreatingOrder(false);
       }
-    } catch (error) {
-      alert("Error creating order. Please try again.");
-      setCreatingOrder(false);
     }
   };
 
@@ -103,7 +187,7 @@ function PaymentForm() {
         </h1>
         <p className="reveal mb-8 text-sm text-zinc-400">Telegram Trading Bot - {planName} Plan</p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-6">
           {/* Customer Information */}
           <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
             <h2 className="mb-4 text-lg font-semibold text-white">Customer Information</h2>
@@ -198,10 +282,10 @@ function PaymentForm() {
                     </div>
                     <div>
                       <p className="font-semibold text-white">Credit / Debit Card</p>
-                      <p className="text-sm text-zinc-400">Visa, Mastercard, etc.</p>
+                      <p className="text-sm text-zinc-400">Visa, Mastercard, Amex, etc.</p>
                     </div>
                   </div>
-                  <span className="rounded-md bg-orange-500/20 px-3 py-1 text-xs font-medium text-orange-400">Coming Soon</span>
+                  <span className="rounded-md bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">Available</span>
                 </div>
               </button>
 
@@ -316,33 +400,132 @@ function PaymentForm() {
             </p>
           </section>
 
-          {/* Terms & Conditions */}
-          <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
-            <h2 className="mb-4 text-lg font-semibold text-white">Terms & Conditions</h2>
-            <div className="max-h-48 space-y-2 overflow-y-auto pr-2 text-sm text-zinc-400">
-              <ul className="list-disc space-y-1 pl-5">
-                <li>All purchases are final and non-refundable once the license key has been delivered.</li>
-                <li>Your license key will be sent to the provided email address within 24 hours of payment confirmation.</li>
-                <li>Each license is valid for one trading account activation only.</li>
-                <li>Cryptocurrency payments may take up to 1 hour for blockchain confirmation.</li>
-                <li>You agree to use the software in accordance with our Terms of Service.</li>
-              </ul>
-            </div>
-            <div className="mt-4 flex items-start gap-2">
-              <input
-                type="checkbox"
-                id="terms"
-                required
-                checked={agreedToTerms}
-                onChange={(e) => setAgreedToTerms(e.target.checked)}
-                className="mt-1 h-4 w-4 rounded border-zinc-700 bg-zinc-800 text-blue-500 focus:ring-blue-500"
-              />
-              <label htmlFor="terms" className="text-sm text-zinc-300">
-                I agree to the terms and conditions, and understand that cryptocurrency payments are non-refundable{" "}
-                <span className="text-red-400">*</span>
-              </label>
-            </div>
-          </section>
+          {/* Terms & Conditions - Show when card payment is selected */}
+          {selectedPayment === "card" && (
+            <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
+              <h2 className="mb-4 text-lg font-semibold text-white">Terms & Conditions</h2>
+              <div className="max-h-48 space-y-2 overflow-y-auto pr-2 text-sm text-zinc-400">
+                <ul className="list-disc space-y-1 pl-5">
+                  <li>All purchases are final and non-refundable once the license key has been delivered.</li>
+                  <li>Your license key will be sent to the provided email address within 24 hours of payment confirmation.</li>
+                  <li>Each license is valid for one trading account activation only.</li>
+                  <li>Cryptocurrency payments may take up to 1 hour for blockchain confirmation.</li>
+                  <li>You agree to use the software in accordance with our Terms of Service.</li>
+                </ul>
+              </div>
+              <div className="mt-4 flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  required
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-zinc-700 bg-zinc-800 text-blue-500 focus:ring-blue-500"
+                />
+                <label htmlFor="terms" className="text-sm text-zinc-300">
+                  I agree to the terms and conditions, and understand that cryptocurrency payments are non-refundable{" "}
+                  <span className="text-red-400">*</span>
+                </label>
+              </div>
+            </section>
+          )}
+
+          {/* Stripe Payment Form - Show when card payment is selected */}
+          {selectedPayment === "card" && (
+            <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
+              <h2 className="mb-4 text-lg font-semibold text-white">Card Payment</h2>
+              
+              {loadingStripe && !clientSecret && (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <svg
+                      className="mx-auto h-10 w-10 animate-spin text-blue-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    <p className="mt-3 text-sm text-zinc-400">Initializing secure payment...</p>
+                  </div>
+                </div>
+              )}
+
+              {showStripeForm && clientSecret && stripeOrderId && (
+                <Elements
+                  stripe={stripePromise}
+                  options={{
+                    clientSecret,
+                    appearance: {
+                      theme: "night",
+                      variables: {
+                        colorPrimary: "#3b82f6",
+                        colorBackground: "#18181b",
+                        colorText: "#ffffff",
+                        colorDanger: "#ef4444",
+                        fontFamily: "system-ui, sans-serif",
+                        borderRadius: "8px",
+                      },
+                    },
+                  }}
+                >
+                  <StripeCardForm
+                    orderId={stripeOrderId}
+                    amount={price}
+                    plan={planName}
+                    agreedToTerms={agreedToTerms}
+                    onSuccess={() => {
+                      console.log("Payment successful");
+                    }}
+                    onError={(error) => {
+                      console.error("Payment error:", error);
+                    }}
+                  />
+                </Elements>
+              )}
+            </section>
+          )}
+
+          {/* Terms & Conditions - Show when crypto payment is selected */}
+          {selectedPayment === "crypto" && (
+            <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
+              <h2 className="mb-4 text-lg font-semibold text-white">Terms & Conditions</h2>
+              <div className="max-h-48 space-y-2 overflow-y-auto pr-2 text-sm text-zinc-400">
+                <ul className="list-disc space-y-1 pl-5">
+                  <li>All purchases are final and non-refundable once the license key has been delivered.</li>
+                  <li>Your license key will be sent to the provided email address within 24 hours of payment confirmation.</li>
+                  <li>Each license is valid for one trading account activation only.</li>
+                  <li>Cryptocurrency payments may take up to 1 hour for blockchain confirmation.</li>
+                  <li>You agree to use the software in accordance with our Terms of Service.</li>
+                </ul>
+              </div>
+              <div className="mt-4 flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  required
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-zinc-700 bg-zinc-800 text-blue-500 focus:ring-blue-500"
+                />
+                <label htmlFor="terms" className="text-sm text-zinc-300">
+                  I agree to the terms and conditions, and understand that cryptocurrency payments are non-refundable{" "}
+                  <span className="text-red-400">*</span>
+                </label>
+              </div>
+            </section>
+          )}
 
           {/* Payment Summary */}
           <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
@@ -364,23 +547,43 @@ function PaymentForm() {
             </div>
           </section>
 
-          {/* Action Buttons */}
-          <div className="flex gap-4">
-            <Link
-              href="/products"
-              className="flex-1 rounded-md border border-zinc-700 bg-zinc-800 px-6 py-3 text-center font-medium text-white hover:bg-zinc-700"
-            >
-              Cancel
-            </Link>
-            <button
-              type="submit"
-              disabled={!agreedToTerms || !selectedPayment || selectedPayment !== "crypto" || !selectedCrypto || creatingOrder}
-              className="flex-1 rounded-md bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {creatingOrder ? "Creating Order..." : "Proceed to Payment"}
-            </button>
-          </div>
-        </form>
+          {/* Action Buttons - Only show for crypto payments */}
+          {selectedPayment === "crypto" && (
+            <form onSubmit={handleSubmit}>
+              <div className="flex gap-4">
+                <Link
+                  href="/products"
+                  className="flex-1 rounded-md border border-zinc-700 bg-zinc-800 px-6 py-3 text-center font-medium text-white hover:bg-zinc-700"
+                >
+                  Cancel
+                </Link>
+                <button
+                  type="submit"
+                  disabled={
+                    !agreedToTerms || 
+                    !selectedCrypto ||
+                    creatingOrder
+                  }
+                  className="flex-1 rounded-md bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {creatingOrder ? "Creating Order..." : "Proceed to Payment"}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Cancel button for card payments */}
+          {selectedPayment === "card" && (
+            <div className="flex justify-center">
+              <Link
+                href="/products"
+                className="rounded-md border border-zinc-700 bg-zinc-800 px-8 py-3 text-center font-medium text-white hover:bg-zinc-700"
+              >
+                ← Back to Products
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

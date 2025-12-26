@@ -1,33 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
-import { orders } from "../../create/route";
+import { orders, stripeOrders } from "@/lib/orders-db";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ orderId: string }> }
 ) {
   try {
+    // Await params in Next.js 15
     const { orderId } = await params;
-    const order = orders.get(orderId);
 
-    if (!order) {
-      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    if (!orderId) {
+      return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
     }
 
-    const now = new Date();
-    const expiresAt = new Date(order.expiresAt);
-    const isExpired = now > expiresAt;
+    // Check both crypto and card orders
+    let order = orders.get(orderId); // Check crypto orders first
 
+    if (!order) {
+      order = stripeOrders.get(orderId); // Check card orders
+    }
+
+    if (!order) {
+      return NextResponse.json(
+        { error: "Order not found", orderId },
+        { status: 404 }
+      );
+    }
+
+    // Return order details
+    // We modify the response to match what the frontend expects (flattened object)
+    // and ensure all fields from the order (like embeddedPrice for crypto) are included
     return NextResponse.json({
       ...order,
-      status: isExpired && order.status === "waiting_for_payment" ? "expired" : order.status,
-      paymentDetected: order.status === "paid" || order.status === "confirming",
-      confirmations: order.confirmations || 0,
-      isExpired,
+      paymentMethod: order.paymentIntentId ? "card" : "crypto",
     });
-  } catch (error) {
-    console.error("Status check error:", error);
-    return NextResponse.json({ error: "Failed to check status" }, { status: 500 });
+  } catch (error: any) {
+    console.error("Error fetching order status:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to fetch order status" },
+      { status: 500 }
+    );
   }
 }
-
-

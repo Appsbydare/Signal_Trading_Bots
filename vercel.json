@@ -1,8 +1,0 @@
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd signal_trading_bots && npm run build",
-  "devCommand": "cd signal_trading_bots && npm run dev",
-  "installCommand": "cd signal_trading_bots && npm install",
-  "outputDirectory": "signal_trading_bots/.next"
-}
-

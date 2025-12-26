@@ -1,73 +1,199 @@
-# 🤖 Signal Trading Bots
+# 🤖 Signal Trading Bot - Web Platform
 
-A Next.js-based trading bot platform with license management and payment integration.
+A comprehensive Next.js web platform for managing and distributing automated trading bot licenses with integrated payment processing, admin dashboard, and customer support.
 
-## 🚀 Getting Started
+## 🚀 Features
 
-First, run the development server:
+- **License Management System** - Generate, validate, and manage trading bot licenses
+- **Payment Integration** - Stripe and cryptocurrency payment support
+- **Admin Dashboard** - Comprehensive admin panel for managing users, licenses, and content
+- **Customer Portal** - User-friendly portal for license activation and management
+- **Support System** - Integrated ticketing system and live chat support
+- **Content Management** - Dynamic FAQ, news, and promotional content management
+- **SEO Optimized** - Built-in SEO features with sitemap generation
+- **Responsive Design** - Modern, mobile-friendly UI with Tailwind CSS
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 📋 Prerequisites
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Node.js 20.x or higher
+- npm, yarn, pnpm, or bun
+- PostgreSQL database (via Supabase)
+- Stripe account for payment processing
+- MT5 trading platform (for bot integration)
+
+## 🛠️ Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd signal_trading_bots
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   yarn install
+   # or
+   pnpm install
+   ```
+
+3. **Set up environment variables**
+   
+   Create a `.env.local` file in the root directory with the following variables:
+   ```env
+   # Supabase
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+   # Stripe
+   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+   STRIPE_SECRET_KEY=your_stripe_secret_key
+   STRIPE_WEBHOOK_SECRET=your_webhook_secret
+
+   # JWT
+   JWT_SECRET=your_jwt_secret
+
+   # Admin
+   ADMIN_USERNAME=admin
+   ADMIN_PASSWORD_HASH=your_bcrypt_hash
+   ```
+
+4. **Set up the database**
+   
+   Run the SQL migrations in order:
+   ```bash
+   # Execute files in database/ folder in your PostgreSQL database
+   # 1. license-schema.sql
+   # 2. database/001_add_license_security_columns.sql
+   # 3. database/002_create_validation_log_table.sql
+   ```
+
+5. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+   Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ## 📁 Project Structure
 
 ```
-STB-19.12/
-├── src/                    # Source code (components, pages, utilities)
-├── public/                 # Static assets (images, SVGs, sitemaps)
-├── docs/                   # 📚 All project documentation
-│   ├── specs/             # Technical specifications
-│   ├── planning/          # Project planning & requirements
-│   └── notes/             # Development notes & references
-├── database/              # Database schemas and migrations
-├── assets/                # Project assets (images, icons)
-├── migrations/            # Database migration files
-├── data/                  # Data files
-├── fonts/                 # Custom fonts
-└── signal_trading_bots/   # Legacy/additional bot code
+signal_trading_bots/
+├── src/
+│   ├── app/                    # Next.js App Router pages
+│   │   ├── admin/             # Admin dashboard pages
+│   │   ├── api/               # API routes
+│   │   ├── portal/            # Customer portal
+│   │   └── ...                # Public pages (home, products, etc.)
+│   ├── components/            # Reusable React components
+│   ├── lib/                   # Utility functions and configurations
+│   └── data/                  # Static data and content
+├── public/                    # Static assets served by Next.js
+│   ├── images/               # Public images
+│   ├── fonts/                # Custom fonts
+│   └── docs/                 # Public documentation
+├── docs/                      # Project documentation
+│   ├── planning/             # Planning documents and requirements
+│   ├── specs/                # Technical specifications
+│   ├── images/               # Documentation screenshots
+│   └── notes/                # Development notes
+├── database/                  # Database schemas and migrations
+│   ├── migrations/           # SQL migration files
+│   └── *.sql                 # Schema files
+├── assets/                    # Source assets (logos, icons, etc.)
+├── broker_logos/             # Trading broker logos
+├── data/                      # Application data (JSON files)
+└── sample_csv/               # Sample data files
+
 ```
+
+## 🔑 Key Technologies
+
+- **Framework:** Next.js 16 (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS 4
+- **Database:** PostgreSQL (Supabase)
+- **Authentication:** JWT with bcrypt
+- **Payments:** Stripe API
+- **Animation:** Framer Motion
+- **PDF Generation:** jsPDF
+- **QR Codes:** qrcode.react
 
 ## 📚 Documentation
 
-All project documentation is now organized in the `/docs` directory:
+- **[Quick Start Guide](docs/QUICK_START.md)** - Get started quickly
+- **[API Endpoints](docs/specs/API_ENDPOINTS.md)** - API documentation
+- **[Payment System Plan](docs/planning/PAYMENT_SYSTEM_PLAN.txt)** - Payment integration details
+- **[SEO Plan](docs/planning/seo_plan.md)** - SEO strategy and implementation
+- **[Product Specifications](docs/Mini%20Bot%20V13.1_spec_sheet.pdf)** - Trading bot specifications
 
-- **Technical Specs**: `/docs/specs/` - API endpoints, backend implementation, license specs
-- **Planning**: `/docs/planning/` - Project plans, requirements, improvements
-- **Notes**: `/docs/notes/` - Development notes, chat logs, error tracking
+## 🚢 Deployment
 
-See [docs/README.md](./docs/README.md) for detailed documentation navigation.
+### Build for Production
 
-## 🛠️ Tech Stack
+```bash
+npm run build
+npm run start
+```
 
-- **Framework**: Next.js 14+ with App Router
-- **Language**: TypeScript
-- **Styling**: CSS (custom)
-- **Database**: SQL-based (see `/database` for schemas)
+### Deploy to Vercel
 
-## 📖 Learn More
+The easiest way to deploy is using the [Vercel Platform](https://vercel.com):
 
-To learn more about Next.js:
+1. Push your code to GitHub
+2. Import your repository to Vercel
+3. Configure environment variables
+4. Deploy!
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial
+See [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-## 🚢 Deploy on Vercel
+## 🔐 Security Features
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme).
+- License key encryption and validation
+- Secure password hashing with bcrypt
+- JWT-based authentication
+- Rate limiting on API endpoints
+- Validation logging for security auditing
+- Environment variable protection
 
-Check out the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🎨 Admin Features
 
-## 📝 Recent Changes
+- User and license management
+- Content management (FAQs, news, help videos)
+- Support ticket system
+- Analytics and reporting
+- Promotional image management
+- Agent management
 
-- **Codebase Reorganization** (Dec 2025): All documentation moved to `/docs`, assets to `/assets`, database files to `/database`
-- Removed duplicate files
-- Improved project structure for better maintainability
+## 🛡️ License
+
+This project is proprietary software. All rights reserved.
+
+## 📞 Support
+
+For support inquiries, please use:
+- **Live Chat:** Available on the website
+- **Support Tickets:** Through the admin portal
+- **Email:** Contact through the website contact form
+
+## 🔄 Development
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+
+### Code Quality
+
+- ESLint configured for Next.js
+- TypeScript for type safety
+- Organized folder structure
+- Component-based architecture
+
+---
+
+**Built with ❤️ using Next.js and modern web technologies**

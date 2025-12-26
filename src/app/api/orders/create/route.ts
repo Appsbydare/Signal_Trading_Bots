@@ -3,7 +3,10 @@ import { getNextWallet, getEmbeddedPrice } from "@/lib/wallets";
 
 // In production, use a database. For now, we'll use in-memory storage
 // You should replace this with a real database or Google Sheets integration
-const orders = new Map();
+import { orders } from "@/lib/orders-db";
+
+// In production, use a database. For now, we'll use in-memory storage available in lib/orders-db
+// You should replace this with a real database or Google Sheets integration
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +17,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const displayPrice = plan === "pro" ? 49 : 29;
+    const displayPrice = plan === "lifetime" ? 999 : plan === "pro" ? 49 : 29;
     const selectedCoinNetwork = coinNetwork || "USDT-TRC20"; // Default to USDT-TRC20 if not provided
     const { wallet, orderCount } = getNextWallet(selectedCoinNetwork);
     const embeddedPrice = getEmbeddedPrice(displayPrice, orderCount);
@@ -57,5 +60,5 @@ export async function POST(request: NextRequest) {
 }
 
 // Export orders map for verification endpoints (in production, use shared DB)
-export { orders };
+// Export orders map removed (using shared db)
 

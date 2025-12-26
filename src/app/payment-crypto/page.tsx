@@ -20,6 +20,70 @@ function CryptoPayment() {
   const [cryptoPrice, setCryptoPrice] = useState<number | null>(null);
   const [cryptoAmount, setCryptoAmount] = useState<number | null>(null);
   const [showManualPaymentModal, setShowManualPaymentModal] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
+
+  // Handle Back Button / Exit Intent
+  useEffect(() => {
+    // Only intercept if payment is pending
+    if (!mounted || status === "paid" || status === "failed" || status === "expired") return;
+
+    // Push a dummy state to history so "Back" triggers popstate instead of leaving
+    window.history.pushState({ page: "payment_active" }, "", window.location.href);
+
+    const handlePopState = (event: PopStateEvent) => {
+      // Prevent immediate exit
+      event.preventDefault();
+      // Show confirmation modal
+      setShowExitModal(true);
+      // Re-push state to keep the trap active until they explicitly choose to leave
+      window.history.pushState({ page: "payment_active" }, "", window.location.href);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [mounted, status]);
+
+  // Handle Internal Navigation (Link Clicks)
+  useEffect(() => {
+    if (!mounted || status === "paid" || status === "failed" || status === "expired") return;
+
+    const handleAnchorClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest("a");
+
+      if (anchor) {
+        const href = anchor.getAttribute("href");
+
+        // Allow mailto, tel, or hash links
+        if (href && (href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("#"))) {
+          return;
+        }
+
+        // Prevent navigation and show modal
+        e.preventDefault();
+        e.stopPropagation();
+        setShowExitModal(true);
+      }
+    };
+
+
+    document.addEventListener("click", handleAnchorClick, true);
+
+    return () => {
+      document.removeEventListener("click", handleAnchorClick, true);
+    };
+  }, [mounted, status]);
+
+  const handleExitConfirm = () => {
+    router.push("/products");
+  };
+
+  const handleExitCancel = () => {
+    setShowExitModal(false);
+  };
 
   // Ensure component is mounted (client-side only)
   useEffect(() => {
@@ -46,7 +110,7 @@ function CryptoPayment() {
         if (data && !data.error) {
           setOrder(data);
           setStatus(data.status);
-          
+
           // Calculate time left from expiresAt
           if (data.expiresAt) {
             const expires = new Date(data.expiresAt).getTime();
@@ -200,7 +264,7 @@ function CryptoPayment() {
     };
 
     const schemes = walletSchemes[network] || [];
-    
+
     // Try the first (most common) scheme
     if (schemes.length > 0) {
       try {
@@ -220,7 +284,7 @@ function CryptoPayment() {
   };
 
   const handleCopyAmount = () => {
-    if (displayAmount !== null) {
+    if (displayAmount !== null && displayAmount !== undefined) {
       const decimals = coin === "BTC" ? 8 : coin === "ETH" || coin === "BNB" ? 6 : 6;
       navigator.clipboard.writeText(displayAmount.toFixed(decimals));
       alert(`Amount (${displayAmount.toFixed(decimals)} ${coin}) copied to clipboard!`);
@@ -228,7 +292,7 @@ function CryptoPayment() {
   };
 
   const handleCopyPaymentDetails = () => {
-    if (order?.walletAddress && displayAmount !== null) {
+    if (order?.walletAddress && displayAmount !== null && displayAmount !== undefined) {
       const decimals = coin === "BTC" ? 8 : coin === "ETH" || coin === "BNB" ? 6 : 6;
       const details = `Address: ${order.walletAddress}\nAmount: ${displayAmount.toFixed(decimals)} ${coin}`;
       navigator.clipboard.writeText(details);
@@ -246,15 +310,15 @@ function CryptoPayment() {
 
   // Use crypto amount if available, otherwise fallback to embedded price (for stablecoins)
   const displayAmount = cryptoAmount !== null ? cryptoAmount : order.embeddedPrice;
-  
+
   // QR code format: Just address (for Binance compatibility)
   // Binance app doesn't support URI schemes with amount parameter
   // Users will enter the amount manually in their wallet
   const qrValue = order.walletAddress || "";
-  
+
   // Alternative QR with amount (for wallets that support it)
-  const qrValueWithAmount = order.walletAddress && displayAmount 
-    ? `${order.walletAddress}?amount=${displayAmount}` 
+  const qrValueWithAmount = order.walletAddress && displayAmount
+    ? `${order.walletAddress}?amount=${displayAmount}`
     : "";
 
   return (
@@ -266,13 +330,12 @@ function CryptoPayment() {
               <h1 className="text-xl font-semibold text-white">Order #{order.orderId}</h1>
               <div className="mt-1 flex items-center gap-2">
                 <p className="text-sm text-zinc-400">{order.plan} Plan</p>
-                <span className={`rounded border px-2 py-0.5 text-xs font-medium ${
-                  network === "TRC20" ? "bg-orange-500/20 text-orange-400 border-orange-500/30" :
+                <span className={`rounded border px-2 py-0.5 text-xs font-medium ${network === "TRC20" ? "bg-orange-500/20 text-orange-400 border-orange-500/30" :
                   network === "ERC20" ? "bg-blue-500/20 text-blue-400 border-blue-500/30" :
-                  network === "BSC" ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" :
-                  network === "BTC" ? "bg-orange-500/20 text-orange-400 border-orange-500/30" :
-                  "bg-zinc-500/20 text-zinc-400 border-zinc-500/30"
-                }`}>
+                    network === "BSC" ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" :
+                      network === "BTC" ? "bg-orange-500/20 text-orange-400 border-orange-500/30" :
+                        "bg-zinc-500/20 text-zinc-400 border-zinc-500/30"
+                  }`}>
                   {network}
                 </span>
               </div>
@@ -297,7 +360,7 @@ function CryptoPayment() {
             </div>
             <p className="mb-2 text-sm text-zinc-400">Total to pay</p>
             <p className="text-3xl font-bold text-white">
-              {displayAmount !== null 
+              {displayAmount !== null && displayAmount !== undefined
                 ? displayAmount.toFixed(coin === "BTC" ? 8 : coin === "ETH" || coin === "BNB" ? 6 : 6)
                 : "0.000000"} {coin}
             </p>
@@ -327,7 +390,7 @@ function CryptoPayment() {
               <p className="mt-2 text-center text-xs text-zinc-500">
                 Enter amount manually:{" "}
                 <span className="font-semibold text-white">
-                  {displayAmount !== null 
+                  {displayAmount !== null && displayAmount !== undefined
                     ? displayAmount.toFixed(coin === "BTC" ? 8 : coin === "ETH" || coin === "BNB" ? 6 : 6)
                     : "0.000000"} {coin}
                 </span>
@@ -396,7 +459,7 @@ function CryptoPayment() {
                 onClick={() => {
                   // Try to open wallet with detection
                   tryOpenWallet(order.network, order.walletAddress, displayAmount);
-                  
+
                   // Show manual payment modal after a delay
                   // User can close it if wallet opened successfully
                   setTimeout(() => {
@@ -405,11 +468,11 @@ function CryptoPayment() {
                 }}
                 className="rounded-md bg-black px-6 py-3 font-medium text-white hover:bg-zinc-800"
               >
-                {order.network === "TRC20" ? "Pay with TronLink" : 
-                 order.network === "ERC20" || order.network === "ETH" ? "Pay with MetaMask" :
-                 order.network === "BSC" ? "Pay with Trust Wallet" :
-                 order.network === "BTC" ? "Pay with Bitcoin Wallet" :
-                 "Pay from wallet"}
+                {order.network === "TRC20" ? "Pay with TronLink" :
+                  order.network === "ERC20" || order.network === "ETH" ? "Pay with MetaMask" :
+                    order.network === "BSC" ? "Pay with Trust Wallet" :
+                      order.network === "BTC" ? "Pay with Bitcoin Wallet" :
+                        "Pay from wallet"}
               </button>
               <button
                 onClick={() => setShowManualPaymentModal(true)}
@@ -434,7 +497,7 @@ function CryptoPayment() {
                 </button>
 
                 <h2 className="mb-4 text-xl font-semibold text-white">Manual Payment Instructions</h2>
-                
+
                 <div className="mb-4 space-y-3">
                   <div>
                     <label className="mb-1 block text-sm text-zinc-400">Wallet Address:</label>
@@ -466,9 +529,9 @@ function CryptoPayment() {
 
                   <div className="flex flex-col items-center gap-2">
                     <div className="rounded-lg border border-zinc-700 bg-white p-4">
-                      <QRCodeCanvas 
-                        value={order.walletAddress} 
-                        size={200} 
+                      <QRCodeCanvas
+                        value={order.walletAddress}
+                        size={200}
                       />
                     </div>
                     <p className="text-xs text-zinc-400">
@@ -504,6 +567,33 @@ function CryptoPayment() {
                     className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
                   >
                     Got It
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* EXIT INTENT MODAL */}
+          {showExitModal && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="w-full max-w-sm rounded-lg border border-zinc-800 bg-zinc-900 p-6 shadow-xl">
+                <h3 className="mb-2 text-lg font-semibold text-white">Cancel Payment?</h3>
+                <p className="mb-6 text-sm text-zinc-400">
+                  Your order for <span className="text-zinc-200">{order.plan} Plan</span> is currently pending. Are you sure you want to cancel this payment?
+                </p>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleExitConfirm}
+                    className="flex-1 rounded-md border border-zinc-700 bg-transparent py-2.5 text-sm font-medium text-zinc-400 transition hover:border-zinc-600 hover:bg-zinc-800 hover:text-white"
+                  >
+                    Leave Page
+                  </button>
+                  <button
+                    onClick={handleExitCancel}
+                    className="flex-1 rounded-md bg-[#5e17eb] py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+                  >
+                    Continue Payment
                   </button>
                 </div>
               </div>

@@ -118,11 +118,10 @@ export default function Navbar() {
 
                         <Link href="/demo" className="block rounded-md px-2 py-1.5 text-sm font-medium text-zinc-300 hover:bg-zinc-900 hover:text-white">Demo</Link>
                         <Link href="/contact" className="block rounded-md px-2 py-1.5 text-sm font-medium text-zinc-300 hover:bg-zinc-900 hover:text-white">Contact</Link>
-                        <Link href="/login" className="mt-2 block w-full rounded-md bg-[#5e17eb] px-4 py-2 text-center text-sm font-medium text-white shadow-sm">Sign in</Link>
+                        <Link href="/login" className="mt-2 block w-full rounded-md bg-[#5e17eb] px-4 py-2 text-center text-sm font-medium text-white shadow-sm hover:bg-[#4a12bf]">Sign in</Link>
                     </nav>
                 </div>
             )}
         </header>
     );
 }
-

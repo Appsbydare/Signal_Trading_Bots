@@ -221,7 +221,7 @@ export default function VirtualSupportChat() {
                 type="button"
                 onClick={() => void handleSend()}
                 disabled={loading || initialising || !input.trim()}
-                className="rounded-md bg-[#5e17eb] px-3 py-1 text-xs font-semibold text-white transition disabled:opacity-50"
+                className="rounded-md bg-[#5e17eb] px-3 py-1 text-xs font-semibold text-white transition disabled:opacity-50 hover:bg-[#4512c2]"
               >
                 Send
               </button>
