@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripeOrder } from "@/lib/orders-supabase";
 import { sendStripeLicenseEmail } from "@/lib/email-stripe";
+import { createMagicLinkToken } from "@/lib/auth-tokens";
 
 export async function POST(
   request: NextRequest,
@@ -30,6 +31,17 @@ export async function POST(
       );
     }
 
+    // Generate Magic Link
+    let magicLinkUrl = "https://www.signaltradingbots.com/login"; // Fallback
+    try {
+      const host = request.headers.get("host") || "www.signaltradingbots.com";
+      const protocol = host.includes("localhost") ? "http" : "https";
+      const token = await createMagicLinkToken(order.email);
+      magicLinkUrl = `${protocol}://${host}/api/auth/magic-login?token=${token}`;
+    } catch (err) {
+      console.error("Failed to generate magic link:", err);
+    }
+
     // Send email
     try {
       await sendStripeLicenseEmail({
@@ -39,6 +51,7 @@ export async function POST(
         plan: order.plan,
         orderId: order.order_id,
         amount: order.display_price,
+        magicLinkUrl,
       });
 
       return NextResponse.json({
