@@ -300,7 +300,7 @@ export default function Home() {
   const homePricingPlans = [
     {
       name: "Starter",
-      badge: "For testing on demo",
+      badge: "Basic plan",
       price: "$0.99/month",
       yearlyNote: "Save 10% with yearly billing",
       features: [

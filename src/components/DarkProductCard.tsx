@@ -11,6 +11,11 @@ interface DarkProductCardProps {
   paymentLink: string;
   viewDetailsHref?: string;
   onViewDetailsClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+  isCurrentPlan?: boolean;
+  expiresAt?: string;
+  daysRemaining?: number;
+  showPromoOffer?: boolean;
+  isLifetime?: boolean;
 }
 
 export function DarkProductCard({
@@ -23,6 +28,11 @@ export function DarkProductCard({
   paymentLink,
   viewDetailsHref = "#",
   onViewDetailsClick,
+  isCurrentPlan = false,
+  expiresAt,
+  daysRemaining,
+  showPromoOffer = false,
+  isLifetime = false,
 }: DarkProductCardProps) {
   return (
     <div className="relative group h-full">
@@ -72,6 +82,14 @@ export function DarkProductCard({
           {price}
         </p>
 
+        {/* Promo Offer Banner for Starter */}
+        {showPromoOffer && (
+          <div className="mb-4 rounded-lg border border-blue-400/40 bg-gradient-to-r from-blue-500/25 to-purple-500/25 p-3 text-center shadow-lg shadow-blue-500/20">
+            <p className="text-xs font-bold uppercase tracking-wide text-blue-300">🎉 Special Offer</p>
+            <p className="mt-1 text-sm font-semibold text-white">Get Pro features for the 1st month!</p>
+          </div>
+        )}
+
         {/* Features list */}
         <ul className="mb-6 flex-grow space-y-2">
           {features.map((feature, idx) => (
@@ -87,6 +105,23 @@ export function DarkProductCard({
           ))}
         </ul>
 
+        {/* Current Plan Badge or Expiration Info */}
+        {isCurrentPlan && (
+          <div className="mb-3 rounded-lg border border-blue-500/30 bg-blue-500/10 p-3 text-center">
+            <p className="text-sm font-semibold text-blue-300">✓ Current Plan</p>
+            {daysRemaining !== undefined && expiresAt && (
+              <p className="mt-1 text-xs text-blue-200">
+                {isLifetime 
+                  ? 'Lifetime Access'
+                  : daysRemaining > 0 
+                    ? `Active for ${daysRemaining} more days`
+                    : 'Expired - Renew to continue'
+                }
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Buttons */}
         <div className="mt-auto space-y-2 pt-4">
           <Link
@@ -99,12 +134,22 @@ export function DarkProductCard({
           >
             View details
           </Link>
-          <Link
-            href={paymentLink}
-            className="inline-flex w-full items-center justify-center rounded-md bg-[#5e17eb] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4512c2]"
-          >
-            Start Automation →
-          </Link>
+          {isCurrentPlan && daysRemaining !== undefined && daysRemaining > 0 ? (
+            <button
+              disabled
+              className="inline-flex w-full items-center justify-center rounded-md bg-zinc-700 px-4 py-2 text-sm font-medium text-zinc-400 cursor-not-allowed"
+              title={`Your current plan is active for ${daysRemaining} more days`}
+            >
+              Active Until {expiresAt ? new Date(expiresAt).toLocaleDateString() : ''}
+            </button>
+          ) : (
+            <Link
+              href={paymentLink}
+              className="inline-flex w-full items-center justify-center rounded-md bg-[#5e17eb] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4512c2]"
+            >
+              {isCurrentPlan ? 'Renew Now →' : 'Start Automation →'}
+            </Link>
+          )}
         </div>
 
         {/* Footer text */}

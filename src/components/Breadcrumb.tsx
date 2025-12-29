@@ -13,11 +13,11 @@ export default function Breadcrumb() {
 
     return (
         <nav aria-label="Breadcrumb" className="mb-6 mt-4">
-            <ol className="flex items-center space-x-2 text-sm text-zinc-500">
+            <ol className="flex items-center space-x-2 text-sm text-zinc-400">
                 <li>
                     <Link
                         href="/"
-                        className="flex items-center transition-colors hover:text-zinc-900 dark:hover:text-zinc-50"
+                        className="flex items-center text-[#5e17eb] transition-colors hover:text-[#4a12bf]"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -69,14 +69,14 @@ export default function Breadcrumb() {
                                 {isLast ? (
                                     <span
                                         aria-current="page"
-                                        className="font-medium text-zinc-900 dark:text-zinc-50"
+                                        className="font-medium text-white"
                                     >
                                         {label}
                                     </span>
                                 ) : (
                                     <Link
                                         href={href}
-                                        className="transition-colors hover:text-zinc-900 dark:hover:text-zinc-50"
+                                        className="text-zinc-400 transition-colors hover:text-white"
                                     >
                                         {label}
                                     </Link>

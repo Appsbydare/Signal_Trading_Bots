@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, Variants } from "framer-motion";
@@ -61,7 +61,7 @@ const features = [
 const pricingPlans = [
   {
     name: "Starter",
-    badge: "For testing on demo",
+    badge: "Basic plan",
     features: [
       "Ideal for demo and small live accounts",
       "Core Telegram → MT5 automation",
@@ -149,6 +149,51 @@ const products = [
 
 export function ProductsPageClient() {
   const [activeProduct, setActiveProduct] = useState<ProductId>("telegram-mt5");
+  const [customerLicenses, setCustomerLicenses] = useState<Array<{plan: string, expires_at: string}>>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loadingLicenses, setLoadingLicenses] = useState(true);
+
+  // Fetch customer licenses if logged in
+  useEffect(() => {
+    fetch("/api/auth/customer/me")
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.customer) {
+          setIsLoggedIn(true);
+          // Fetch licenses
+          fetch("/api/customer/licenses")
+            .then(res => res.ok ? res.json() : null)
+            .then(licensesData => {
+              if (licensesData?.licenses) {
+                setCustomerLicenses(licensesData.licenses);
+              }
+              setLoadingLicenses(false);
+            })
+            .catch(() => setLoadingLicenses(false));
+        } else {
+          setLoadingLicenses(false);
+        }
+      })
+      .catch(() => setLoadingLicenses(false));
+  }, []);
+
+  // Auto-scroll to plans section if hash is present
+  useEffect(() => {
+    if (window.location.hash === '#plans') {
+      setTimeout(() => {
+        const element = document.getElementById('plans');
+        if (element) {
+          const headerOffset = 20; // Reduced offset for better positioning
+          const elementPosition = element.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.scrollY - headerOffset;
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth",
+          });
+        }
+      }, 300);
+    }
+  }, []);
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
@@ -226,7 +271,7 @@ export function ProductsPageClient() {
                     setActiveProduct(product.id);
                   }
                 }}
-                className={`flex h-full flex-col rounded-xl border bg-white/90 p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5e17eb] ${isActive ? "border-[#5e17eb]" : "border-zinc-200"
+                className={`flex h-full flex-col rounded-xl border bg-zinc-800/80 backdrop-blur-sm p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5e17eb] ${isActive ? "border-[#5e17eb]" : "border-zinc-700"
                   }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -235,17 +280,17 @@ export function ProductsPageClient() {
                   <span
                     className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-wide ${product.statusTone === "primary"
                       ? "bg-[#5e17eb] text-white"
-                      : "bg-zinc-100 text-zinc-700"
+                      : "bg-zinc-700 text-zinc-300"
                       }`}
                   >
                     {product.status}
                   </span>
                 </div>
-                <h3 className="mb-2 text-sm font-semibold text-zinc-900">
+                <h3 className="mb-2 text-sm font-semibold text-white">
                   {product.name}
                 </h3>
-                <p className="mb-3 text-xs text-zinc-600">{product.description}</p>
-                <ul className="mb-4 space-y-1 text-xs text-zinc-700">
+                <p className="mb-3 text-xs text-zinc-300">{product.description}</p>
+                <ul className="mb-4 space-y-1 text-xs text-zinc-400">
                   {product.bullets.map((item) => (
                     <li key={item}>• {item}</li>
                   ))}
@@ -271,7 +316,7 @@ export function ProductsPageClient() {
       {activeProduct === "telegram-mt5" && (
         <section id="telegram-details">
           {/* Simple plans section */}
-          <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16">
+          <section id="plans" className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16">
             <div className="mx-auto max-w-6xl px-6">
               <div className="mb-8 text-center">
                 <h2 className="mb-3 text-2xl font-semibold text-[var(--text-main)] md:text-3xl">
@@ -289,37 +334,61 @@ export function ProductsPageClient() {
                 whileInView="visible"
                 viewport={{ once: true, margin: "-100px" }}
               >
-                {pricingPlans.map((plan) => (
-                  <motion.div key={plan.name} variants={cardVariants} className="h-full">
-                    <DarkProductCard
-                      name={plan.name}
-                      badge={plan.badge}
-                      price={
-                        plan.name === "Starter"
-                          ? "$0.99/month"
-                          : plan.name === "Pro"
-                            ? "$49/month"
-                            : "$999 one-time"
-                      }
-                      yearlyNote={
-                        plan.name === "Lifetime"
-                          ? "All future versions and features included"
-                          : "Save 10% with yearly billing"
-                      }
-                      features={plan.features}
-                      featured={plan.featured}
-                      paymentLink={
-                        plan.name === "Starter"
-                          ? "/payment?plan=starter"
-                          : plan.name === "Pro"
-                            ? "/payment?plan=pro"
-                            : "/payment?plan=lifetime"
-                      }
-                      viewDetailsHref="#choose-bot"
-                      onViewDetailsClick={(e) => scrollToSection(e, "choose-bot")}
-                    />
-                  </motion.div>
-                ))}
+                {pricingPlans.map((plan) => {
+                  const planKey = plan.name.toLowerCase();
+                  const license = customerLicenses.find((l: any) => l.plan.toLowerCase() === planKey);
+                  const isCurrentPlan = !!license;
+                  const expiresAt = license?.expires_at;
+                  const daysRemaining = expiresAt
+                    ? Math.max(
+                        0,
+                        Math.ceil(
+                          (new Date(expiresAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+                        )
+                      )
+                    : undefined;
+
+                  // Show promo offer for Starter plan only if user has no licenses at all
+                  const showPromoOffer = plan.name === "Starter" && customerLicenses.length === 0;
+                  const isLifetime = plan.name === "Lifetime";
+
+                  return (
+                    <motion.div key={plan.name} variants={cardVariants} className="h-full">
+                      <DarkProductCard
+                        name={plan.name}
+                        badge={plan.badge}
+                        price={
+                          plan.name === "Starter"
+                            ? "$0.99/month"
+                            : plan.name === "Pro"
+                              ? "$49/month"
+                              : "$999 one-time"
+                        }
+                        yearlyNote={
+                          plan.name === "Lifetime"
+                            ? "All future versions and features included"
+                            : "Save 10% with yearly billing"
+                        }
+                        features={plan.features}
+                        featured={plan.featured}
+                        paymentLink={
+                          plan.name === "Starter"
+                            ? "/payment?plan=starter"
+                            : plan.name === "Pro"
+                              ? "/payment?plan=pro"
+                              : "/payment?plan=lifetime"
+                        }
+                        viewDetailsHref="#choose-bot"
+                        onViewDetailsClick={(e) => scrollToSection(e, "choose-bot")}
+                        isCurrentPlan={isCurrentPlan}
+                        expiresAt={expiresAt}
+                        daysRemaining={daysRemaining}
+                        showPromoOffer={showPromoOffer}
+                        isLifetime={isLifetime}
+                      />
+                    </motion.div>
+                  );
+                })}
               </motion.div>
               <div className="mt-6 text-center text-sm text-[var(--text-muted)]">
                 Have questions before you buy?{" "}

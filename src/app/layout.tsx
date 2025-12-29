@@ -38,6 +38,9 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
+  other: {
+    "color-scheme": "dark",
+  },
   openGraph: {
     title: "Telegram to MT5 Trading Bot | Automate Forex Signals",
     description:
@@ -70,13 +73,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark" style={{ colorScheme: 'dark' }}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased overflow-x-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased overflow-x-hidden bg-zinc-950 text-white`}
       >
         <Navbar />
 
-        <main className="mx-auto min-h-[70vh] max-w-6xl px-6 pb-12 pt-0 ">
+        <main className="mx-auto min-h-[70vh] max-w-6xl px-6 pb-12 pt-0">
           <Breadcrumb />
           {children}
         </main>

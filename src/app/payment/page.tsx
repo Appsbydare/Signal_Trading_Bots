@@ -31,8 +31,31 @@ function PaymentForm() {
   const [selectedCrypto, setSelectedCrypto] = useState<string | null>(null);
   const [emailVerified, setEmailVerified] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loadingUser, setLoadingUser] = useState(true);
 
   const [creatingOrder, setCreatingOrder] = useState(false);
+  
+  // Check if user is logged in and pre-fill their data
+  useEffect(() => {
+    fetch("/api/auth/customer/me")
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.customer) {
+          setIsLoggedIn(true);
+          setFormData(prev => ({
+            ...prev,
+            email: data.customer.email,
+            fullName: prev.fullName || "", // Keep empty unless we have it stored
+          }));
+          setEmailVerified(true); // Skip email verification for logged-in users
+        }
+        setLoadingUser(false);
+      })
+      .catch(() => {
+        setLoadingUser(false);
+      });
+  }, []);
   
   // Stripe-specific state
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -190,10 +213,37 @@ function PaymentForm() {
         </h1>
         <p className="reveal mb-8 text-sm text-zinc-400">Telegram Trading Bot - {planName} Plan</p>
 
-        <div className="space-y-6">
-          {/* Customer Information */}
-          <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
-            <h2 className="mb-4 text-lg font-semibold text-white">Customer Information</h2>
+        {loadingUser ? (
+          <div className="text-center py-12">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#5e17eb] border-r-transparent"></div>
+            <p className="mt-4 text-sm text-zinc-400">Loading...</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Show logged-in user info */}
+            {isLoggedIn && (
+              <section className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-6">
+                <div className="flex items-start gap-3">
+                  <svg className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <h3 className="font-semibold text-blue-300 text-sm">Purchasing as Logged-In User</h3>
+                    <p className="mt-1 text-xs text-blue-200/80">
+                      Email: <span className="font-semibold">{formData.email}</span>
+                    </p>
+                    <p className="mt-1 text-xs text-blue-200/80">
+                      Your new license will be added to your account automatically.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Customer Information - Only show if NOT logged in */}
+            {!isLoggedIn && (
+              <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
+                <h2 className="mb-4 text-lg font-semibold text-white">Customer Information</h2>
             <div className="space-y-4">
               <div>
                 <label className="mb-1 block text-sm text-zinc-300">
@@ -277,6 +327,7 @@ function PaymentForm() {
               </div>
             </div>
           </section>
+            )}
 
           {/* Important Warning */}
           <section className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-6">
@@ -638,7 +689,8 @@ function PaymentForm() {
               </Link>
             </div>
           )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

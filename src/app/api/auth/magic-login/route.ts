@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 3. Create Session Token (Standard Login Token)
-    const sessionToken = await createAuthToken(customer.id, customer.email, "customer");
+    const sessionToken = await createAuthToken(customer.id, customer.email, "customer", customer.password_set_by_user ?? false);
 
     // 4. Set Cookie and Redirect
     const response = NextResponse.redirect(new URL("/portal", request.url));

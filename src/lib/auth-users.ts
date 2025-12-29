@@ -8,6 +8,7 @@ export interface CustomerRow {
   id: number;
   email: string;
   password_hash: string;
+  password_set_by_user: boolean;
   name: string | null;
   created_at: string;
   updated_at: string;
@@ -114,13 +115,24 @@ export async function getAdminByEmail(email: string): Promise<AdminRow | null> {
 
 
 
+export async function verifyCustomerPassword(email: string, password: string): Promise<boolean> {
+  const customer = await getCustomerByEmail(email);
+  if (!customer) {
+    return false;
+  }
+  return verifyPassword(password, customer.password_hash);
+}
+
 export async function updateCustomerPassword(email: string, newPassword: string): Promise<void> {
   const client = getSupabaseClient();
   const password_hash = await hashPassword(newPassword);
 
   const { error } = await client
     .from("customers")
-    .update({ password_hash })
+    .update({ 
+      password_hash,
+      password_set_by_user: true 
+    })
     .eq("email", email.toLowerCase());
 
   if (error) {

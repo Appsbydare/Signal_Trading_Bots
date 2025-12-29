@@ -7,6 +7,7 @@ import { ADMIN_COOKIE_NAME, CUSTOMER_COOKIE_NAME, verifyAuthToken } from "./auth
 export interface CurrentCustomer {
   id: number;
   email: string;
+  password_set_by_user: boolean;
 }
 
 export interface CurrentAdmin {
@@ -31,6 +32,7 @@ export async function getCurrentCustomer(): Promise<CurrentCustomer | null> {
   return {
     id: Number(payload.sub),
     email: payload.email,
+    password_set_by_user: payload.password_set_by_user ?? false,
   };
 }
 

@@ -49,103 +49,99 @@ export async function sendStripeLicenseEmail(params: {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Your Trading Bot License</title>
 </head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Payment Successful!</h1>
-  </div>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 0; background-color: #f9fafb;">
+  <div style="background: #ffffff; margin: 40px 20px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <div style="background: #1f2937; padding: 40px 30px; text-align: center;">
+      <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.5px;">Payment Successful</h1>
+    </div>
   
-  <div style="background-color: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-    <p style="font-size: 16px; margin-bottom: 20px;">
-      Hi ${params.fullName},
-    </p>
-    
-    <p style="font-size: 16px; margin-bottom: 20px;">
-      Thank you for your purchase! Your payment has been processed successfully and your trading bot license is ready to use.
-    </p>
-    
-    <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
-      <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">Your License Key:</p>
-      <p style="font-size: 24px; font-weight: bold; color: #667eea; font-family: 'Courier New', monospace; margin: 0; letter-spacing: 2px;">
-        ${params.licenseKey}
+    <div style="padding: 40px 30px;">
+      <p style="font-size: 16px; margin-bottom: 8px; color: #374151;">
+        Hi ${params.fullName},
       </p>
-    </div>
+      
+      <p style="font-size: 16px; margin-bottom: 28px; color: #374151;">
+        Thank you for your purchase! Your payment has been processed successfully and your trading bot license is ready to use.
+      </p>
+      
+      <div style="background-color: #f9fafb; padding: 20px; border-radius: 6px; margin: 24px 0; border-left: 3px solid #1f2937;">
+        <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">License Key</p>
+        <p style="font-size: 20px; font-weight: 700; color: #1f2937; font-family: 'Courier New', monospace; margin: 0; letter-spacing: 2px; word-break: break-all;">
+          ${params.licenseKey}
+        </p>
+      </div>
 
-    <!-- Magic Link Button -->
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="${params.magicLinkUrl}" style="background-color: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold; box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);">
-        Access Customer Portal
-      </a>
-      <p style="font-size: 12px; color: #666; margin-top: 10px;">
-        (Link expires in 1 hour)
+      <!-- Magic Link Button -->
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${params.magicLinkUrl}" style="background-color: #1f2937; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 15px;">
+          Access Customer Portal
+        </a>
+        <p style="font-size: 12px; color: #6b7280; margin-top: 12px;">
+          Link expires in 1 hour
+        </p>
+      </div>
+      
+      <div style="background-color: #f9fafb; padding: 20px; border-radius: 6px; margin: 24px 0;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">Order ID</td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; font-family: 'Courier New', monospace; font-size: 13px; color: #1f2937;">${params.orderId}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">Plan</td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; color: #1f2937; font-weight: 600;">${planName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">Amount Paid</td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; color: #1f2937; font-weight: 600;">$${params.amount} USD</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; color: #6b7280; font-size: 14px;">License Status</td>
+            <td style="padding: 10px 0; text-align: right; color: #1f2937; font-weight: 600;">${expiryDate}</td>
+          </tr>
+        </table>
+      </div>
+      
+      <h2 style="color: #1f2937; font-size: 18px; margin-top: 32px; margin-bottom: 16px; font-weight: 600;">Getting Started</h2>
+      <ol style="padding-left: 20px; color: #374151;">
+        <li style="margin-bottom: 10px; font-size: 14px;">Download the Trading Bot application from our website</li>
+        <li style="margin-bottom: 10px; font-size: 14px;">Launch the application on your Windows PC or VPS</li>
+        <li style="margin-bottom: 10px; font-size: 14px;">Enter your license key when prompted</li>
+        <li style="margin-bottom: 10px; font-size: 14px;">Configure your MT5 and Telegram settings</li>
+        <li style="margin-bottom: 10px; font-size: 14px;">Start automating your trades</li>
+      </ol>
+      
+      <div style="background-color: #fef3c7; border-left: 3px solid #f59e0b; padding: 16px; margin: 24px 0; border-radius: 4px;">
+        <p style="margin: 0; color: #92400e; font-size: 14px;">
+          <strong>Important:</strong> Keep your license key safe and secure. You can use it on one device at a time. 
+          If you need to transfer your license to a different device, please contact support.
+        </p>
+      </div>
+    
+      <div style="background-color: #dbeafe; border-left: 3px solid #3b82f6; padding: 16px; margin: 24px 0; border-radius: 4px;">
+        <p style="margin: 0; color: #1e40af; font-size: 14px;">
+          <strong>Pro Tip:</strong> Start with a demo account to test your signal configurations before going live. 
+          This helps you understand SL/TP settings and avoid costly mistakes.
+        </p>
+      </div>
+      
+      <h2 style="color: #1f2937; font-size: 18px; margin-top: 32px; margin-bottom: 16px; font-weight: 600;">Need Help?</h2>
+      <p style="margin-bottom: 12px; color: #374151; font-size: 14px;">Our support team is here to assist you:</p>
+      <ul style="padding-left: 20px; color: #374151;">
+        <li style="margin-bottom: 8px; font-size: 14px;">Visit our <a href="https://www.signaltradingbots.com/faq" style="color: #1f2937; text-decoration: none; font-weight: 600;">FAQ page</a></li>
+        <li style="margin-bottom: 8px; font-size: 14px;">Check our <a href="https://www.signaltradingbots.com/resources" style="color: #1f2937; text-decoration: none; font-weight: 600;">documentation</a></li>
+        <li style="margin-bottom: 8px; font-size: 14px;">Watch our <a href="https://www.signaltradingbots.com/resources" style="color: #1f2937; text-decoration: none; font-weight: 600;">video tutorials</a></li>
+        <li style="margin-bottom: 8px; font-size: 14px;">Contact us at <a href="mailto:${FROM_EMAIL}" style="color: #1f2937; text-decoration: none; font-weight: 600;">${FROM_EMAIL}</a></li>
+      </ul>
+    </div>
+    
+    <div style="background: #f9fafb; padding: 24px 30px; border-top: 1px solid #e5e7eb;">
+      <p style="font-size: 12px; color: #6b7280; text-align: center; margin: 0;">
+        SignalTradingBots | <a href="https://www.signaltradingbots.com" style="color: #1f2937; text-decoration: none;">www.signaltradingbots.com</a>
+        <br>
+        © ${new Date().getFullYear()} All rights reserved.
       </p>
     </div>
-    
-    <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
-      <table style="width: 100%; border-collapse: collapse;">
-        <tr>
-          <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Order ID:</strong></td>
-          <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right; font-family: 'Courier New', monospace; font-size: 12px;">${params.orderId}</td>
-        </tr>
-        <tr>
-          <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Plan:</strong></td>
-          <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right;">${planName}</td>
-        </tr>
-        <tr>
-          <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Amount Paid:</strong></td>
-          <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right;">$${params.amount} USD</td>
-        </tr>
-        <tr>
-          <td style="padding: 10px 0;"><strong>License Status:</strong></td>
-          <td style="padding: 10px 0; text-align: right;">${expiryDate}</td>
-        </tr>
-      </table>
-    </div>
-    
-    <h2 style="color: #667eea; font-size: 20px; margin-top: 30px;">🚀 Getting Started</h2>
-    <ol style="padding-left: 20px;">
-      <li style="margin-bottom: 10px;">Download the Trading Bot application from our website</li>
-      <li style="margin-bottom: 10px;">Launch the application on your Windows PC or VPS</li>
-      <li style="margin-bottom: 10px;">Enter your license key when prompted: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">${params.licenseKey}</code></li>
-      <li style="margin-bottom: 10px;">Configure your MT5 and Telegram settings</li>
-      <li style="margin-bottom: 10px;">Start automating your trades!</li>
-    </ol>
-    
-    <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
-      <p style="margin: 0; color: #856404;">
-        <strong>⚠️ Important:</strong> Keep your license key safe and secure. You can use it on one device at a time. 
-        If you need to transfer your license to a different device, please contact support.
-      </p>
-    </div>
-    
-    <div style="background-color: #e8f4f8; border-left: 4px solid #0ea5e9; padding: 15px; margin: 20px 0; border-radius: 4px;">
-      <p style="margin: 0; color: #0c4a6e;">
-        <strong>💡 Pro Tip:</strong> Start with a demo account to test your signal configurations before going live. 
-        This helps you understand SL/TP settings and avoid costly mistakes.
-      </p>
-    </div>
-    
-    <h2 style="color: #667eea; font-size: 20px; margin-top: 30px;">📚 Need Help?</h2>
-    <p style="margin-bottom: 10px;">Our support team is here to assist you:</p>
-    <ul style="padding-left: 20px;">
-      <li style="margin-bottom: 8px;">Visit our <a href="https://www.signaltradingbots.com/faq" style="color: #667eea; text-decoration: none;">FAQ page</a></li>
-      <li style="margin-bottom: 8px;">Check our <a href="https://www.signaltradingbots.com/resources" style="color: #667eea; text-decoration: none;">documentation</a></li>
-      <li style="margin-bottom: 8px;">Watch our <a href="https://www.signaltradingbots.com/resources" style="color: #667eea; text-decoration: none;">video tutorials</a></li>
-      <li style="margin-bottom: 8px;">Contact us at <a href="mailto:${FROM_EMAIL}" style="color: #667eea; text-decoration: none;">${FROM_EMAIL}</a></li>
-    </ul>
-    
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="https://www.signaltradingbots.com/portal" style="background-color: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
-        Access Customer Portal
-      </a>
-    </div>
-    
-    <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
-    
-    <p style="font-size: 12px; color: #666; text-align: center; margin: 0;">
-      Signal Trading Bots | <a href="https://www.signaltradingbots.com" style="color: #667eea; text-decoration: none;">www.signaltradingbots.com</a>
-      <br>
-      © ${new Date().getFullYear()} All rights reserved.
-    </p>
   </div>
 </body>
 </html>
@@ -166,7 +162,7 @@ export async function sendStripeLicenseEmail(params: {
     body: JSON.stringify({
       from: FROM_EMAIL,
       to: params.to,
-      subject: `🎉 Your ${planName} License Key - Signal Trading Bots`,
+      subject: `Your ${planName} License Key - Signal Trading Bots`,
       html: html,
     }),
   });

@@ -26,7 +26,7 @@ export async function sendVerificationCodeEmail(params: {
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">🔐 Verify Your Email</h1>
+    <h1 style="color: white; margin: 0; font-size: 24px;">Verify Your Email</h1>
   </div>
   
   <div style="background-color: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
@@ -116,7 +116,7 @@ export async function sendMagicLinkEmail(params: {
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">🔐 Login to Your Portal</h1>
+    <h1 style="color: white; margin: 0; font-size: 24px;">Login to Your Portal</h1>
   </div>
   
   <div style="background-color: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
@@ -245,7 +245,7 @@ export async function sendNewDeviceEmail(params: {
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">🔐 New Device Activation</h1>
+    <h1 style="color: white; margin: 0; font-size: 24px;">New Device Activation</h1>
   </div>
   
   <div style="background-color: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
@@ -305,7 +305,7 @@ export async function sendNewDeviceEmail(params: {
     body: JSON.stringify({
       from: FROM_EMAIL,
       to: params.to,
-      subject: "🔐 New Device Activation Alert - Trading Bot",
+      subject: "New Device Activation Alert - Trading Bot",
       html: html,
     }),
   });
@@ -341,7 +341,7 @@ export async function sendDuplicateDetectedEmail(params: {
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">⚠️ License Duplicate Usage Detected</h1>
+    <h1 style="color: white; margin: 0; font-size: 24px;">License Duplicate Usage Detected</h1>
   </div>
   
   <div style="background-color: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
@@ -406,7 +406,7 @@ export async function sendDuplicateDetectedEmail(params: {
     body: JSON.stringify({
       from: FROM_EMAIL,
       to: params.to,
-      subject: "⚠️ URGENT: License Duplicate Usage Detected",
+      subject: "URGENT: License Duplicate Usage Detected",
       html: html,
     }),
   });

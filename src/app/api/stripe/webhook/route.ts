@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
             // Check if it's a duplicate constraint error
             if (err.code === '23505') {
               console.log("Customer already exists (race condition), fetching existing customer...");
-              customer = await getCustomerByEmail(order.email);
+            customer = await getCustomerByEmail(order.email);
             }
             
             if (!customer) {

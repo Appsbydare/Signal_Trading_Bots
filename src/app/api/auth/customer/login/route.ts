@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const token = await createAuthToken(customer.id, customer.email, "customer");
+  const token = await createAuthToken(customer.id, customer.email, "customer", customer.password_set_by_user ?? false);
 
   const response = NextResponse.json(
     {

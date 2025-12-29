@@ -6,6 +6,7 @@ export interface AuthJwtPayload extends JWTPayload {
   sub: string;
   role: AuthRole;
   email: string;
+  password_set_by_user?: boolean;
 }
 
 const AUTH_JWT_SECRET = process.env.AUTH_JWT_SECRET;
@@ -26,6 +27,7 @@ export async function createAuthToken(
   userId: number,
   email: string,
   role: AuthRole,
+  passwordSetByUser: boolean = false,
 ): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
 
@@ -33,6 +35,7 @@ export async function createAuthToken(
     sub: String(userId),
     role,
     email,
+    password_set_by_user: passwordSetByUser,
   })
     .setProtectedHeader({ alg: "HS256", typ: "JWT" })
     .setIssuedAt(now)
