@@ -301,7 +301,7 @@ export default function Home() {
     {
       name: "Starter",
       badge: "For testing on demo",
-      price: "$2.9/month",
+      price: "$0.99/month",
       yearlyNote: "Save 10% with yearly billing",
       features: [
         "Ideal for demo and small live accounts",
