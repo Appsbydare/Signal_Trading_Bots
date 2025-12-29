@@ -16,7 +16,7 @@ function PaymentForm() {
   const plan = searchParams.get("plan") || "starter";
   const isPro = plan === "pro";
   const isLifetime = plan === "lifetime";
-  const price = isLifetime ? 999 : isPro ? 49 : 29;
+  const price = isLifetime ? 999 : isPro ? 49 : 2.9;
   const planName = isLifetime ? "Lifetime" : isPro ? "Pro" : "Starter";
 
   const [formData, setFormData] = useState({

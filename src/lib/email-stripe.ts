@@ -31,7 +31,7 @@ export async function sendStripeLicenseEmail(params: {
   }
 
   const planNames: Record<string, string> = {
-    starter: "Starter Plan ($29/month)",
+    starter: "Starter Plan ($2.9/month)",
     pro: "Pro Plan ($49/month)",
     lifetime: "Lifetime License ($999)",
   };

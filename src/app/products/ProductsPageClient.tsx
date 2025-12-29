@@ -296,7 +296,7 @@ export function ProductsPageClient() {
                       badge={plan.badge}
                       price={
                         plan.name === "Starter"
-                          ? "$29/month"
+                          ? "$2.9/month"
                           : plan.name === "Pro"
                             ? "$49/month"
                             : "$999 one-time"

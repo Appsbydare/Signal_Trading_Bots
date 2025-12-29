@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const displayPrice = plan === "lifetime" ? 999 : plan === "pro" ? 49 : 29;
+    const displayPrice = plan === "lifetime" ? 999 : plan === "pro" ? 49 : 2.9;
     const selectedCoinNetwork = coinNetwork || "USDT-TRC20"; // Default to USDT-TRC20 if not provided
     const { wallet, orderCount } = await getNextWalletFromDB(selectedCoinNetwork);
     const embeddedPrice = getEmbeddedPrice(displayPrice, orderCount);
