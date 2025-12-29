@@ -1,7 +1,6 @@
 import "server-only";
 
-const FROM_EMAIL =
-  process.env.SUPPORT_FROM_EMAIL || "support@signaltradingbots.com";
+const FROM_EMAIL = process.env.SUPPORT_FROM_EMAIL;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 export async function sendTicketEmail(params: {
@@ -12,6 +11,13 @@ export async function sendTicketEmail(params: {
   if (!RESEND_API_KEY) {
     console.warn(
       "RESEND_API_KEY is not configured. Ticket email will not be sent.",
+    );
+    return;
+  }
+
+  if (!FROM_EMAIL) {
+    console.warn(
+      "SUPPORT_FROM_EMAIL is not configured. Ticket email will not be sent.",
     );
     return;
   }
@@ -43,6 +49,11 @@ export async function sendNewDeviceEmail(params: {
 }): Promise<void> {
   if (!RESEND_API_KEY) {
     console.warn("RESEND_API_KEY is not configured. New device email will not be sent.");
+    return;
+  }
+
+  if (!FROM_EMAIL) {
+    console.warn("SUPPORT_FROM_EMAIL is not configured. New device email will not be sent.");
     return;
   }
 
@@ -146,6 +157,11 @@ export async function sendDuplicateDetectedEmail(params: {
     return;
   }
 
+  if (!FROM_EMAIL) {
+    console.warn("SUPPORT_FROM_EMAIL is not configured. Duplicate detection email will not be sent.");
+    return;
+  }
+
   const html = `
 <!DOCTYPE html>
 <html>
@@ -240,6 +256,13 @@ export async function sendLicenseEmail(params: {
   if (!RESEND_API_KEY) {
     console.warn(
       "RESEND_API_KEY is not configured. License email will not be sent.",
+    );
+    return;
+  }
+
+  if (!FROM_EMAIL) {
+    console.warn(
+      "SUPPORT_FROM_EMAIL is not configured. License email will not be sent.",
     );
     return;
   }

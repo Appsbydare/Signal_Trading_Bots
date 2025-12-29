@@ -10,6 +10,8 @@ function PaymentSuccessContent() {
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   useEffect(() => {
     if (!orderId) {
@@ -37,6 +39,29 @@ function PaymentSuccessContent() {
 
     fetchOrderDetails();
   }, [orderId]);
+
+  const handleResendEmail = async () => {
+    if (!orderId) return;
+    
+    setSendingEmail(true);
+    try {
+      const response = await fetch(`/api/orders/${orderId}/send-email`, {
+        method: "POST",
+      });
+      
+      if (response.ok) {
+        setEmailSent(true);
+        setTimeout(() => setEmailSent(false), 5000);
+      } else {
+        const data = await response.json();
+        alert(`Failed to send email: ${data.error || "Unknown error"}`);
+      }
+    } catch (err) {
+      alert("Error sending email. Please try again.");
+    } finally {
+      setSendingEmail(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -132,8 +157,8 @@ function PaymentSuccessContent() {
           <h1 className="mb-2 text-3xl font-bold text-white">
             Payment Successful! 🎉
           </h1>
-          <p className="text-zinc-400">
-            Your order has been confirmed and your license key has been sent to your email.
+          <p className="text-zinc-300">
+            Your order has been confirmed and <span className="font-semibold text-green-400">your license key has been sent to your email.</span>
           </p>
         </div>
 
@@ -252,14 +277,30 @@ function PaymentSuccessContent() {
                   d="M12 9v2m0 4h.01M4.93 19h14.14a2 2 0 001.79-2.9L13.79 4.9a2 2 0 00-3.58 0L3.14 16.1A2 2 0 004.93 19z"
                 />
               </svg>
-              <div>
+              <div className="flex-1">
                 <h3 className="font-semibold text-amber-300">Important</h3>
                 <ul className="mt-2 space-y-1 text-sm text-amber-100/90">
-                  <li>• Check your email for the license key and receipt</li>
+                  <li>• Check your email (and spam folder) for the license key and receipt</li>
                   <li>• Keep your license key secure and don't share it</li>
                   <li>• Start with a demo account to test your configuration</li>
                   <li>• Contact support if you need any assistance</li>
                 </ul>
+                
+                {/* Resend Email Button */}
+                <div className="mt-4">
+                  <button
+                    onClick={handleResendEmail}
+                    disabled={sendingEmail}
+                    className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {sendingEmail ? "Sending..." : emailSent ? "✓ Email Sent!" : "📧 Resend License Email"}
+                  </button>
+                  {emailSent && (
+                    <p className="mt-2 text-xs text-green-300">
+                      Email sent successfully! Check your inbox.
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </section>

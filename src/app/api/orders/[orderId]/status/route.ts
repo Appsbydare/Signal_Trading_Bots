@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { orders, stripeOrders } from "@/lib/orders-db";
+import { getCryptoOrder, getStripeOrder } from "@/lib/orders-supabase";
 
 export async function GET(
   request: NextRequest,
@@ -14,10 +14,46 @@ export async function GET(
     }
 
     // Check both crypto and card orders
-    let order = orders.get(orderId); // Check crypto orders first
+    let order = await getCryptoOrder(orderId); // Check crypto orders first
+    let paymentMethod = "crypto";
 
     if (!order) {
-      order = stripeOrders.get(orderId); // Check card orders
+      const stripeOrder = await getStripeOrder(orderId); // Check card orders
+      if (stripeOrder) {
+        // Convert stripe order to match expected format
+        order = {
+          orderId: stripeOrder.order_id,
+          plan: stripeOrder.plan,
+          email: stripeOrder.email,
+          fullName: stripeOrder.full_name,
+          country: stripeOrder.country,
+          displayPrice: stripeOrder.display_price,
+          status: stripeOrder.status,
+          paymentIntentId: stripeOrder.payment_intent_id,
+          licenseKey: stripeOrder.license_key,
+          createdAt: stripeOrder.created_at,
+        } as any;
+        paymentMethod = "card";
+      }
+    } else {
+      // Convert crypto order to match expected format
+      order = {
+        orderId: order.order_id,
+        plan: order.plan,
+        email: order.email,
+        fullName: order.full_name,
+        country: order.country,
+        displayPrice: order.display_price,
+        embeddedPrice: order.embedded_price,
+        walletAddress: order.wallet_address,
+        coin: order.coin,
+        network: order.network,
+        status: order.status,
+        licenseKey: order.license_key,
+        txHash: order.tx_hash,
+        createdAt: order.created_at,
+        expiresAt: order.expires_at,
+      } as any;
     }
 
     if (!order) {
@@ -27,12 +63,10 @@ export async function GET(
       );
     }
 
-    // Return order details
-    // We modify the response to match what the frontend expects (flattened object)
-    // and ensure all fields from the order (like embeddedPrice for crypto) are included
+    // Return order details with payment method
     return NextResponse.json({
       ...order,
-      paymentMethod: order.paymentIntentId ? "card" : "crypto",
+      paymentMethod,
     });
   } catch (error: any) {
     console.error("Error fetching order status:", error);

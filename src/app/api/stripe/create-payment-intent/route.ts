@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createPaymentIntent, isStripeEnabled } from '@/lib/stripe-server';
-
-// In production, use a database. For now, we'll use in-memory storage
-// This should be replaced with a real database or shared with orders/create
-import { stripeOrders } from "@/lib/orders-db";
-// In production, use a database. For now, we'll use in-memory storage available in lib/orders-db
+import { createStripeOrder } from '@/lib/orders-supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,23 +42,16 @@ export async function POST(request: NextRequest) {
       country,
     });
 
-    // Store order information
-    const order = {
+    // Store order in database
+    await createStripeOrder({
       orderId,
+      paymentIntentId: paymentIntent.id,
       plan: planName,
       email,
       fullName,
       country,
       displayPrice,
-      paymentIntentId: paymentIntent.id,
-      status: 'pending_payment',
-      paymentMethod: 'card',
-      createdAt: new Date().toISOString(),
-      licenseKey: null,
-    };
-
-    stripeOrders.set(orderId, order);
-    stripeOrders.set(paymentIntent.id, order); // Also store by PaymentIntent ID for webhook lookup
+    });
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
@@ -77,7 +66,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-// Export orders map for webhook access
-// Export orders map removed (using shared db)
 

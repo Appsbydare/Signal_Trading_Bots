@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getNewsData, setNewsData } from "@/lib/admin-data";
+import { getNewsItems, updateNewsItems } from "@/lib/admin-content-db";
 
 // GET - Retrieve News data (admin)
 export async function GET(request: NextRequest) {
   try {
-    const items = await getNewsData();
-    return NextResponse.json({ items });
+    const items = await getNewsItems();
+    // Convert to format expected by frontend
+    const formattedItems = items.map(item => ({
+      id: item.id,
+      controlName: item.control_name,
+      title: item.title,
+      url: item.url,
+    }));
+    return NextResponse.json({ items: formattedItems });
   } catch (error) {
     console.error("News fetch error:", error);
     return NextResponse.json({ error: "Failed to fetch News data" }, { status: 500 });
@@ -35,17 +42,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update data
+    // Update data in database
     const updatedItems = items.map((item: any, index: number) => ({
       id: index + 1,
-      controlName: item.controlName || `News${index + 1}`,
+      control_name: item.controlName || `News${index + 1}`,
       title: item.title || "",
       url: item.url || "",
     }));
     
-    await setNewsData(updatedItems);
+    await updateNewsItems(updatedItems);
 
-    return NextResponse.json({ success: true, items: updatedItems });
+    // Return in frontend format
+    const formattedItems = updatedItems.map(item => ({
+      id: item.id,
+      controlName: item.control_name,
+      title: item.title,
+      url: item.url,
+    }));
+
+    return NextResponse.json({ success: true, items: formattedItems });
   } catch (error) {
     console.error("News update error:", error);
     return NextResponse.json({ error: "Failed to update News data" }, { status: 500 });

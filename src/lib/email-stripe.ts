@@ -1,7 +1,6 @@
 import "server-only";
 
-const FROM_EMAIL =
-  process.env.SUPPORT_FROM_EMAIL || "support@signaltradingbots.com";
+const FROM_EMAIL = process.env.SUPPORT_FROM_EMAIL;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 /**
@@ -18,6 +17,13 @@ export async function sendStripeLicenseEmail(params: {
   if (!RESEND_API_KEY) {
     console.warn(
       "RESEND_API_KEY is not configured. License email will not be sent.",
+    );
+    return;
+  }
+
+  if (!FROM_EMAIL) {
+    console.warn(
+      "SUPPORT_FROM_EMAIL is not configured. License email will not be sent.",
     );
     return;
   }
@@ -132,6 +138,12 @@ export async function sendStripeLicenseEmail(params: {
 </body>
 </html>
   `;
+
+  // Debug logging
+  console.log("🔍 Email Debug Info:");
+  console.log("FROM_EMAIL:", FROM_EMAIL);
+  console.log("SUPPORT_FROM_EMAIL env:", process.env.SUPPORT_FROM_EMAIL);
+  console.log("RESEND_API_KEY exists:", !!RESEND_API_KEY);
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",

@@ -40,15 +40,15 @@ export default async function FAQPage() {
       <div className="space-y-10">
         {Object.entries(groupedByCategory).map(([category, items]) => (
           <section key={category} className="space-y-4">
-            <h2 className="text-xl font-semibold text-zinc-900">{category}</h2>
+            <h2 className="text-xl font-semibold text-white">{category}</h2>
             <ul className="space-y-4">
               {items.map((item) => (
                 <li
                   key={item.id}
-                  className="rounded-lg border border-[#5e17eb] bg-white/90 p-4 shadow-sm transition hover:-translate-y-[2px] hover:shadow-md"
+                  className="rounded-lg border border-[#5e17eb] bg-zinc-900/90 p-5 shadow-sm transition hover:-translate-y-[2px] hover:shadow-md hover:shadow-[#5e17eb]/20"
                 >
-                  <p className="font-medium">{item.question}</p>
-                  <p className="text-sm text-zinc-600">{item.answer}</p>
+                  <p className="mb-3 text-lg font-semibold text-white">{item.question}</p>
+                  <p className="text-sm leading-relaxed text-zinc-300">{item.answer}</p>
                 </li>
               ))}
             </ul>

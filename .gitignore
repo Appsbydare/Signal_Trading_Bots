@@ -50,3 +50,5 @@ next-env.d.ts
 
 # data files (keep in git for now, but can be excluded if needed)
 # /data/*.json
+PRODUCTION_CHECKLIST.md
+STRIPE_PRICING_CONFIG.md

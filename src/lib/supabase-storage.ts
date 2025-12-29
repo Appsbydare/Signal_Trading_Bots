@@ -3,10 +3,10 @@ import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const SUPABASE_PROJECT_ID = process.env.SUPABASE_PROJECT_ID;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
 const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET || "app-data";
 const SUPABASE_BASE_URL =
-  process.env.SUPABASE_URL || (SUPABASE_PROJECT_ID ? `https://${SUPABASE_PROJECT_ID}.supabase.co` : undefined);
+  process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || (SUPABASE_PROJECT_ID ? `https://${SUPABASE_PROJECT_ID}.supabase.co` : undefined);
 
 let supabaseClient: SupabaseClient | null = null;
 

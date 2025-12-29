@@ -100,20 +100,8 @@ export const WALLET_POOLS: Record<string, Wallet[]> = {
   ],
 };
 
-// Track order count per wallet address (for price increment within each wallet)
-const walletOrderCounts: Record<string, number> = {};
-
-// Track last reset date per wallet (for daily reset)
-const walletLastResetDate: Record<string, string> = {};
-
-// Track wallet rotation per coinNetwork
-const walletRotationCounts: Record<string, number> = {};
-
-// Get today's date string (YYYY-MM-DD) for daily reset tracking
-function getTodayDateString(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-}
+// Import database functions for wallet rotation
+import { getNextWalletFromDB } from "./wallets-supabase";
 
 // Calculate embedded price based on order count for this specific wallet
 // Resets to base price when it would exceed display price
@@ -143,54 +131,15 @@ export function getEmbeddedPrice(displayPrice: number, orderCount: number): numb
 
 // Get next available wallet (sequential rotation per coin/network)
 // Returns wallet and its current order count for price calculation
+// Now uses database for persistent state
 export function getNextWallet(coinNetwork: string): { wallet: Wallet; orderCount: number } {
-  const pool = WALLET_POOLS[coinNetwork];
-  if (!pool || pool.length === 0) {
-    throw new Error(`No wallets configured for ${coinNetwork}`);
-  }
+  // This is now a wrapper that calls the database version
+  // We keep it synchronous for backward compatibility, but it will be called from async contexts
+  throw new Error("getNextWallet must be called from async context. Use getNextWalletFromDB instead.");
+}
 
-  // Initialize rotation counter for this coinNetwork if not exists
-  if (!walletRotationCounts[coinNetwork]) {
-    walletRotationCounts[coinNetwork] = 0;
-  }
-
-  // Get current rotation count and select wallet
-  const currentRotation = walletRotationCounts[coinNetwork];
-  const walletIndex = currentRotation % pool.length; // Rotate: 0-14, then back to 0
-  const selectedWallet = pool[walletIndex];
-  
-  // Increment rotation counter for next order
-  walletRotationCounts[coinNetwork] = currentRotation + 1;
-
-  // Get order count for this specific wallet address
-  const walletKey = `${coinNetwork}:${selectedWallet.address}`;
-  const today = getTodayDateString();
-  
-  // Check if we need to reset (new day)
-  if (!walletLastResetDate[walletKey] || walletLastResetDate[walletKey] !== today) {
-    // Reset order count for new day
-    walletOrderCounts[walletKey] = 0;
-    walletLastResetDate[walletKey] = today;
-  }
-
-  // Get current order count for this wallet
-  let orderCount = walletOrderCounts[walletKey];
-  
-  // Calculate max order count (same logic as in getEmbeddedPrice)
-  // We use a default displayPrice of 29 for calculation, but actual price will be calculated with real displayPrice
-  const defaultBase = 29 - 0.01989; // Updated base
-  const maxOrderCount = Math.floor((29 - defaultBase) / 0.00001); // 1989
-  
-  // Reset orderCount if it exceeds max (prevents counter from growing indefinitely)
-  // This is a safety check, but daily reset should handle this
-  if (orderCount > maxOrderCount) {
-    orderCount = 0;
-    walletOrderCounts[walletKey] = 0;
-  } else {
-    // Increment for next order
-    walletOrderCounts[walletKey] = orderCount + 1;
-  }
-
-  return { wallet: selectedWallet, orderCount };
+// Async version that uses database
+export async function getNextWalletAsync(coinNetwork: string): Promise<{ wallet: Wallet; orderCount: number }> {
+  return await getNextWalletFromDB(coinNetwork);
 }
 

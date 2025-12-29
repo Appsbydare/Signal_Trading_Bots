@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { orders } from "../../orders/create/route";
+import { getCryptoOrder, updateCryptoOrderStatus } from "@/lib/orders-supabase";
 import { generateLicenseKey } from "@/lib/license-keys";
 import { createLicense } from "@/lib/license-db";
 import { sendLicenseEmail } from "@/lib/email";
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing orderId or txHash" }, { status: 400 });
     }
 
-    const order = orders.get(orderId);
+    const order = await getCryptoOrder(orderId);
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
         const amount = parseFloat(data.amount) / 1000000; // USDT has 6 decimals
 
         if (
-          toAddress.toLowerCase() === order.walletAddress.toLowerCase() &&
-          Math.abs(amount - order.embeddedPrice) < 0.000001 // Allow tiny tolerance
+          toAddress.toLowerCase() === order.wallet_address.toLowerCase() &&
+          Math.abs(amount - order.embedded_price) < 0.000001 // Allow tiny tolerance
         ) {
           verified = true;
           txDetails = data;
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
           plan: order.plan,
           expiresAt,
           paymentId: txHash,
-          amount: order.displayPrice,
+          amount: order.display_price,
           currency: order.coin === "USDT" ? "USD" : order.coin,
         });
       } catch (dbError) {
@@ -98,11 +98,12 @@ export async function POST(request: NextRequest) {
         // Don't fail the transaction if email fails - license is already in DB
       }
 
-      // Update in-memory order
-      order.status = "paid";
-      order.licenseKey = licenseKey;
-      order.txHash = txHash;
-      order.verifiedAt = new Date().toISOString();
+      // Update order in database
+      await updateCryptoOrderStatus(orderId, "paid", {
+        licenseKey,
+        txHash,
+        verifiedAt: now,
+      });
 
       return NextResponse.json({
         success: true,

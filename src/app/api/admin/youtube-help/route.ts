@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getYouTubeHelpData, setYouTubeHelpData } from "@/lib/admin-data";
+import { getYouTubeHelpItems, updateYouTubeHelpItems } from "@/lib/admin-content-db";
 
 // GET - Retrieve YouTube help data (admin)
 export async function GET(request: NextRequest) {
   try {
-    const items = await getYouTubeHelpData();
-    return NextResponse.json({ items });
+    const items = await getYouTubeHelpItems();
+    // Convert to format expected by frontend
+    const formattedItems = items.map(item => ({
+      id: item.id,
+      controlName: item.control_name,
+      title: item.title,
+      url: item.url,
+    }));
+    return NextResponse.json({ items: formattedItems });
   } catch (error) {
     console.error("YouTube help fetch error:", error);
     return NextResponse.json({ error: "Failed to fetch YouTube help data" }, { status: 500 });
@@ -35,17 +42,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update data
+    // Update data in database
     const updatedItems = items.map((item: any, index: number) => ({
       id: index + 1,
-      controlName: item.controlName || `Help${index + 1}`,
+      control_name: item.controlName || `Help${index + 1}`,
       title: item.title || "",
       url: item.url || "",
     }));
     
-    await setYouTubeHelpData(updatedItems);
+    await updateYouTubeHelpItems(updatedItems);
 
-    return NextResponse.json({ success: true, items: updatedItems });
+    // Return in frontend format
+    const formattedItems = updatedItems.map(item => ({
+      id: item.id,
+      controlName: item.control_name,
+      title: item.title,
+      url: item.url,
+    }));
+
+    return NextResponse.json({ success: true, items: formattedItems });
   } catch (error) {
     console.error("YouTube help update error:", error);
     return NextResponse.json({ error: "Failed to update YouTube help data" }, { status: 500 });

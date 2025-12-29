@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getNextWallet, getEmbeddedPrice } from "@/lib/wallets";
-
-// In production, use a database. For now, we'll use in-memory storage
-// You should replace this with a real database or Google Sheets integration
-import { orders } from "@/lib/orders-db";
-
-// In production, use a database. For now, we'll use in-memory storage available in lib/orders-db
-// You should replace this with a real database or Google Sheets integration
+import { getEmbeddedPrice } from "@/lib/wallets";
+import { getNextWalletFromDB } from "@/lib/wallets-supabase";
+import { createCryptoOrder } from "@/lib/orders-supabase";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,13 +14,14 @@ export async function POST(request: NextRequest) {
 
     const displayPrice = plan === "lifetime" ? 999 : plan === "pro" ? 49 : 29;
     const selectedCoinNetwork = coinNetwork || "USDT-TRC20"; // Default to USDT-TRC20 if not provided
-    const { wallet, orderCount } = getNextWallet(selectedCoinNetwork);
+    const { wallet, orderCount } = await getNextWalletFromDB(selectedCoinNetwork);
     const embeddedPrice = getEmbeddedPrice(displayPrice, orderCount);
 
     const orderId = `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`;
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-    const order = {
+    // Create order in database
+    await createCryptoOrder({
       orderId,
       plan,
       email,
@@ -37,13 +33,8 @@ export async function POST(request: NextRequest) {
       coin: wallet.coin,
       network: wallet.network,
       walletIndex: wallet.index,
-      status: "waiting_for_payment",
-      createdAt: new Date().toISOString(),
-      expiresAt: expiresAt.toISOString(),
-      licenseKey: null,
-    };
-
-    orders.set(orderId, order);
+      expiresAt,
+    });
 
     return NextResponse.json({
       orderId,
@@ -58,7 +49,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
   }
 }
-
-// Export orders map for verification endpoints (in production, use shared DB)
-// Export orders map removed (using shared db)
 
