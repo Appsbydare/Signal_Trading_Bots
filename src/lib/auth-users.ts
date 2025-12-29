@@ -80,6 +80,13 @@ export async function createCustomer(params: {
     .maybeSingle<CustomerRow>();
 
   if (error) {
+    // If it's a duplicate email constraint violation, check if customer exists
+    if (error.code === '23505' && error.message.includes('customers_email_key')) {
+      const existing = await getCustomerByEmail(params.email);
+      if (existing) {
+        return existing;
+      }
+    }
     throw error;
   }
   if (!data) {
@@ -105,3 +112,18 @@ export async function getAdminByEmail(email: string): Promise<AdminRow | null> {
 }
 
 
+
+
+export async function updateCustomerPassword(email: string, newPassword: string): Promise<void> {
+  const client = getSupabaseClient();
+  const password_hash = await hashPassword(newPassword);
+
+  const { error } = await client
+    .from("customers")
+    .update({ password_hash })
+    .eq("email", email.toLowerCase());
+
+  if (error) {
+    throw error;
+  }
+}

@@ -7,12 +7,14 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
  * Send license key email for Stripe orders
  */
 export async function sendStripeLicenseEmail(params: {
+
   to: string;
   fullName: string;
   licenseKey: string;
   plan: string;
   orderId: string;
   amount: number;
+  magicLinkUrl: string;
 }): Promise<void> {
   if (!RESEND_API_KEY) {
     console.warn(
@@ -35,8 +37,8 @@ export async function sendStripeLicenseEmail(params: {
   };
 
   const planName = planNames[params.plan.toLowerCase()] || params.plan;
-  const expiryDate = params.plan.toLowerCase() === 'lifetime' 
-    ? 'Never (Lifetime Access)' 
+  const expiryDate = params.plan.toLowerCase() === 'lifetime'
+    ? 'Never (Lifetime Access)'
     : 'Renews monthly';
 
   const html = `
@@ -65,6 +67,16 @@ export async function sendStripeLicenseEmail(params: {
       <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">Your License Key:</p>
       <p style="font-size: 24px; font-weight: bold; color: #667eea; font-family: 'Courier New', monospace; margin: 0; letter-spacing: 2px;">
         ${params.licenseKey}
+      </p>
+    </div>
+
+    <!-- Magic Link Button -->
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${params.magicLinkUrl}" style="background-color: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold; box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);">
+        Access Customer Portal
+      </a>
+      <p style="font-size: 12px; color: #666; margin-top: 10px;">
+        (Link expires in 1 hour)
       </p>
     </div>
     

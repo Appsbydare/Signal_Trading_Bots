@@ -4,6 +4,8 @@ import { generateLicenseKey } from '@/lib/license-keys';
 import { sendStripeLicenseEmail } from '@/lib/email-stripe';
 import { getStripeOrderByPaymentIntent, updateStripeOrderByPaymentIntent } from '@/lib/orders-supabase';
 import { createLicense } from '@/lib/license-db';
+import { getCustomerByEmail, createCustomer } from '@/lib/auth-users';
+import { createMagicLinkToken } from '@/lib/auth-tokens';
 import Stripe from 'stripe';
 
 export async function POST(request: NextRequest) {
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
 
         // Get order from database using PaymentIntent ID
         const order = await getStripeOrderByPaymentIntent(paymentIntent.id);
-        
+
         if (!order) {
           console.error('Order not found for PaymentIntent:', paymentIntent.id);
           // Still return 200 to acknowledge receipt
@@ -82,6 +84,50 @@ export async function POST(request: NextRequest) {
         // Update order status in database
         await updateStripeOrderByPaymentIntent(paymentIntent.id, 'paid', licenseKey);
 
+        // --- NEW: Magic Link Logic ---
+        // 1. Check if customer exists or create new one
+        let customer = await getCustomerByEmail(order.email);
+        if (!customer) {
+          try {
+            // Create new customer with random password (placeholder)
+            // In a real magic-link flow, password might be optional, but our DB requires it.
+            const randomPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
+            customer = await createCustomer({
+              email: order.email,
+              password: randomPassword,
+              name: order.full_name,
+            });
+            console.log("Auto-created customer for email:", order.email);
+          } catch (err: any) {
+            console.error("Failed to auto-create customer:", err);
+            
+            // Check if it's a duplicate constraint error
+            if (err.code === '23505') {
+              console.log("Customer already exists (race condition), fetching existing customer...");
+              customer = await getCustomerByEmail(order.email);
+            }
+            
+            if (!customer) {
+              console.error("Customer still not found after creation failure. Will proceed without customer record.");
+              // The magic link will still work as it's email-based
+              // Customer record can be created later when they first log in manually
+            }
+          }
+        }
+
+        // 2. Generate Magic Link
+        let magicLinkUrl = "https://www.signaltradingbots.com/login"; // Fallback
+        try {
+          // Detect host from request if possible, or use env var
+          const host = request.headers.get("host") || "www.signaltradingbots.com";
+          const protocol = host.includes("localhost") ? "http" : "https";
+
+          const token = await createMagicLinkToken(order.email);
+          magicLinkUrl = `${protocol}://${host}/api/auth/magic-login?token=${token}`;
+        } catch (err) {
+          console.error("Failed to generate magic link:", err);
+        }
+
         // Send license email
         try {
           await sendStripeLicenseEmail({
@@ -91,6 +137,7 @@ export async function POST(request: NextRequest) {
             plan: order.plan,
             orderId: order.order_id,
             amount: order.display_price,
+            magicLinkUrl,
           });
           console.log('License email sent successfully to:', order.email);
         } catch (emailError) {
