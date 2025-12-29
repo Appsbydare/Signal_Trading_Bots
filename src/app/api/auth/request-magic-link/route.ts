@@ -1,0 +1,58 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getCustomerByEmail } from "@/lib/auth-users";
+import { createMagicLinkToken } from "@/lib/auth-tokens";
+import { sendMagicLinkEmail } from "@/lib/email";
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { email } = body;
+
+    if (!email) {
+      return NextResponse.json(
+        { success: false, message: "Email is required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if customer exists
+    const customer = await getCustomerByEmail(email);
+    
+    if (!customer) {
+      // Don't reveal if email exists or not for security
+      return NextResponse.json({
+        success: true,
+        message: "If an account exists with this email, you will receive a magic link shortly",
+      });
+    }
+
+    // Generate magic link
+    const host = request.headers.get("host") || "www.signaltradingbots.com";
+    const protocol = host.includes("localhost") ? "http" : "https";
+    const token = await createMagicLinkToken(email);
+    const magicLinkUrl = `${protocol}://${host}/api/auth/magic-login?token=${token}`;
+
+    // Send email
+    try {
+      await sendMagicLinkEmail({
+        to: email,
+        magicLinkUrl,
+      });
+    } catch (emailError) {
+      console.error("Failed to send magic link email:", emailError);
+      // Don't reveal email sending failure to user
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "If an account exists with this email, you will receive a magic link shortly",
+    });
+  } catch (error) {
+    console.error("Magic link request error:", error);
+    return NextResponse.json(
+      { success: false, message: "Something went wrong. Please try again." },
+      { status: 500 }
+    );
+  }
+}
+

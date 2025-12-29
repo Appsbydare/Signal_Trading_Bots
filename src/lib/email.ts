@@ -3,6 +3,176 @@ import "server-only";
 const FROM_EMAIL = process.env.SUPPORT_FROM_EMAIL;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
+export async function sendVerificationCodeEmail(params: {
+  to: string;
+  code: string;
+}): Promise<void> {
+  if (!RESEND_API_KEY) {
+    console.warn("RESEND_API_KEY is not configured. Verification email will not be sent.");
+    throw new Error("Email service not configured");
+  }
+
+  if (!FROM_EMAIL) {
+    console.warn("SUPPORT_FROM_EMAIL is not configured. Verification email will not be sent.");
+    throw new Error("Email service not configured");
+  }
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Email Verification Code</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 24px;">🔐 Verify Your Email</h1>
+  </div>
+  
+  <div style="background-color: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+    <p style="font-size: 16px; margin-bottom: 20px;">
+      Enter this verification code to complete your purchase:
+    </p>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <div style="background: white; 
+                  border: 2px dashed #667eea; 
+                  border-radius: 10px; 
+                  padding: 20px; 
+                  display: inline-block;">
+        <p style="margin: 0 0 10px 0; font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px;">
+          Your Verification Code
+        </p>
+        <p style="margin: 0; 
+                  font-size: 36px; 
+                  font-weight: bold; 
+                  letter-spacing: 8px; 
+                  color: #667eea;
+                  font-family: 'Courier New', monospace;">
+          ${params.code}
+        </p>
+      </div>
+    </div>
+    
+    <p style="font-size: 14px; color: #666; margin-top: 30px; text-align: center;">
+      This code will expire in <strong>15 minutes</strong>
+    </p>
+    
+    <p style="font-size: 14px; color: #666; margin-top: 20px;">
+      If you didn't request this code, you can safely ignore this email.
+    </p>
+    
+    <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+    
+    <p style="font-size: 12px; color: #999; text-align: center;">
+      © ${new Date().getFullYear()} SignalTradingBots. All rights reserved.<br>
+      Need help? Contact support at <a href="mailto:${FROM_EMAIL}" style="color: #667eea;">${FROM_EMAIL}</a>
+    </p>
+  </div>
+</body>
+</html>
+  `;
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: FROM_EMAIL,
+      to: params.to,
+      subject: `Your Verification Code: ${params.code}`,
+      html,
+    }),
+  });
+
+  if (!response.ok) {
+    console.error("Failed to send verification email", await response.text());
+    throw new Error("Failed to send verification email");
+  }
+}
+
+export async function sendMagicLinkEmail(params: {
+  to: string;
+  magicLinkUrl: string;
+}): Promise<void> {
+  if (!RESEND_API_KEY) {
+    console.warn("RESEND_API_KEY is not configured. Magic link email will not be sent.");
+    return;
+  }
+
+  if (!FROM_EMAIL) {
+    console.warn("SUPPORT_FROM_EMAIL is not configured. Magic link email will not be sent.");
+    return;
+  }
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Login to Your Account</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 24px;">🔐 Login to Your Portal</h1>
+  </div>
+  
+  <div style="background-color: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+    <p style="font-size: 16px; margin-bottom: 20px;">
+      Click the button below to securely log in to your customer portal. This link will expire in 15 minutes.
+    </p>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${params.magicLinkUrl}" 
+         style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                color: white; 
+                padding: 15px 40px; 
+                text-decoration: none; 
+                border-radius: 8px; 
+                font-weight: bold; 
+                display: inline-block;
+                font-size: 16px;">
+        Access Customer Portal
+      </a>
+    </div>
+    
+    <p style="font-size: 14px; color: #666; margin-top: 30px;">
+      If you didn't request this login link, you can safely ignore this email.
+    </p>
+    
+    <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+    
+    <p style="font-size: 12px; color: #999; text-align: center;">
+      © ${new Date().getFullYear()} SignalTradingBots. All rights reserved.<br>
+      Need help? Contact support at <a href="mailto:${FROM_EMAIL}" style="color: #667eea;">${FROM_EMAIL}</a>
+    </p>
+  </div>
+</body>
+</html>
+  `;
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: FROM_EMAIL,
+      to: params.to,
+      subject: "Login to Your SignalTradingBots Portal",
+      html,
+    }),
+  });
+
+  if (!response.ok) {
+    console.error("Failed to send magic link email", await response.text());
+    throw new Error("Failed to send magic link email");
+  }
+}
+
 export async function sendTicketEmail(params: {
   to: string;
   subject: string;

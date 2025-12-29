@@ -5,6 +5,7 @@ import { useState, Suspense, useEffect } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { StripeCardForm } from "@/components/StripeCardForm";
+import { EmailVerification } from "@/components/EmailVerification";
 
 // Initialize Stripe (only if key is available)
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
@@ -28,6 +29,8 @@ function PaymentForm() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [selectedCrypto, setSelectedCrypto] = useState<string | null>(null);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
 
   const [creatingOrder, setCreatingOrder] = useState(false);
   
@@ -213,12 +216,52 @@ function PaymentForm() {
                   type="email"
                   required
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, email: e.target.value });
+                    setEmailVerified(false);
+                    setShowVerification(false);
+                  }}
+                  onBlur={() => {
+                    if (formData.email && formData.email.includes("@") && !emailVerified) {
+                      setShowVerification(true);
+                    }
+                  }}
                   placeholder="john@example.com"
-                  className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-white placeholder:text-zinc-500 focus:border-blue-500 focus:outline-none"
+                  disabled={emailVerified}
+                  className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-white placeholder:text-zinc-500 focus:border-blue-500 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                 />
-                <p className="mt-1 text-xs text-zinc-500">License key will be sent to this email</p>
+                {emailVerified && (
+                  <div className="mt-2 flex items-center gap-2 text-sm text-green-400">
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Email verified
+                    <button
+                      onClick={() => {
+                        setEmailVerified(false);
+                        setShowVerification(false);
+                      }}
+                      className="text-xs text-zinc-400 hover:text-zinc-300 underline"
+                    >
+                      Change
+                    </button>
+                  </div>
+                )}
+                {!emailVerified && <p className="mt-1 text-xs text-zinc-500">License key will be sent to this email</p>}
               </div>
+
+              {/* Email Verification Section */}
+              {showVerification && !emailVerified && formData.email && (
+                <div className="rounded-lg border border-zinc-700 bg-zinc-800/50 p-4">
+                  <EmailVerification
+                    email={formData.email}
+                    onVerified={() => {
+                      setEmailVerified(true);
+                      setShowVerification(false);
+                    }}
+                  />
+                </div>
+              )}
               <div>
                 <label className="mb-1 block text-sm text-zinc-300">
                   Country <span className="text-red-400">*</span>
@@ -261,17 +304,28 @@ function PaymentForm() {
           </section>
 
           {/* Payment Methods */}
-          <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
-            <h2 className="mb-4 text-lg font-semibold text-white">Select Payment Method</h2>
+          <section className={`rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 ${!emailVerified ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-white">Select Payment Method</h2>
+              {!emailVerified && (
+                <span className="flex items-center gap-2 text-sm text-amber-400">
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                  </svg>
+                  Verify email first
+                </span>
+              )}
+            </div>
             <div className="space-y-3">
               <button
                 type="button"
-                onClick={() => setSelectedPayment("card")}
+                onClick={() => emailVerified && setSelectedPayment("card")}
+                disabled={!emailVerified}
                 className={`w-full rounded-lg border p-4 text-left transition-colors ${
                   selectedPayment === "card"
                     ? "border-blue-500 bg-blue-500/10"
                     : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                }`}
+                } disabled:cursor-not-allowed`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -291,12 +345,13 @@ function PaymentForm() {
 
               <button
                 type="button"
-                onClick={() => setSelectedPayment("crypto")}
+                onClick={() => emailVerified && setSelectedPayment("crypto")}
+                disabled={!emailVerified}
                 className={`w-full rounded-lg border p-4 text-left transition-colors ${
                   selectedPayment === "crypto"
                     ? "border-green-500 bg-green-500/10"
                     : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                }`}
+                } disabled:cursor-not-allowed`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
