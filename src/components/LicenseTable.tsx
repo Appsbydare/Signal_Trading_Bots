@@ -111,7 +111,7 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-xs text-zinc-300">
                   <div className="flex items-center gap-2">
-                    <code 
+                    <code
                       onClick={() => copyToClipboard(lic.license_key, lic.id)}
                       className="cursor-pointer rounded bg-zinc-800 px-2 py-1 text-[0.7rem] font-mono text-white hover:bg-zinc-700 transition-colors"
                       title="Click to copy"
@@ -142,15 +142,18 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
                   </span>
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-xs text-zinc-300">
-                  {isLifetime ? 'Never' : expiresAt.toLocaleDateString()}
+                  {isLifetime ? 'Never' : expiresAt.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                  })}
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-xs">
                   <span
-                    className={`inline-flex rounded-full px-2 py-1 text-[0.7rem] ${
-                      isLifetime 
+                    className={`inline-flex rounded-full px-2 py-1 text-[0.7rem] ${isLifetime
                         ? 'text-emerald-700 bg-emerald-50'
                         : getLicenseStatusColor(daysRemaining)
-                    }`}
+                      }`}
                   >
                     {isLifetime ? 'Lifetime' : `${daysRemaining} days`}
                   </span>

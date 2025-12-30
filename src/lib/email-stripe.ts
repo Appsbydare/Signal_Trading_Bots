@@ -15,6 +15,7 @@ export async function sendStripeLicenseEmail(params: {
   orderId: string;
   amount: number;
   magicLinkUrl: string;
+  downloadUrl?: string; // Optional download URL for installer
 }): Promise<void> {
   if (!RESEND_API_KEY) {
     console.warn(
@@ -80,6 +81,27 @@ export async function sendStripeLicenseEmail(params: {
           Link expires in 1 hour
         </p>
       </div>
+
+      ${params.downloadUrl ? `
+      <!-- Download Button -->
+      <div style="background-color: #dbeafe; border-left: 3px solid #3b82f6; padding: 20px; margin: 24px 0; border-radius: 6px;">
+        <h3 style="margin: 0 0 12px 0; color: #1e40af; font-size: 16px; font-weight: 600;">📥 Download Your Software</h3>
+        <p style="margin: 0 0 16px 0; color: #1e40af; font-size: 14px;">
+          Click the button below to download the TelegramSignalBot Installer:
+        </p>
+        <div style="text-align: center;">
+          <a href="${params.downloadUrl}" style="background-color: #3b82f6; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 15px;">
+            Download Installer
+          </a>
+        </div>
+        <p style="font-size: 12px; color: #1e40af; margin-top: 12px; text-align: center;">
+          ⏱️ Download link expires in 1 hour • Single-use only
+        </p>
+        <p style="font-size: 12px; color: #1e40af; margin-top: 8px;">
+          <strong>Note:</strong> If your download link expires or fails, you can generate a new one from the Customer Portal or the payment success page.
+        </p>
+      </div>
+      ` : ''}
       
       <div style="background-color: #f9fafb; padding: 20px; border-radius: 6px; margin: 24px 0;">
         <table style="width: 100%; border-collapse: collapse;">

@@ -5,10 +5,15 @@ import { getLicensesForEmail } from "@/lib/license-db";
 import { getPromotionalImage } from "@/lib/promotional-image";
 import { listTicketsForCustomer } from "@/lib/tickets-db";
 import { LicenseTable } from "@/components/LicenseTable";
+import { RequestDownloadSection } from "@/components/RequestDownloadSection";
 
 export const metadata = {
   title: "Customer Portal | signaltradingbots",
 };
+
+// Force dynamic rendering to always show fresh license data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function PortalPage() {
   const customer = await getCurrentCustomer();
@@ -64,32 +69,32 @@ export default async function PortalPage() {
 
       {/* Security Warning */}
       {showSecurityWarning && (
-      <section className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-6">
-        <div className="flex items-start gap-4">
-          <div className="flex-shrink-0">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20">
-              <svg className="h-6 w-6 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
+        <section className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20">
+                <svg className="h-6 w-6 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-base font-semibold text-amber-300">Secure Your Account</h3>
+              <p className="mt-1 text-sm text-amber-200/80">
+                Your account was created automatically when you purchased. We recommend setting a password so you can log in directly without requesting a magic link each time.
+              </p>
+              <Link
+                href="/portal/settings"
+                className="mt-4 inline-flex items-center rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-amber-400"
+              >
+                Set Up Password
+                <svg className="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
             </div>
           </div>
-          <div className="flex-1">
-            <h3 className="text-base font-semibold text-amber-300">Secure Your Account</h3>
-            <p className="mt-1 text-sm text-amber-200/80">
-              Your account was created automatically when you purchased. We recommend setting a password so you can log in directly without requesting a magic link each time.
-            </p>
-            <Link
-              href="/portal/settings"
-              className="mt-4 inline-flex items-center rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-amber-400"
-            >
-              Set Up Password
-              <svg className="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-        </div>
-      </section>
+        </section>
       )}
 
       {/* My Licenses */}
@@ -119,6 +124,9 @@ export default async function PortalPage() {
         )}
       </section>
 
+      {/* Download Software */}
+      <RequestDownloadSection />
+
       {/* Promotions banner */}
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between gap-2">
@@ -132,7 +140,7 @@ export default async function PortalPage() {
         {promo ? (
           <div className="flex flex-col gap-4 md:flex-row md:items-center">
             <div className="flex-1">
-                <p className="mb-2 text-sm text-zinc-300">
+              <p className="mb-2 text-sm text-zinc-300">
                 Click the banner to learn more about the current promotion or bonus.
               </p>
               {promo.redirectUrl && (
@@ -211,13 +219,12 @@ export default async function PortalPage() {
                     <td className="px-3 py-2 text-zinc-300">#{tickets.length - index}</td>
                     <td className="px-3 py-2 text-zinc-300">{t.subject}</td>
                     <td className="px-3 py-2 capitalize">
-                      <span className={`rounded-full px-2 py-0.5 text-xs ${
-                        t.status === "pending" 
-                          ? "bg-amber-500/20 text-amber-300" 
-                          : t.status === "sorted" 
+                      <span className={`rounded-full px-2 py-0.5 text-xs ${t.status === "pending"
+                        ? "bg-amber-500/20 text-amber-300"
+                        : t.status === "sorted"
                           ? "bg-emerald-500/20 text-emerald-300"
                           : "bg-zinc-700 text-zinc-300"
-                      }`}>
+                        }`}>
                         {t.status === "pending" ? "Pending" : t.status === "sorted" ? "Resolved" : t.status}
                       </span>
                     </td>

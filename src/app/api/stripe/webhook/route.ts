@@ -6,6 +6,8 @@ import { getStripeOrderByPaymentIntent, updateStripeOrderByPaymentIntent } from 
 import { createLicense } from '@/lib/license-db';
 import { getCustomerByEmail, createCustomer } from '@/lib/auth-users';
 import { createMagicLinkToken } from '@/lib/auth-tokens';
+import { createDownloadToken, getExeFileName } from '@/lib/download-tokens';
+import { isR2Enabled } from '@/lib/r2-client';
 import Stripe from 'stripe';
 
 export async function POST(request: NextRequest) {
@@ -100,13 +102,13 @@ export async function POST(request: NextRequest) {
             console.log("Auto-created customer for email:", order.email);
           } catch (err: any) {
             console.error("Failed to auto-create customer:", err);
-            
+
             // Check if it's a duplicate constraint error
             if (err.code === '23505') {
               console.log("Customer already exists (race condition), fetching existing customer...");
-            customer = await getCustomerByEmail(order.email);
+              customer = await getCustomerByEmail(order.email);
             }
-            
+
             if (!customer) {
               console.error("Customer still not found after creation failure. Will proceed without customer record.");
               // The magic link will still work as it's email-based
@@ -128,6 +130,37 @@ export async function POST(request: NextRequest) {
           console.error("Failed to generate magic link:", err);
         }
 
+        // 3. Generate Download Link (R2 Signed URL)
+        let downloadUrl = "";
+        try {
+          if (isR2Enabled()) {
+            const ipAddress = request.headers.get("x-forwarded-for") ||
+              request.headers.get("x-real-ip") ||
+              "webhook";
+            const userAgent = request.headers.get("user-agent") || "stripe-webhook";
+
+            const downloadToken = await createDownloadToken({
+              licenseKey,
+              email: order.email,
+              fileName: getExeFileName(),
+              ipAddress,
+              userAgent,
+            });
+
+            // Generate proxy URL instead of direct R2 URL
+            const host = request.headers.get("host") || "www.signaltradingbots.com";
+            const protocol = host.includes("localhost") ? "http" : "https";
+            downloadUrl = `${protocol}://${host}/api/download/${downloadToken.token}`;
+
+            console.log(`✅ Generated download link for order ${order.order_id}`);
+          } else {
+            console.warn("⚠️ R2 not configured, skipping download link generation");
+          }
+        } catch (err) {
+          console.error("Failed to generate download link:", err);
+          // Don't fail the webhook - download can be regenerated later
+        }
+
         // Send license email
         try {
           await sendStripeLicenseEmail({
@@ -138,6 +171,7 @@ export async function POST(request: NextRequest) {
             orderId: order.order_id,
             amount: order.display_price,
             magicLinkUrl,
+            downloadUrl, // Add download URL
           });
           console.log('License email sent successfully to:', order.email);
         } catch (emailError) {

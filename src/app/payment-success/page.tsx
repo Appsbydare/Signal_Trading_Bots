@@ -12,6 +12,8 @@ function PaymentSuccessContent() {
   const [error, setError] = useState<string | null>(null);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadStarted, setDownloadStarted] = useState(false);
 
   useEffect(() => {
     if (!orderId) {
@@ -42,13 +44,13 @@ function PaymentSuccessContent() {
 
   const handleResendEmail = async () => {
     if (!orderId) return;
-    
+
     setSendingEmail(true);
     try {
       const response = await fetch(`/api/orders/${orderId}/send-email`, {
         method: "POST",
       });
-      
+
       if (response.ok) {
         setEmailSent(true);
         setTimeout(() => setEmailSent(false), 5000);
@@ -181,6 +183,105 @@ function PaymentSuccessContent() {
             </section>
           )}
 
+          {/* Download Link */}
+          {orderDetails.downloadUrl && !orderDetails.downloadExpired && (
+            <section className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-6">
+              <h2 className="mb-3 text-lg font-semibold text-blue-300">
+                📥 Download Your Software
+              </h2>
+              <p className="mb-4 text-sm text-blue-200">
+                Click the button below to download the TelegramSignalBot Installer:
+              </p>
+              <button
+                onClick={() => {
+                  if (downloadStarted) {
+                    alert('Download has already been initiated. Please check your downloads folder.');
+                    return;
+                  }
+                  setDownloading(true);
+                  setDownloadStarted(true);
+
+                  // Create a temporary link and trigger download
+                  const link = document.createElement('a');
+                  link.href = orderDetails.downloadUrl;
+                  link.download = 'TelegramSignalBot Installer.exe';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+
+                  // Show downloading state for 3 seconds
+                  setTimeout(() => {
+                    setDownloading(false);
+                  }, 3000);
+                }}
+                disabled={downloading || downloadStarted}
+                className={`block w-full rounded-md px-6 py-3 text-center font-medium text-white transition ${downloading || downloadStarted
+                    ? 'bg-gray-600 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
+              >
+                {downloading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Downloading...
+                  </span>
+                ) : downloadStarted ? (
+                  '✓ Download Started'
+                ) : (
+                  'Download Installer'
+                )}
+              </button>
+              <p className="mt-3 text-xs text-blue-200">
+                ⏱️ This download link expires in 1 hour and can only be used once.
+              </p>
+              {downloadStarted && (
+                <p className="mt-2 text-xs text-green-300">
+                  ✓ Download initiated! Check your downloads folder. If the download didn't start, please contact support.
+                </p>
+              )}
+            </section>
+          )}
+
+          {/* Download Expired - Show Regenerate Button */}
+          {orderDetails.downloadExpired && orderDetails.licenseKey && (
+            <section className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-6">
+              <h2 className="mb-3 text-lg font-semibold text-amber-300">
+                ⚠️ Download Link Expired
+              </h2>
+              <p className="mb-4 text-sm text-amber-200">
+                Your download link has expired. Click below to generate a new one:
+              </p>
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/download/generate', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        licenseKey: orderDetails.licenseKey,
+                        email: orderDetails.email,
+                      }),
+                    });
+                    if (response.ok) {
+                      const data = await response.json();
+                      window.location.href = data.downloadUrl;
+                    } else {
+                      alert('Failed to generate download link. Please contact support.');
+                    }
+                  } catch (err) {
+                    alert('Error generating download link. Please try again.');
+                  }
+                }}
+                className="w-full rounded-md bg-amber-600 px-6 py-3 text-center font-medium text-white transition hover:bg-amber-700"
+              >
+                Generate New Download Link
+              </button>
+            </section>
+          )}
+
           {/* Order Information */}
           <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
             <h2 className="mb-4 text-lg font-semibold text-white">
@@ -285,7 +386,7 @@ function PaymentSuccessContent() {
                   <li>• Start with a demo account to test your configuration</li>
                   <li>• Contact support if you need any assistance</li>
                 </ul>
-                
+
                 {/* Resend Email Button */}
                 <div className="mt-4">
                   <button

@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getCurrentAdmin } from "@/lib/auth-server";
 import { getSupabaseClient } from "@/lib/supabase-storage";
+import { RevokeLicenseButton } from "@/components/RevokeLicenseButton";
+import { LicenseKeyDisplay } from "@/components/LicenseKeyDisplay";
 
 interface LicenseWithSessions {
   id: number;
@@ -50,18 +52,24 @@ async function getLicensesWithSessionCount(): Promise<LicenseWithSessions[]> {
 async function getRecentValidationLogs(limit: number = 50) {
   const client = getSupabaseClient();
 
-  const { data, error } = await client
-    .from("license_validation_log")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  try {
+    const { data, error } = await client
+      .from("license_validation_log")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(limit);
 
-  if (error) {
-    console.error("Error fetching validation logs:", error);
+    if (error) {
+      // Table doesn't exist yet - return empty array
+      console.log("Validation log table not found (this is optional)");
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    // Gracefully handle missing table
     return [];
   }
-
-  return data || [];
 }
 
 export default async function AdminLicensesPage() {
@@ -148,7 +156,7 @@ export default async function AdminLicensesPage() {
           <table className="w-full">
             <thead className="border-b border-zinc-800 bg-zinc-800/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500 w-48">
                   License Key
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
@@ -169,12 +177,15 @@ export default async function AdminLicensesPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                   Flags
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500 min-w-[100px]">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
               {licenses.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-sm text-zinc-500">
+                  <td colSpan={8} className="px-6 py-12 text-center text-sm text-zinc-500">
                     No licenses found
                   </td>
                 </tr>
@@ -189,35 +200,31 @@ export default async function AdminLicensesPage() {
                   return (
                     <tr key={license.id} className="hover:bg-zinc-800/30">
                       <td className="px-6 py-4">
-                        <code className="text-xs font-mono text-zinc-300">
-                          {license.license_key}
-                        </code>
+                        <LicenseKeyDisplay licenseKey={license.license_key} />
                       </td>
                       <td className="px-6 py-4 text-sm text-zinc-300">{license.email}</td>
                       <td className="px-6 py-4">
                         <span
-                          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                            license.plan === "test"
-                              ? "bg-yellow-500/20 text-yellow-400"
-                              : license.plan === "yearly"
-                                ? "bg-blue-500/20 text-blue-400"
-                                : license.plan === "monthly"
-                                  ? "bg-purple-500/20 text-purple-400"
-                                  : "bg-zinc-500/20 text-zinc-400"
-                          }`}
+                          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${license.plan === "test"
+                            ? "bg-yellow-500/20 text-yellow-400"
+                            : license.plan === "yearly"
+                              ? "bg-blue-500/20 text-blue-400"
+                              : license.plan === "monthly"
+                                ? "bg-purple-500/20 text-purple-400"
+                                : "bg-zinc-500/20 text-zinc-400"
+                            }`}
                         >
                           {license.plan}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                            license.status === "active"
-                              ? "bg-emerald-500/20 text-emerald-400"
-                              : license.status === "expired"
-                                ? "bg-red-500/20 text-red-400"
-                                : "bg-zinc-500/20 text-zinc-400"
-                          }`}
+                          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${license.status === "active"
+                            ? "bg-emerald-500/20 text-emerald-400"
+                            : license.status === "expired"
+                              ? "bg-red-500/20 text-red-400"
+                              : "bg-zinc-500/20 text-zinc-400"
+                            }`}
                         >
                           {license.status}
                         </span>
@@ -242,11 +249,10 @@ export default async function AdminLicensesPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`inline-flex items-center justify-center rounded-full px-2 py-1 text-xs font-semibold ${
-                            license.active_sessions > 0
-                              ? "bg-emerald-500/20 text-emerald-400"
-                              : "bg-zinc-500/20 text-zinc-500"
-                          }`}
+                          className={`inline-flex items-center justify-center rounded-full px-2 py-1 text-xs font-semibold ${license.active_sessions > 0
+                            ? "bg-emerald-500/20 text-emerald-400"
+                            : "bg-zinc-500/20 text-zinc-500"
+                            }`}
                         >
                           {license.active_sessions}
                         </span>
@@ -258,7 +264,7 @@ export default async function AdminLicensesPage() {
                               className="inline-flex rounded-full bg-red-500/20 px-2 py-1 text-xs font-semibold text-red-400"
                               title="Duplicate usage detected"
                             >
-                              🚫 DUP
+                              DUP
                             </span>
                           )}
                           {!license.grace_period_allowed && (
@@ -266,10 +272,16 @@ export default async function AdminLicensesPage() {
                               className="inline-flex rounded-full bg-orange-500/20 px-2 py-1 text-xs font-semibold text-orange-400"
                               title="Grace period disabled"
                             >
-                              ⏸️ NO-GRACE
+                              NO-GRACE
                             </span>
                           )}
                         </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <RevokeLicenseButton
+                          licenseKey={license.license_key}
+                          email={license.email}
+                        />
                       </td>
                     </tr>
                   );
@@ -280,108 +292,109 @@ export default async function AdminLicensesPage() {
         </div>
       </section>
 
-      {/* Recent Activity Log */}
-      <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 shadow-sm">
-        <div className="border-b border-zinc-800 p-6">
-          <h2 className="text-lg font-semibold text-white">Recent Validation Activity</h2>
-          <p className="mt-1 text-sm text-zinc-400">Last 50 validation attempts and events</p>
-        </div>
+      {/* Recent Activity Log - Only show if validation log table exists */}
+      {recentLogs.length > 0 && (
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 shadow-sm">
+          <div className="border-b border-zinc-800 p-6">
+            <h2 className="text-lg font-semibold text-white">Recent Validation Activity</h2>
+            <p className="mt-1 text-sm text-zinc-400">Last 50 validation attempts and events</p>
+          </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="border-b border-zinc-800 bg-zinc-800/50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  Timestamp
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  License Key
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  Event Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  Device ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  Result
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  Error Code
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800">
-              {recentLogs.length === 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="border-b border-zinc-800 bg-zinc-800/50">
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-sm text-zinc-500">
-                    No validation logs found
-                  </td>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    Timestamp
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    License Key
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    Event Type
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    Device ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    Result
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    Error Code
+                  </th>
                 </tr>
-              ) : (
-                recentLogs.map((log: any) => {
-                  const timestamp = new Date(log.created_at);
-                  return (
-                    <tr key={log.id} className="hover:bg-zinc-800/30">
-                      <td className="px-6 py-4 text-sm text-zinc-300">
-                        {timestamp.toLocaleString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </td>
-                      <td className="px-6 py-4">
-                        <code className="text-xs font-mono text-zinc-400">
-                          {log.license_key?.substring(0, 20) || "N/A"}...
-                        </code>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                            log.event_type === "validation"
+              </thead>
+              <tbody className="divide-y divide-zinc-800">
+                {recentLogs.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-sm text-zinc-500">
+                      No validation logs found
+                    </td>
+                  </tr>
+                ) : (
+                  recentLogs.map((log: any) => {
+                    const timestamp = new Date(log.created_at);
+                    return (
+                      <tr key={log.id} className="hover:bg-zinc-800/30">
+                        <td className="px-6 py-4 text-sm text-zinc-300">
+                          {timestamp.toLocaleString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </td>
+                        <td className="px-6 py-4">
+                          <code className="text-xs font-mono text-zinc-400">
+                            {log.license_key?.substring(0, 20) || "N/A"}...
+                          </code>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${log.event_type === "validation"
                               ? "bg-blue-500/20 text-blue-400"
                               : log.event_type === "duplicate_detected"
                                 ? "bg-red-500/20 text-red-400"
                                 : log.event_type === "deactivation"
                                   ? "bg-zinc-500/20 text-zinc-400"
                                   : "bg-orange-500/20 text-orange-400"
-                          }`}
-                        >
-                          {log.event_type}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <code className="text-xs font-mono text-zinc-500">
-                          {log.device_id?.substring(0, 12) || "N/A"}...
-                        </code>
-                      </td>
-                      <td className="px-6 py-4">
-                        {log.success ? (
-                          <span className="inline-flex items-center text-sm text-emerald-400">
-                            ✓ Success
+                              }`}
+                          >
+                            {log.event_type}
                           </span>
-                        ) : (
-                          <span className="inline-flex items-center text-sm text-red-400">
-                            ✗ Failed
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        {log.error_code ? (
-                          <code className="text-xs font-mono text-red-400">{log.error_code}</code>
-                        ) : (
-                          <span className="text-xs text-zinc-400">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+                        </td>
+                        <td className="px-6 py-4">
+                          <code className="text-xs font-mono text-zinc-500">
+                            {log.device_id?.substring(0, 12) || "N/A"}...
+                          </code>
+                        </td>
+                        <td className="px-6 py-4">
+                          {log.success ? (
+                            <span className="inline-flex items-center text-sm text-emerald-400">
+                              ✓ Success
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center text-sm text-red-400">
+                              ✗ Failed
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          {log.error_code ? (
+                            <code className="text-xs font-mono text-red-400">{log.error_code}</code>
+                          ) : (
+                            <span className="text-xs text-zinc-400">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {/* Admin Actions Info */}
       <section className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-6">
@@ -390,8 +403,8 @@ export default async function AdminLicensesPage() {
           <li>• View all licenses and their active sessions</li>
           <li>• Monitor duplicate detection flags</li>
           <li>• Review validation activity logs</li>
+          <li>• <strong>Revoke licenses</strong> - Instantly revoke any license and deactivate all sessions</li>
           <li>• Force deactivate sessions via API (coming soon)</li>
-          <li>• Revoke licenses manually in Supabase table editor</li>
         </ul>
       </section>
     </div>

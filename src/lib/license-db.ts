@@ -35,6 +35,7 @@ export async function getLicensesForEmail(email: string): Promise<LicenseRow[]> 
     .from("licenses")
     .select("*")
     .eq("email", email.toLowerCase())
+    .neq("status", "revoked") // Exclude revoked licenses
     .order("created_at", { ascending: false })
     .returns<LicenseRow[]>();
 
@@ -161,7 +162,7 @@ export interface LogValidationArgs {
 
 export async function logValidation(args: LogValidationArgs): Promise<void> {
   const client = getSupabaseClient();
-  
+
   try {
     await client.from("license_validation_log").insert({
       license_key: args.licenseKey,
