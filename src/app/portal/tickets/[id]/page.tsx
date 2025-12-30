@@ -58,25 +58,37 @@ export default function TicketDetailPage() {
     }
     setError(null);
     try {
+      console.log('Loading ticket:', ticketId);
       const res = await fetch(`/api/portal/tickets/${ticketId}`);
       const data = await res.json();
+      console.log('Ticket response:', data);
 
-      if (!data.success) {
-        setError(data.message || "Failed to load ticket");
+      if (!res.ok || !data.success) {
+        const errorMsg = data.message || `Failed to load ticket (${res.status})`;
+        console.error('Ticket load error:', errorMsg);
+        setError(errorMsg);
+        setLoading(false);
         return;
       }
 
       const newReplies = data.replies || [];
-      
+
       // Only update if reply count changed
       if (newReplies.length !== lastReplyCount) {
         setTicket(data.ticket);
         setReplies(newReplies);
         setTicketNumber(data.ticketNumber || 0);
         setLastReplyCount(newReplies.length);
+      } else if (!ticket) {
+        // First load - always set the data
+        setTicket(data.ticket);
+        setReplies(newReplies);
+        setTicketNumber(data.ticketNumber || 0);
+        setLastReplyCount(newReplies.length);
       }
     } catch (err) {
-      setError("Failed to load ticket");
+      console.error('Ticket load exception:', err);
+      setError("Failed to load ticket. Please try again.");
     } finally {
       if (showLoading) {
         setLoading(false);
@@ -202,13 +214,12 @@ export default function TicketDetailPage() {
                 Ticket #{ticketNumber || '...'}
               </span>
               <span
-                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                  ticket.status === "pending"
+                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${ticket.status === "pending"
                     ? "bg-amber-500/20 text-amber-300"
                     : ticket.status === "sorted"
-                    ? "bg-emerald-500/20 text-emerald-300"
-                    : "bg-zinc-700 text-zinc-300"
-                }`}
+                      ? "bg-emerald-500/20 text-emerald-300"
+                      : "bg-zinc-700 text-zinc-300"
+                  }`}
               >
                 {ticket.status === "pending" ? "Pending" : ticket.status === "sorted" ? "Resolved" : ticket.status}
               </span>
@@ -232,11 +243,10 @@ export default function TicketDetailPage() {
           {replies.map((reply) => (
             <div
               key={reply.id}
-              className={`rounded-xl border p-4 ${
-                reply.author_type === "customer"
+              className={`rounded-xl border p-4 ${reply.author_type === "customer"
                   ? "border-blue-500/30 bg-blue-500/10"
                   : "border-zinc-800 bg-zinc-900/50"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-2 text-sm">
                 <span className="font-medium text-white">
