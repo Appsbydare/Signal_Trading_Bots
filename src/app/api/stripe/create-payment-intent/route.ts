@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine price based on plan
-    const displayPrice = plan === 'lifetime' ? 999 : plan === 'pro' ? 49 : 0.99;
+    const displayPrice = plan === 'lifetime' ? 999 : plan === 'pro' ? 49 : 29;
     const planName = plan === 'lifetime' ? 'Lifetime' : plan === 'pro' ? 'Pro' : 'Starter';
 
     // Generate unique order ID

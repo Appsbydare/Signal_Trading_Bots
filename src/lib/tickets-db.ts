@@ -8,6 +8,7 @@ export interface TicketRow {
   customer_id: number | null;
   email: string | null;
   subject: string;
+  description: string | null;
   status: string;
   priority: string | null;
   created_at: string;
@@ -23,20 +24,32 @@ export interface TicketEventRow {
   created_at: string;
 }
 
+export interface TicketReplyRow {
+  id: number;
+  ticket_id: number;
+  author_type: string;
+  author_id: number | null;
+  author_name: string | null;
+  message: string;
+  created_at: string;
+}
+
 export async function createTicket(params: {
   conversationId: number | null;
   customerId: number | null;
   email: string | null;
   subject: string;
+  description?: string | null;
 }): Promise<TicketRow> {
   const client = getSupabaseClient();
-  const { data, error } = await client
+  const { data, error} = await client
     .from("tickets")
     .insert({
       conversation_id: params.conversationId,
       customer_id: params.customerId,
       email: params.email,
       subject: params.subject,
+      description: params.description ?? null,
     })
     .select("*")
     .maybeSingle<TicketRow>();
@@ -141,6 +154,67 @@ export async function updateTicket(params: {
   }
 
   return data;
+}
+
+export async function getTicketById(ticketId: number): Promise<TicketRow | null> {
+  const client = getSupabaseClient();
+  const { data, error } = await client
+    .from("tickets")
+    .select("*")
+    .eq("id", ticketId)
+    .maybeSingle<TicketRow>();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function addTicketReply(params: {
+  ticketId: number;
+  authorType: string;
+  authorId?: number | null;
+  authorName?: string | null;
+  message: string;
+}): Promise<TicketReplyRow> {
+  const client = getSupabaseClient();
+  const { data, error } = await client
+    .from("ticket_replies")
+    .insert({
+      ticket_id: params.ticketId,
+      author_type: params.authorType,
+      author_id: params.authorId ?? null,
+      author_name: params.authorName ?? null,
+      message: params.message,
+    })
+    .select("*")
+    .maybeSingle<TicketReplyRow>();
+
+  if (error) {
+    throw error;
+  }
+  if (!data) {
+    throw new Error("Failed to add ticket reply");
+  }
+
+  return data;
+}
+
+export async function listTicketReplies(ticketId: number): Promise<TicketReplyRow[]> {
+  const client = getSupabaseClient();
+  const { data, error } = await client
+    .from("ticket_replies")
+    .select("*")
+    .eq("ticket_id", ticketId)
+    .order("created_at", { ascending: true })
+    .returns<TicketReplyRow[]>();
+
+  if (error) {
+    throw error;
+  }
+
+  return data ?? [];
 }
 
 

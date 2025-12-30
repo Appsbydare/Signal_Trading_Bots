@@ -181,6 +181,12 @@ export default async function PortalPage() {
               Tickets created from the virtual support chat or by our team on your behalf.
             </p>
           </div>
+          <Link
+            href="/portal/tickets"
+            className="rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 transition"
+          >
+            View All
+          </Link>
         </div>
         {tickets.length === 0 ? (
           <div className="rounded-md bg-zinc-800/50 p-4 text-xs text-zinc-400">
@@ -196,21 +202,50 @@ export default async function PortalPage() {
                   <th className="px-3 py-2 text-left font-semibold text-zinc-500">Subject</th>
                   <th className="px-3 py-2 text-left font-semibold text-zinc-500">Status</th>
                   <th className="px-3 py-2 text-left font-semibold text-zinc-500">Created</th>
+                  <th className="px-3 py-2 text-left font-semibold text-zinc-500"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800">
-                {tickets.map((t) => (
-                  <tr key={t.id}>
-                    <td className="px-3 py-2 text-zinc-300">#{t.id}</td>
+                {tickets.slice(0, 5).map((t, index) => (
+                  <tr key={t.id} className="hover:bg-zinc-800/30">
+                    <td className="px-3 py-2 text-zinc-300">#{tickets.length - index}</td>
                     <td className="px-3 py-2 text-zinc-300">{t.subject}</td>
-                    <td className="px-3 py-2 text-zinc-800 capitalize">{t.status}</td>
+                    <td className="px-3 py-2 capitalize">
+                      <span className={`rounded-full px-2 py-0.5 text-xs ${
+                        t.status === "pending" 
+                          ? "bg-amber-500/20 text-amber-300" 
+                          : t.status === "sorted" 
+                          ? "bg-emerald-500/20 text-emerald-300"
+                          : "bg-zinc-700 text-zinc-300"
+                      }`}>
+                        {t.status === "pending" ? "Pending" : t.status === "sorted" ? "Resolved" : t.status}
+                      </span>
+                    </td>
                     <td className="px-3 py-2 text-zinc-300">
                       {new Date(t.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-3 py-2">
+                      <Link
+                        href={`/portal/tickets/${t.id}`}
+                        className="text-[#5e17eb] hover:text-[#4512c2] transition"
+                      >
+                        View →
+                      </Link>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            {tickets.length > 5 && (
+              <div className="mt-3 text-center">
+                <Link
+                  href="/portal/tickets"
+                  className="text-xs text-zinc-400 hover:text-white transition"
+                >
+                  View all {tickets.length} tickets →
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </section>

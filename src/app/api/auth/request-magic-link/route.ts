@@ -19,11 +19,13 @@ export async function POST(request: NextRequest) {
     const customer = await getCustomerByEmail(email);
     
     if (!customer) {
-      // Don't reveal if email exists or not for security
-      return NextResponse.json({
-        success: true,
-        message: "If an account exists with this email, you will receive a magic link shortly",
-      });
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: "No account found with this email address. Please check your email or contact support if you believe this is an error." 
+        },
+        { status: 404 }
+      );
     }
 
     // Generate magic link
@@ -45,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "If an account exists with this email, you will receive a magic link shortly",
+      message: "Magic link sent! Check your email inbox for a secure login link.",
     });
   } catch (error) {
     console.error("Magic link request error:", error);

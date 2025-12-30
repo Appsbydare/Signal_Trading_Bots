@@ -79,14 +79,24 @@ export default function LoginPage() {
       </p>
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
+        <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          <div className="flex items-start gap-2">
+            <svg className="h-5 w-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{error}</span>
+          </div>
         </div>
       )}
 
       {magicLinkSent && (
-        <div className="mb-4 rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
-          ✓ Magic link sent! Check your email inbox for a secure login link.
+        <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+          <div className="flex items-start gap-2">
+            <svg className="h-5 w-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>✓ Magic link sent! Check your email inbox for a secure login link.</span>
+          </div>
         </div>
       )}
 

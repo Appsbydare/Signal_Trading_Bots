@@ -23,7 +23,10 @@
     "qrcode.react": "^4.2.0",
     "react": "19.2.1",
     "react-dom": "19.2.1",
-    "stripe": "^20.1.0"
+    "react-hot-toast": "^2.6.0",
+    "resend": "^6.6.0",
+    "stripe": "^20.1.0",
+    "svix": "^1.84.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

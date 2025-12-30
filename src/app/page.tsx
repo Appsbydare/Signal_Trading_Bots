@@ -301,7 +301,7 @@ export default function Home() {
     {
       name: "Starter",
       badge: "Basic plan",
-      price: "$0.99/month",
+      price: "$29/month",
       yearlyNote: "Save 10% with yearly billing",
       features: [
         "Ideal for demo and small live accounts",
