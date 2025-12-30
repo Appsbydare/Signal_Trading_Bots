@@ -75,22 +75,24 @@ export default function NewsAdminPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-lg">Loading...</p>
+        <p className="text-lg text-white">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-4xl py-8">
-      <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-bold">News - Admin</h1>
-        <p className="text-zinc-600">Manage news content for the application</p>
+    <div className="space-y-6">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-white">News Admin</h1>
+        <p className="mt-1 text-sm text-zinc-400">Manage news content for the application</p>
       </div>
 
       {message && (
         <div
-          className={`mb-6 rounded-md p-4 ${
-            message.type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+          className={`rounded-md p-4 ${
+            message.type === "success" 
+              ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300" 
+              : "bg-red-500/10 border border-red-500/30 text-red-300"
           }`}
         >
           {message.text}
@@ -99,37 +101,37 @@ export default function NewsAdminPage() {
 
       <div className="space-y-6">
         {items.map((item, index) => (
-          <div key={item.id} className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-            <div className="mb-2 text-sm font-semibold text-zinc-700">Item {index + 1}</div>
+          <div key={item.id} className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 shadow-sm">
+            <div className="mb-2 text-sm font-semibold text-white">Item {index + 1}</div>
             <div className="space-y-4">
               <div>
-                <label className="mb-1 block text-sm font-medium text-zinc-700">Control Name</label>
+                <label className="mb-1 block text-sm font-medium text-zinc-300">Control Name</label>
                 <input
                   type="text"
                   value={item.controlName}
                   onChange={(e) => handleChange(index, "controlName", e.target.value)}
-                  className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
+                  className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
                   placeholder={`News${index + 1}`}
                 />
                 <p className="mt-1 text-xs text-zinc-500">This name maps to the control/widget in your application</p>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-zinc-700">Title</label>
+                <label className="mb-1 block text-sm font-medium text-zinc-300">Title</label>
                 <input
                   type="text"
                   value={item.title}
                   onChange={(e) => handleChange(index, "title", e.target.value)}
-                  className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
+                  className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
                   placeholder={`Enter title for item ${index + 1}`}
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-zinc-700">URL</label>
+                <label className="mb-1 block text-sm font-medium text-zinc-300">URL</label>
                 <input
                   type="url"
                   value={item.url}
                   onChange={(e) => handleChange(index, "url", e.target.value)}
-                  className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
+                  className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
                   placeholder={`Enter URL for item ${index + 1}`}
                 />
               </div>
@@ -149,7 +151,7 @@ export default function NewsAdminPage() {
         <button
           onClick={loadData}
           disabled={loading}
-          className="rounded-md border border-zinc-300 bg-white px-6 py-2 text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50"
+          className="rounded-md border border-zinc-700 bg-zinc-800/50 px-6 py-2 text-white transition hover:bg-zinc-700 disabled:opacity-50"
         >
           {loading ? "Loading..." : "Reload"}
         </button>

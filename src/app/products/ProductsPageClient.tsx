@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, Variants } from "framer-motion";
 import { DarkProductCard } from "@/components/DarkProductCard";
+import TelegramLogo from "../../../assets/telegram.webp";
+import MT5Logo from "../../../assets/mt5.png";
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -228,24 +230,28 @@ export function ProductsPageClient() {
         </motion.p>
         <motion.div variants={fadeInUp} className="flex flex-wrap items-center gap-3">
           <span className="text-sm font-medium text-[#5e17eb]">Compatible with:</span>
-          <Image
-            src="/telegram-badge.svg"
-            alt="Telegram Compatible"
-            title="Works with Telegram signals"
-            width={32}
-            height={32}
-            className="h-8 w-8 transition hover:scale-110"
-            loading="lazy"
-          />
-          <Image
-            src="/mt5-badge.svg"
-            alt="MT5 Supported"
-            title="Executes trades via MetaTrader 5"
-            width={32}
-            height={32}
-            className="h-8 w-8 transition hover:scale-110"
-            loading="lazy"
-          />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 border-2 border-[#5e17eb] shadow-md p-2 overflow-hidden transition hover:scale-110">
+            <Image
+              src={TelegramLogo}
+              alt="Telegram Compatible"
+              title="Works with Telegram signals"
+              width={40}
+              height={40}
+              className="h-full w-full object-contain"
+              loading="lazy"
+            />
+          </div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#5e17eb] shadow-md p-2 overflow-hidden transition hover:scale-110">
+            <Image
+              src={MT5Logo}
+              alt="MT5 Supported"
+              title="Executes trades via MetaTrader 5"
+              width={40}
+              height={40}
+              className="h-full w-full object-contain"
+              loading="lazy"
+            />
+          </div>
         </motion.div>
       </motion.section>
 

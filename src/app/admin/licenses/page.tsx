@@ -75,25 +75,25 @@ export default async function AdminLicensesPage() {
   const recentLogs = await getRecentValidationLogs(50);
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-900">License Management</h1>
-          <p className="mt-1 text-sm text-zinc-600">
+          <h1 className="text-2xl font-semibold tracking-tight text-white">License Management</h1>
+          <p className="mt-1 text-sm text-zinc-400">
             View and manage all trading bot licenses and active sessions
           </p>
         </div>
         <div className="flex gap-3">
           <a
             href="/admin"
-            className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50"
+            className="rounded-md border border-zinc-700 bg-zinc-800/50 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700"
           >
             ← Back to Dashboard
           </a>
           <form action="/api/auth/admin/logout" method="post">
             <button
               type="submit"
-              className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50"
+              className="rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700"
             >
               Log out
             </button>
@@ -103,23 +103,23 @@ export default async function AdminLicensesPage() {
 
       {/* Statistics Cards */}
       <section className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 shadow-sm">
           <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             Total Licenses
           </div>
-          <div className="mt-2 text-3xl font-semibold text-zinc-900">
+          <div className="mt-2 text-3xl font-semibold text-white">
             {licenses.length}
           </div>
         </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 shadow-sm">
           <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             Active Licenses
           </div>
-          <div className="mt-2 text-3xl font-semibold text-emerald-700">
+          <div className="mt-2 text-3xl font-semibold text-emerald-400">
             {licenses.filter((l) => l.status === "active").length}
           </div>
         </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 shadow-sm">
           <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             Active Sessions
           </div>
@@ -127,26 +127,26 @@ export default async function AdminLicensesPage() {
             {licenses.reduce((sum, l) => sum + l.active_sessions, 0)}
           </div>
         </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 shadow-sm">
           <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             Duplicate Flags
           </div>
-          <div className="mt-2 text-3xl font-semibold text-red-600">
+          <div className="mt-2 text-3xl font-semibold text-red-400">
             {licenses.filter((l) => l.duplicate_detected).length}
           </div>
         </div>
       </section>
 
       {/* Licenses Table */}
-      <section className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-        <div className="border-b border-zinc-200 p-6">
-          <h2 className="text-lg font-semibold text-zinc-900">All Licenses</h2>
-          <p className="mt-1 text-sm text-zinc-600">Complete list of all licenses in the system</p>
+      <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 shadow-sm">
+        <div className="border-b border-zinc-800 p-6">
+          <h2 className="text-lg font-semibold text-white">All Licenses</h2>
+          <p className="mt-1 text-sm text-zinc-400">Complete list of all licenses in the system</p>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="border-b border-zinc-200 bg-zinc-50">
+            <thead className="border-b border-zinc-800 bg-zinc-800/50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                   License Key
@@ -171,7 +171,7 @@ export default async function AdminLicensesPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-200">
+            <tbody className="divide-y divide-zinc-800">
               {licenses.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center text-sm text-zinc-500">
@@ -187,23 +187,23 @@ export default async function AdminLicensesPage() {
                   );
 
                   return (
-                    <tr key={license.id} className="hover:bg-zinc-50">
+                    <tr key={license.id} className="hover:bg-zinc-800/30">
                       <td className="px-6 py-4">
-                        <code className="text-xs font-mono text-zinc-900">
+                        <code className="text-xs font-mono text-zinc-300">
                           {license.license_key}
                         </code>
                       </td>
-                      <td className="px-6 py-4 text-sm text-zinc-900">{license.email}</td>
+                      <td className="px-6 py-4 text-sm text-zinc-300">{license.email}</td>
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
                             license.plan === "test"
-                              ? "bg-yellow-100 text-yellow-800"
+                              ? "bg-yellow-500/20 text-yellow-400"
                               : license.plan === "yearly"
-                                ? "bg-blue-100 text-blue-800"
+                                ? "bg-blue-500/20 text-blue-400"
                                 : license.plan === "monthly"
-                                  ? "bg-purple-100 text-purple-800"
-                                  : "bg-gray-100 text-gray-800"
+                                  ? "bg-purple-500/20 text-purple-400"
+                                  : "bg-zinc-500/20 text-zinc-400"
                           }`}
                         >
                           {license.plan}
@@ -213,16 +213,16 @@ export default async function AdminLicensesPage() {
                         <span
                           className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
                             license.status === "active"
-                              ? "bg-emerald-100 text-emerald-800"
+                              ? "bg-emerald-500/20 text-emerald-400"
                               : license.status === "expired"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-gray-100 text-gray-800"
+                                ? "bg-red-500/20 text-red-400"
+                                : "bg-zinc-500/20 text-zinc-400"
                           }`}
                         >
                           {license.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-zinc-900">
+                      <td className="px-6 py-4 text-sm text-zinc-300">
                         <div>
                           {expiresAt.toLocaleDateString("en-US", {
                             month: "short",
@@ -231,7 +231,7 @@ export default async function AdminLicensesPage() {
                           })}
                         </div>
                         <div
-                          className={`text-xs ${isExpired ? "text-red-600" : daysUntilExpiry <= 7 ? "text-orange-600" : "text-zinc-500"}`}
+                          className={`text-xs ${isExpired ? "text-red-400" : daysUntilExpiry <= 7 ? "text-orange-400" : "text-zinc-500"}`}
                         >
                           {isExpired
                             ? "Expired"
@@ -244,8 +244,8 @@ export default async function AdminLicensesPage() {
                         <span
                           className={`inline-flex items-center justify-center rounded-full px-2 py-1 text-xs font-semibold ${
                             license.active_sessions > 0
-                              ? "bg-emerald-100 text-emerald-800"
-                              : "bg-zinc-100 text-zinc-600"
+                              ? "bg-emerald-500/20 text-emerald-400"
+                              : "bg-zinc-500/20 text-zinc-500"
                           }`}
                         >
                           {license.active_sessions}
@@ -255,7 +255,7 @@ export default async function AdminLicensesPage() {
                         <div className="flex gap-2">
                           {license.duplicate_detected && (
                             <span
-                              className="inline-flex rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-800"
+                              className="inline-flex rounded-full bg-red-500/20 px-2 py-1 text-xs font-semibold text-red-400"
                               title="Duplicate usage detected"
                             >
                               🚫 DUP
@@ -263,7 +263,7 @@ export default async function AdminLicensesPage() {
                           )}
                           {!license.grace_period_allowed && (
                             <span
-                              className="inline-flex rounded-full bg-orange-100 px-2 py-1 text-xs font-semibold text-orange-800"
+                              className="inline-flex rounded-full bg-orange-500/20 px-2 py-1 text-xs font-semibold text-orange-400"
                               title="Grace period disabled"
                             >
                               ⏸️ NO-GRACE
@@ -281,15 +281,15 @@ export default async function AdminLicensesPage() {
       </section>
 
       {/* Recent Activity Log */}
-      <section className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-        <div className="border-b border-zinc-200 p-6">
-          <h2 className="text-lg font-semibold text-zinc-900">Recent Validation Activity</h2>
-          <p className="mt-1 text-sm text-zinc-600">Last 50 validation attempts and events</p>
+      <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 shadow-sm">
+        <div className="border-b border-zinc-800 p-6">
+          <h2 className="text-lg font-semibold text-white">Recent Validation Activity</h2>
+          <p className="mt-1 text-sm text-zinc-400">Last 50 validation attempts and events</p>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="border-b border-zinc-200 bg-zinc-50">
+            <thead className="border-b border-zinc-800 bg-zinc-800/50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                   Timestamp
@@ -311,7 +311,7 @@ export default async function AdminLicensesPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-200">
+            <tbody className="divide-y divide-zinc-800">
               {recentLogs.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-sm text-zinc-500">
@@ -322,8 +322,8 @@ export default async function AdminLicensesPage() {
                 recentLogs.map((log: any) => {
                   const timestamp = new Date(log.created_at);
                   return (
-                    <tr key={log.id} className="hover:bg-zinc-50">
-                      <td className="px-6 py-4 text-sm text-zinc-900">
+                    <tr key={log.id} className="hover:bg-zinc-800/30">
+                      <td className="px-6 py-4 text-sm text-zinc-300">
                         {timestamp.toLocaleString("en-US", {
                           month: "short",
                           day: "numeric",
@@ -332,7 +332,7 @@ export default async function AdminLicensesPage() {
                         })}
                       </td>
                       <td className="px-6 py-4">
-                        <code className="text-xs font-mono text-zinc-700">
+                        <code className="text-xs font-mono text-zinc-400">
                           {log.license_key?.substring(0, 20) || "N/A"}...
                         </code>
                       </td>
@@ -340,36 +340,36 @@ export default async function AdminLicensesPage() {
                         <span
                           className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
                             log.event_type === "validation"
-                              ? "bg-blue-100 text-blue-800"
+                              ? "bg-blue-500/20 text-blue-400"
                               : log.event_type === "duplicate_detected"
-                                ? "bg-red-100 text-red-800"
+                                ? "bg-red-500/20 text-red-400"
                                 : log.event_type === "deactivation"
-                                  ? "bg-gray-100 text-gray-800"
-                                  : "bg-orange-100 text-orange-800"
+                                  ? "bg-zinc-500/20 text-zinc-400"
+                                  : "bg-orange-500/20 text-orange-400"
                           }`}
                         >
                           {log.event_type}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <code className="text-xs font-mono text-zinc-600">
+                        <code className="text-xs font-mono text-zinc-500">
                           {log.device_id?.substring(0, 12) || "N/A"}...
                         </code>
                       </td>
                       <td className="px-6 py-4">
                         {log.success ? (
-                          <span className="inline-flex items-center text-sm text-emerald-700">
+                          <span className="inline-flex items-center text-sm text-emerald-400">
                             ✓ Success
                           </span>
                         ) : (
-                          <span className="inline-flex items-center text-sm text-red-700">
+                          <span className="inline-flex items-center text-sm text-red-400">
                             ✗ Failed
                           </span>
                         )}
                       </td>
                       <td className="px-6 py-4">
                         {log.error_code ? (
-                          <code className="text-xs font-mono text-red-700">{log.error_code}</code>
+                          <code className="text-xs font-mono text-red-400">{log.error_code}</code>
                         ) : (
                           <span className="text-xs text-zinc-400">—</span>
                         )}
@@ -384,9 +384,9 @@ export default async function AdminLicensesPage() {
       </section>
 
       {/* Admin Actions Info */}
-      <section className="rounded-xl border border-zinc-200 bg-blue-50 p-6">
-        <h3 className="mb-2 text-sm font-semibold text-blue-900">Admin Actions Available</h3>
-        <ul className="space-y-1 text-sm text-blue-800">
+      <section className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-6">
+        <h3 className="mb-2 text-sm font-semibold text-blue-300">Admin Actions Available</h3>
+        <ul className="space-y-1 text-sm text-blue-200/80">
           <li>• View all licenses and their active sessions</li>
           <li>• Monitor duplicate detection flags</li>
           <li>• Review validation activity logs</li>

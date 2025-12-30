@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentCustomer } from "@/lib/auth-server";
 import { SetPasswordForm } from "@/components/SetPasswordForm";
+import { UpdatePersonalInfoForm } from "@/components/UpdatePersonalInfoForm";
 
 export const metadata = {
   title: "Settings | Customer Portal | signaltradingbots",
@@ -58,6 +59,17 @@ export default async function SettingsPage() {
           </p>
         </div>
         <SetPasswordForm hasPassword={customer.password_set_by_user} />
+      </section>
+
+      {/* Personal Information */}
+      <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 shadow-sm">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-white">Personal Information</h2>
+          <p className="text-sm text-zinc-400">
+            Update your name and country for faster checkout
+          </p>
+        </div>
+        <UpdatePersonalInfoForm />
       </section>
 
       {/* Account Information */}

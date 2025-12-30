@@ -203,16 +203,18 @@ export default function PromotionalImageAdminPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl py-8">
-      <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-bold">Promotional Image - Admin</h1>
-        <p className="text-zinc-600">Upload and manage promotional image for the application</p>
+    <div className="space-y-6">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-white">Promotional Image Admin</h1>
+        <p className="mt-1 text-sm text-zinc-400">Upload and manage promotional image for the application</p>
       </div>
 
       {message && (
         <div
-          className={`mb-6 rounded-md p-4 ${
-            message.type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+          className={`rounded-md p-4 ${
+            message.type === "success" 
+              ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300" 
+              : "bg-red-500/10 border border-red-500/30 text-red-300"
           }`}
         >
           {message.text}
@@ -222,18 +224,18 @@ export default function PromotionalImageAdminPage() {
       <div className="space-y-6">
         {/* Current Image Preview */}
         {loading ? (
-          <div className="flex items-center justify-center rounded-lg border border-zinc-200 bg-white p-12">
-            <p className="text-zinc-600">Loading...</p>
+          <div className="flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/50 p-12">
+            <p className="text-zinc-400">Loading...</p>
           </div>
         ) : currentImage || previewUrl ? (
-          <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-zinc-700">
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold text-white">
               {previewUrl ? "New Image Preview" : "Current Promotional Image"}
             </h2>
-            <div className="relative mb-4 aspect-video w-full overflow-hidden rounded-md border border-zinc-200 bg-zinc-100">
+            <div className="relative mb-4 aspect-video w-full overflow-hidden rounded-md border border-zinc-700 bg-zinc-800">
               {imageLoadError && !previewUrl ? (
-                <div className="flex h-full items-center justify-center bg-red-50">
-                  <p className="text-red-600">Failed to load image</p>
+                <div className="flex h-full items-center justify-center bg-red-500/10">
+                  <p className="text-red-300">Failed to load image</p>
                 </div>
               ) : (
                 <Image
@@ -250,16 +252,16 @@ export default function PromotionalImageAdminPage() {
                 />
               )}
             </div>
-            <div className="space-y-2 text-sm text-zinc-600">
+            <div className="space-y-2 text-sm text-zinc-400">
               <p>
-                <strong>API Endpoint:</strong>{" "}
-                <code className="rounded bg-zinc-100 px-2 py-1">
+                <strong className="text-zinc-300">API Endpoint:</strong>{" "}
+                <code className="rounded bg-zinc-800 px-2 py-1 text-zinc-300">
                   https://www.signaltradingbots.com/api/app/promotional-image
                 </code>
               </p>
               {currentUrl && (
                 <p>
-                  <strong>Redirect URL:</strong>{" "}
+                  <strong className="text-zinc-300">Redirect URL:</strong>{" "}
                   <a href={currentUrl} target="_blank" rel="noopener noreferrer" className="text-[#5e17eb] hover:underline">
                     {currentUrl}
                   </a>
@@ -268,17 +270,17 @@ export default function PromotionalImageAdminPage() {
             </div>
           </div>
         ) : (
-          <div className="rounded-lg border border-zinc-200 bg-white p-12 text-center">
-            <p className="text-zinc-600">No promotional image uploaded yet</p>
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-12 text-center">
+            <p className="text-zinc-400">No promotional image uploaded yet</p>
           </div>
         )}
 
         {/* Upload Section */}
-        <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-zinc-700">Upload New Image</h2>
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-semibold text-white">Upload New Image</h2>
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-zinc-700">
+              <label className="mb-2 block text-sm font-medium text-zinc-300">
                 Select Image File
               </label>
               <input
@@ -287,14 +289,14 @@ export default function PromotionalImageAdminPage() {
                 accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                 onChange={handleFileSelect}
                 disabled={saving}
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm file:mr-4 file:rounded-md file:border-0 file:bg-[#5e17eb] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-[#4512c2] disabled:opacity-50"
+                className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white file:mr-4 file:rounded-md file:border-0 file:bg-[#5e17eb] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-[#4512c2] disabled:opacity-50"
               />
               <p className="mt-2 text-xs text-zinc-500">
                 Supported formats: JPEG, PNG, GIF, WebP. Maximum file size: 5MB
               </p>
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-zinc-700">
+              <label className="mb-2 block text-sm font-medium text-zinc-300">
                 Redirect URL (when image is clicked)
               </label>
               <input
@@ -302,7 +304,7 @@ export default function PromotionalImageAdminPage() {
                 value={currentUrl}
                 onChange={(e) => setCurrentUrl(e.target.value)}
                 placeholder="https://example.com"
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
+                className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
               />
               <p className="mt-2 text-xs text-zinc-500">
                 Enter the URL where users will be redirected when they click on the image
@@ -324,7 +326,7 @@ export default function PromotionalImageAdminPage() {
             <button
               onClick={handleDelete}
               disabled={deleting || saving}
-              className="rounded-md border border-red-300 bg-white px-6 py-2 text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+              className="rounded-md border border-red-500/30 bg-red-500/10 px-6 py-2 text-red-300 transition hover:bg-red-500/20 disabled:opacity-50"
             >
               {deleting ? "Deleting..." : "Delete Image"}
             </button>
@@ -332,7 +334,7 @@ export default function PromotionalImageAdminPage() {
           <button
             onClick={loadCurrentImage}
             disabled={loading || saving}
-            className="rounded-md border border-zinc-300 bg-white px-6 py-2 text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50"
+            className="rounded-md border border-zinc-700 bg-zinc-800/50 px-6 py-2 text-white transition hover:bg-zinc-700 disabled:opacity-50"
           >
             {loading ? "Loading..." : "Refresh"}
           </button>

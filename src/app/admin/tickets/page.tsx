@@ -91,38 +91,39 @@ export default function TicketsAdminPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl py-8">
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <div>
-          <h1 className="mb-1 text-3xl font-bold">Support tickets</h1>
-          <p className="text-sm text-zinc-600">
-            View escalated conversations from the virtual agents and reply or mark them as
-            sorted.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-zinc-500">Filter:</span>
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value as any);
-              setSelectedId(null);
-            }}
-            className="rounded-md border border-zinc-300 px-2 py-1 text-sm focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
-          >
-            <option value="pending">Pending</option>
-            <option value="sorted">Sorted</option>
-            <option value="all">All</option>
-          </select>
+    <div className="space-y-6">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-white">Support Tickets</h1>
+            <p className="mt-1 text-sm text-zinc-400">
+              View escalated conversations from the virtual agents and reply or mark them as sorted.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-zinc-400">Filter:</span>
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value as any);
+                setSelectedId(null);
+              }}
+              className="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1 text-sm text-white focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
+            >
+              <option value="pending">Pending</option>
+              <option value="sorted">Sorted</option>
+              <option value="all">All</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {message && (
         <div
-          className={`mb-4 rounded-md p-3 text-sm ${
+          className={`rounded-md p-3 text-sm ${
             message.type === "success"
-              ? "bg-emerald-50 text-emerald-800"
-              : "bg-red-50 text-red-700"
+              ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300"
+              : "bg-red-500/10 border border-red-500/30 text-red-300"
           }`}
         >
           {message.text}
@@ -130,34 +131,34 @@ export default function TicketsAdminPage() {
       )}
 
       <div className="grid gap-6 md:grid-cols-[2fr,3fr]">
-        <div className="rounded-lg border border-zinc-200 bg-white p-3 shadow-sm">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 shadow-sm">
           <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
             Tickets
           </div>
           <div className="max-h-[480px] overflow-y-auto text-xs">
             {loading && tickets.length === 0 && (
-              <div className="rounded-md bg-zinc-50 p-3 text-zinc-600">Loading…</div>
+              <div className="rounded-md bg-zinc-800/50 p-3 text-zinc-400">Loading…</div>
             )}
-            <table className="min-w-full divide-y divide-zinc-200">
-              <thead className="bg-zinc-50">
+            <table className="min-w-full divide-y divide-zinc-800">
+              <thead className="bg-zinc-800/50">
                 <tr>
                   <th className="px-2 py-1 text-left font-semibold text-zinc-500">#</th>
                   <th className="px-2 py-1 text-left font-semibold text-zinc-500">Subject</th>
                   <th className="px-2 py-1 text-left font-semibold text-zinc-500">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-200">
+              <tbody className="divide-y divide-zinc-800">
                 {tickets.map((t) => (
                   <tr
                     key={t.id}
                     className={
-                      t.id === selectedId ? "bg-[#5e17eb]/5 cursor-pointer" : "cursor-pointer"
+                      t.id === selectedId ? "bg-[#5e17eb]/20 cursor-pointer" : "cursor-pointer hover:bg-zinc-800/30"
                     }
                     onClick={() => setSelectedId(t.id)}
                   >
-                    <td className="px-2 py-1 text-zinc-800">#{t.id}</td>
-                    <td className="px-2 py-1 text-zinc-800">{t.subject}</td>
-                    <td className="px-2 py-1 text-zinc-800 capitalize">{t.status}</td>
+                    <td className="px-2 py-1 text-zinc-300">#{t.id}</td>
+                    <td className="px-2 py-1 text-zinc-300">{t.subject}</td>
+                    <td className="px-2 py-1 text-zinc-300 capitalize">{t.status}</td>
                   </tr>
                 ))}
                 {!loading && tickets.length === 0 && (
@@ -172,11 +173,11 @@ export default function TicketsAdminPage() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-zinc-800">Details & reply</h2>
+            <h2 className="text-sm font-semibold text-white">Details & reply</h2>
             {selected && (
-              <span className="text-xs text-zinc-500">
+              <span className="text-xs text-zinc-400">
                 Ticket #{selected.id} · {selected.email || "no email"}
               </span>
             )}
@@ -184,24 +185,24 @@ export default function TicketsAdminPage() {
           {selected ? (
             <div className="space-y-3 text-sm">
               <div>
-                <div className="text-xs font-medium text-zinc-700">Subject</div>
-                <div className="text-xs text-zinc-900">{selected.subject}</div>
+                <div className="text-xs font-medium text-zinc-300">Subject</div>
+                <div className="text-xs text-white">{selected.subject}</div>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-zinc-700">
+                  <label className="mb-1 block text-xs font-medium text-zinc-300">
                     New status
                   </label>
                   <select
                     value={newStatus}
                     onChange={(e) => setNewStatus(e.target.value as any)}
-                    className="w-full rounded-md border border-zinc-300 px-2 py-1 text-xs focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
+                    className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs text-white focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
                   >
                     <option value="pending">Pending</option>
                     <option value="sorted">Sorted</option>
                   </select>
                 </div>
-                <div className="flex items-center gap-2 pt-5 text-xs text-zinc-700">
+                <div className="flex items-center gap-2 pt-5 text-xs text-zinc-300">
                   <input
                     type="checkbox"
                     checked={notifyCustomer}
@@ -211,13 +212,13 @@ export default function TicketsAdminPage() {
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-700">
+                <label className="mb-1 block text-xs font-medium text-zinc-300">
                   Reply / internal note
                 </label>
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  className="min-h-[120px] w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
+                  className="min-h-[120px] w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
                   placeholder="Write a reply to the customer or an internal note about the investigation."
                 />
               </div>

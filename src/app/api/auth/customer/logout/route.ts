@@ -1,11 +1,17 @@
-import { NextResponse } from "next/server";
-import { redirect } from "next/navigation";
+import { NextRequest, NextResponse } from "next/server";
 
 import { CUSTOMER_COOKIE_NAME } from "@/lib/auth-tokens";
 
-export async function POST() {
-  const response = NextResponse.redirect(new URL("/login", process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"));
+export async function POST(request: NextRequest) {
+  // Get the origin from the request headers
+  const origin = request.headers.get("origin") || request.nextUrl.origin;
+  
+  // Create redirect URL using the actual origin
+  const redirectUrl = new URL("/login", origin);
+  
+  const response = NextResponse.redirect(redirectUrl);
 
+  // Clear the customer cookie
   response.cookies.set(CUSTOMER_COOKIE_NAME, "", {
     httpOnly: true,
     sameSite: "lax",

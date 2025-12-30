@@ -6,6 +6,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { StripeCardForm } from "@/components/StripeCardForm";
 import { EmailVerification } from "@/components/EmailVerification";
+import { CountrySelect } from "@/components/CountrySelect";
 
 // Initialize Stripe (only if key is available)
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
@@ -32,6 +33,8 @@ function PaymentForm() {
   const [emailVerified, setEmailVerified] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [purchaseForDifferentEmail, setPurchaseForDifferentEmail] = useState(false);
+  const [loggedInUserEmail, setLoggedInUserEmail] = useState("");
   const [loadingUser, setLoadingUser] = useState(true);
 
   const [creatingOrder, setCreatingOrder] = useState(false);
@@ -43,12 +46,24 @@ function PaymentForm() {
       .then(data => {
         if (data?.customer) {
           setIsLoggedIn(true);
+          setLoggedInUserEmail(data.customer.email);
+          
+          // Auto-fill form with customer data from customers table
+          const autoFilledName = data.customer.name || "";
+          const autoFilledCountry = data.customer.country || "";
+          
           setFormData(prev => ({
             ...prev,
             email: data.customer.email,
-            fullName: prev.fullName || "", // Keep empty unless we have it stored
+            fullName: autoFilledName,
+            country: autoFilledCountry,
           }));
           setEmailVerified(true); // Skip email verification for logged-in users
+          
+          console.log("Auto-filled customer data:", {
+            name: autoFilledName,
+            country: autoFilledCountry,
+          });
         }
         setLoadingUser(false);
       })
@@ -75,10 +90,20 @@ function PaymentForm() {
 
   // Auto-create PaymentIntent when card payment is selected
   useEffect(() => {
+    console.log("Payment Intent Check:", {
+      selectedPayment,
+      hasClientSecret: !!clientSecret,
+      email: formData.email,
+      fullName: formData.fullName,
+      country: formData.country,
+      isLoggedIn,
+    });
+    
     if (selectedPayment === "card" && !clientSecret && formData.email && formData.fullName && formData.country) {
+      console.log("Creating PaymentIntent...");
       createStripePaymentIntent();
     }
-  }, [selectedPayment, formData.email, formData.fullName, formData.country]);
+  }, [selectedPayment, formData.email, formData.fullName, formData.country, clientSecret, isLoggedIn]);
 
   const createStripePaymentIntent = async () => {
     if (loadingStripe || clientSecret) return;
@@ -227,107 +252,180 @@ function PaymentForm() {
                   <svg className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                   </svg>
-                  <div>
+                  <div className="flex-1">
                     <h3 className="font-semibold text-blue-300 text-sm">Purchasing as Logged-In User</h3>
                     <p className="mt-1 text-xs text-blue-200/80">
-                      Email: <span className="font-semibold">{formData.email}</span>
+                      Account Email: <span className="font-semibold">{loggedInUserEmail}</span>
                     </p>
-                    <p className="mt-1 text-xs text-blue-200/80">
-                      Your new license will be added to your account automatically.
-                    </p>
+                    {!purchaseForDifferentEmail && (
+                      <p className="mt-1 text-xs text-blue-200/80">
+                        Your new license will be added to your account automatically.
+                      </p>
+                    )}
+                    
+                    {/* Toggle for purchasing for different email */}
+                    <div className="mt-3 pt-3 border-t border-blue-500/20">
+                      <label className="flex items-start gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={purchaseForDifferentEmail}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setPurchaseForDifferentEmail(checked);
+                            if (checked) {
+                              // Clear all fields for recipient's information
+                              setFormData(prev => ({ 
+                                ...prev, 
+                                email: "",
+                                fullName: "",
+                                country: "",
+                              }));
+                              setEmailVerified(false);
+                              setShowVerification(false);
+                            } else {
+                              // Restore logged-in user's information
+                              fetch("/api/auth/customer/me")
+                                .then(res => res.ok ? res.json() : null)
+                                .then(data => {
+                                  if (data?.customer) {
+                                    const autoFilledName = data.customer.name || "";
+                                    const autoFilledCountry = data.customer.country || "";
+                                    setFormData(prev => ({ 
+                                      ...prev, 
+                                      email: data.customer.email,
+                                      fullName: autoFilledName,
+                                      country: autoFilledCountry,
+                                    }));
+                                  }
+                                });
+                              setEmailVerified(true);
+                              setShowVerification(false);
+                            }
+                          }}
+                          className="mt-0.5 h-4 w-4 rounded border-blue-500/50 bg-blue-500/20 text-blue-500 focus:ring-blue-500"
+                        />
+                        <span className="text-xs text-blue-200/90">
+                          Purchase for a different email address (gift or separate account)
+                        </span>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </section>
             )}
 
-            {/* Customer Information - Only show if NOT logged in */}
-            {!isLoggedIn && (
-              <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
-                <h2 className="mb-4 text-lg font-semibold text-white">Customer Information</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="mb-1 block text-sm text-zinc-300">
-                  Full Name <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  placeholder="John Doe"
-                  className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-white placeholder:text-zinc-500 focus:border-blue-500 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm text-zinc-300">
-                  Email Address <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => {
-                    setFormData({ ...formData, email: e.target.value });
-                    setEmailVerified(false);
-                    setShowVerification(false);
-                  }}
-                  onBlur={() => {
-                    if (formData.email && formData.email.includes("@") && !emailVerified) {
-                      setShowVerification(true);
-                    }
-                  }}
-                  placeholder="john@example.com"
-                  disabled={emailVerified}
-                  className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-white placeholder:text-zinc-500 focus:border-blue-500 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
-                />
-                {emailVerified && (
-                  <div className="mt-2 flex items-center gap-2 text-sm text-green-400">
-                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+            {/* Customer Information */}
+            <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-white">Customer Information</h2>
+                {isLoggedIn && !purchaseForDifferentEmail && (formData.fullName || formData.country) && (
+                  <span className="text-xs text-green-400 flex items-center gap-1">
+                    <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                    Email verified
-                    <button
-                      onClick={() => {
-                        setEmailVerified(false);
-                        setShowVerification(false);
-                      }}
-                      className="text-xs text-zinc-400 hover:text-zinc-300 underline"
-                    >
-                      Change
-                    </button>
-                  </div>
+                    Auto-filled from your account
+                  </span>
                 )}
-                {!emailVerified && <p className="mt-1 text-xs text-zinc-500">License key will be sent to this email</p>}
               </div>
-
-              {/* Email Verification Section */}
-              {showVerification && !emailVerified && formData.email && (
-                <div className="rounded-lg border border-zinc-700 bg-zinc-800/50 p-4">
-                  <EmailVerification
-                    email={formData.email}
-                    onVerified={() => {
-                      setEmailVerified(true);
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1 block text-sm text-zinc-300">
+                    Full Name <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    placeholder="John Doe"
+                    disabled={isLoggedIn && !purchaseForDifferentEmail}
+                    className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-white placeholder:text-zinc-500 focus:border-blue-500 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  />
+                  {isLoggedIn && !purchaseForDifferentEmail && (
+                    <p className="mt-1 text-xs text-zinc-500">
+                      Using your saved information. <Link href="/portal/settings" className="text-blue-400 hover:text-blue-300 underline">Update in settings</Link>
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm text-zinc-300">
+                    Email Address <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => {
+                      setFormData({ ...formData, email: e.target.value });
+                      setEmailVerified(false);
                       setShowVerification(false);
                     }}
+                    onBlur={() => {
+                      if (formData.email && formData.email.includes("@") && !emailVerified) {
+                        setShowVerification(true);
+                      }
+                    }}
+                    placeholder="john@example.com"
+                    disabled={emailVerified || (isLoggedIn && !purchaseForDifferentEmail)}
+                    className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-white placeholder:text-zinc-500 focus:border-blue-500 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                   />
+                  {emailVerified && (
+                    <div className="mt-2 flex items-center gap-2 text-sm text-green-400">
+                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Email verified
+                      {(!isLoggedIn || purchaseForDifferentEmail) && (
+                        <button
+                          onClick={() => {
+                            setEmailVerified(false);
+                            setShowVerification(false);
+                          }}
+                          className="text-xs text-zinc-400 hover:text-zinc-300 underline"
+                        >
+                          Change
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {!emailVerified && (!isLoggedIn || purchaseForDifferentEmail) && (
+                    <p className="mt-1 text-xs text-zinc-500">License key will be sent to this email</p>
+                  )}
+                  {isLoggedIn && !purchaseForDifferentEmail && (
+                    <p className="mt-1 text-xs text-zinc-500">Using your account email</p>
+                  )}
                 </div>
-              )}
-              <div>
-                <label className="mb-1 block text-sm text-zinc-300">
-                  Country <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  placeholder="United States"
-                  className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-white placeholder:text-zinc-500 focus:border-blue-500 focus:outline-none"
-                />
+
+                {/* Email Verification Section - For non-logged-in users or logged-in users purchasing for different email */}
+                {showVerification && !emailVerified && formData.email && (!isLoggedIn || purchaseForDifferentEmail) && (
+                  <div className="rounded-lg border border-zinc-700 bg-zinc-800/50 p-4">
+                    <EmailVerification
+                      email={formData.email}
+                      onVerified={() => {
+                        setEmailVerified(true);
+                        setShowVerification(false);
+                      }}
+                    />
+                  </div>
+                )}
+                <div>
+                  <label className="mb-1 block text-sm text-zinc-300">
+                    Country <span className="text-red-400">*</span>
+                  </label>
+                  <CountrySelect
+                    value={formData.country}
+                    onChange={(value) => setFormData({ ...formData, country: value })}
+                    disabled={isLoggedIn && !purchaseForDifferentEmail}
+                    required
+                  />
+                  {isLoggedIn && !purchaseForDifferentEmail && (
+                    <p className="mt-1 text-xs text-zinc-500">
+                      Using your saved information. <Link href="/portal/settings" className="text-blue-400 hover:text-blue-300 underline">Update in settings</Link>
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-          </section>
-            )}
+            </section>
 
           {/* Important Warning */}
           <section className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-6">
@@ -541,7 +639,26 @@ function PaymentForm() {
             <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
               <h2 className="mb-4 text-lg font-semibold text-white">Card Payment</h2>
               
-              {loadingStripe && !clientSecret && (
+              {/* Show message if required fields are missing */}
+              {!formData.fullName || !formData.country ? (
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-6">
+                  <div className="flex items-start gap-3">
+                    <svg className="h-5 w-5 flex-shrink-0 text-amber-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-medium text-amber-300">Complete Customer Information</p>
+                      <p className="mt-1 text-sm text-amber-200/80">
+                        Please fill in all required fields in the Customer Information section above to continue.
+                      </p>
+                      <ul className="mt-2 text-sm text-amber-200/80 list-disc list-inside">
+                        {!formData.fullName && <li>Full Name is required</li>}
+                        {!formData.country && <li>Country is required</li>}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              ) : loadingStripe && !clientSecret ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="text-center">
                     <svg
@@ -566,9 +683,7 @@ function PaymentForm() {
                     <p className="mt-3 text-sm text-zinc-400">Initializing secure payment...</p>
                   </div>
                 </div>
-              )}
-
-              {showStripeForm && clientSecret && stripeOrderId && (
+              ) : showStripeForm && clientSecret && stripeOrderId ? (
                 <Elements
                   stripe={stripePromise}
                   options={{
@@ -599,7 +714,7 @@ function PaymentForm() {
                     }}
                   />
                 </Elements>
-              )}
+              ) : null}
             </section>
           )}
 

@@ -122,29 +122,31 @@ export default function DocsAdminPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="mb-1 text-3xl font-bold">Knowledge documents</h1>
-          <p className="text-sm text-zinc-600">
-            Long-form guides that the virtual agents and future AI assistant will use.
-          </p>
+    <div className="space-y-6">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-white">Knowledge Documents</h1>
+            <p className="mt-1 text-sm text-zinc-400">
+              Long-form guides that the virtual agents and future AI assistant will use.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="rounded-md bg-[#5e17eb] px-4 py-2 text-sm font-medium text-white hover:bg-[#4512c2]"
+          >
+            Add document
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={handleAdd}
-          className="rounded-md bg-[#5e17eb] px-4 py-2 text-sm font-medium text-white hover:bg-[#4512c2]"
-        >
-          Add document
-        </button>
       </div>
 
       {message && (
         <div
-          className={`mb-4 rounded-md p-3 text-sm ${
+          className={`rounded-md p-3 text-sm ${
             message.type === "success"
-              ? "bg-emerald-50 text-emerald-800"
-              : "bg-red-50 text-red-700"
+              ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300"
+              : "bg-red-500/10 border border-red-500/30 text-red-300"
           }`}
         >
           {message.text}
@@ -152,13 +154,13 @@ export default function DocsAdminPage() {
       )}
 
       <div className="grid gap-6 md:grid-cols-[2fr,3fr]">
-        <div className="rounded-lg border border-zinc-200 bg-white p-3 shadow-sm">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 shadow-sm">
           <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
             Documents
           </div>
           <div className="max-h-[480px] space-y-1 overflow-y-auto text-sm">
             {loading && docs.length === 0 && (
-              <div className="rounded-md bg-zinc-50 p-3 text-xs text-zinc-600">
+              <div className="rounded-md bg-zinc-800/50 p-3 text-xs text-zinc-400">
                 Loading…
               </div>
             )}
@@ -169,11 +171,11 @@ export default function DocsAdminPage() {
                 onClick={() => doc.id && handleSelect(doc.id)}
                 className={`block w-full rounded-md px-2 py-1 text-left text-xs ${
                   doc.id === selectedId
-                    ? "bg-[#5e17eb]/10 text-[#5e17eb]"
-                    : "hover:bg-zinc-100"
+                    ? "bg-[#5e17eb]/20 text-[#5e17eb]"
+                    : "text-zinc-300 hover:bg-zinc-800/50"
                 }`}
               >
-                {doc.title || <span className="italic text-zinc-400">Untitled document</span>}
+                {doc.title || <span className="italic text-zinc-500">Untitled document</span>}
               </button>
             ))}
             {!loading && docs.length === 0 && (
@@ -184,9 +186,9 @@ export default function DocsAdminPage() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-zinc-800">Edit document</h2>
+            <h2 className="text-sm font-semibold text-white">Edit document</h2>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -200,7 +202,7 @@ export default function DocsAdminPage() {
                 type="button"
                 onClick={handleDelete}
                 disabled={!selected || !selected.id}
-                className="rounded-md border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-300 hover:bg-red-500/20 disabled:opacity-50"
               >
                 Delete
               </button>
@@ -209,47 +211,47 @@ export default function DocsAdminPage() {
           {selected ? (
             <div className="space-y-3 text-sm">
               <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-700">
+                <label className="mb-1 block text-xs font-medium text-zinc-300">
                   Title
                 </label>
                 <input
                   type="text"
                   value={selected.title}
                   onChange={(e) => handleFieldChange("title", e.target.value)}
-                  className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
+                  className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-700">
+                <label className="mb-1 block text-xs font-medium text-zinc-300">
                   Slug (URL-safe identifier)
                 </label>
                 <input
                   type="text"
                   value={selected.slug}
                   onChange={(e) => handleFieldChange("slug", e.target.value)}
-                  className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
+                  className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
                   placeholder="app-guide"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-700">
+                <label className="mb-1 block text-xs font-medium text-zinc-300">
                   Category
                 </label>
                 <input
                   type="text"
                   value={selected.category ?? ""}
                   onChange={(e) => handleFieldChange("category", e.target.value)}
-                  className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
+                  className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-700">
+                <label className="mb-1 block text-xs font-medium text-zinc-300">
                   Content (Markdown)
                 </label>
                 <textarea
                   value={selected.content_md}
                   onChange={(e) => handleFieldChange("content_md", e.target.value)}
-                  className="min-h-[200px] w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
+                  className="min-h-[200px] w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
                   placeholder="Use Markdown for headings, bullet points, etc."
                 />
               </div>

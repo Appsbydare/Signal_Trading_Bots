@@ -126,50 +126,52 @@ export default function FaqsAdminPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl py-8">
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <div>
-          <h1 className="mb-1 text-3xl font-bold">FAQs</h1>
-          <p className="text-sm text-zinc-600">
-            Manage the 200+ questions that power the virtual agent&apos;s quick answers.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                void loadFaqs(search);
-              }
-            }}
-            placeholder="Search question…"
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
-          />
-          <button
-            type="button"
-            onClick={() => void loadFaqs(search)}
-            className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50"
-          >
-            Search
-          </button>
-          <button
-            type="button"
-            onClick={handleAdd}
-            className="rounded-md bg-[#5e17eb] px-4 py-2 text-sm font-medium text-white hover:bg-[#4512c2]"
-          >
-            Add FAQ
-          </button>
+    <div className="space-y-6">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-white">FAQs</h1>
+            <p className="mt-1 text-sm text-zinc-400">
+              Manage the 200+ questions that power the virtual agent&apos;s quick answers.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  void loadFaqs(search);
+                }
+              }}
+              placeholder="Search question…"
+              className="rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
+            />
+            <button
+              type="button"
+              onClick={() => void loadFaqs(search)}
+              className="rounded-md border border-zinc-700 bg-zinc-800/50 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+            >
+              Search
+            </button>
+            <button
+              type="button"
+              onClick={handleAdd}
+              className="rounded-md bg-[#5e17eb] px-4 py-2 text-sm font-medium text-white hover:bg-[#4512c2]"
+            >
+              Add FAQ
+            </button>
+          </div>
         </div>
       </div>
 
       {message && (
         <div
-          className={`mb-4 rounded-md p-3 text-sm ${
+          className={`rounded-md p-3 text-sm ${
             message.type === "success"
-              ? "bg-emerald-50 text-emerald-800"
-              : "bg-red-50 text-red-700"
+              ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300"
+              : "bg-red-500/10 border border-red-500/30 text-red-300"
           }`}
         >
           {message.text}
@@ -177,13 +179,13 @@ export default function FaqsAdminPage() {
       )}
 
       <div className="grid gap-6 md:grid-cols-[2fr,3fr]">
-        <div className="rounded-lg border border-zinc-200 bg-white p-3 shadow-sm">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 shadow-sm">
           <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
             Questions
           </div>
           <div className="max-h-[480px] space-y-1 overflow-y-auto text-sm">
             {loading && faqs.length === 0 && (
-              <div className="rounded-md bg-zinc-50 p-3 text-xs text-zinc-600">
+              <div className="rounded-md bg-zinc-800/50 p-3 text-xs text-zinc-400">
                 Loading…
               </div>
             )}
@@ -194,11 +196,11 @@ export default function FaqsAdminPage() {
                 onClick={() => faq.id && handleSelect(faq.id)}
                 className={`block w-full rounded-md px-2 py-1 text-left text-xs ${
                   faq.id === selectedId
-                    ? "bg-[#5e17eb]/10 text-[#5e17eb]"
-                    : "hover:bg-zinc-100"
+                    ? "bg-[#5e17eb]/20 text-[#5e17eb]"
+                    : "text-zinc-300 hover:bg-zinc-800"
                 }`}
               >
-                {faq.question || <span className="italic text-zinc-400">Untitled question</span>}
+                {faq.question || <span className="italic text-zinc-500">Untitled question</span>}
               </button>
             ))}
             {!loading && faqs.length === 0 && (
@@ -207,9 +209,9 @@ export default function FaqsAdminPage() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-zinc-800">Edit FAQ</h2>
+            <h2 className="text-sm font-semibold text-white">Edit FAQ</h2>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -223,7 +225,7 @@ export default function FaqsAdminPage() {
                 type="button"
                 onClick={handleDelete}
                 disabled={!selectedFaq || !selectedFaq.id}
-                className="rounded-md border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/20 disabled:opacity-50"
               >
                 Delete
               </button>
@@ -232,33 +234,33 @@ export default function FaqsAdminPage() {
           {selectedFaq ? (
             <div className="space-y-3 text-sm">
               <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-700">
+                <label className="mb-1 block text-xs font-medium text-zinc-300">
                   Question
                 </label>
                 <textarea
                   value={selectedFaq.question}
                   onChange={(e) => handleFieldChange("question", e.target.value)}
-                  className="min-h-[60px] w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
+                  className="min-h-[60px] w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-700">Answer</label>
+                <label className="mb-1 block text-xs font-medium text-zinc-300">Answer</label>
                 <textarea
                   value={selectedFaq.answer}
                   onChange={(e) => handleFieldChange("answer", e.target.value)}
-                  className="min-h-[120px] w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
+                  className="min-h-[120px] w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
                 />
               </div>
               <div className="grid gap-3 md:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-zinc-700">
+                  <label className="mb-1 block text-xs font-medium text-zinc-300">
                     Category
                   </label>
                   <input
                     type="text"
                     value={selectedFaq.category ?? ""}
                     onChange={(e) => handleFieldChange("category", e.target.value)}
-                    className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
+                    className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-[#5e17eb] focus:outline-none focus:ring-1 focus:ring-[#5e17eb]"
                     placeholder="install, licensing, strategies…"
                   />
                 </div>
