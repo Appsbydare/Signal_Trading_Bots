@@ -377,13 +377,11 @@ export default function Home() {
               className="flex flex-col justify-start"
             >
               <h1
-                className="font-bold leading-tight mb-3 hero-typewriter-text"
+                className="font-bold leading-tight mb-3 hero-typewriter-text h-[9.075rem] md:h-[12rem] lg:h-[17.6rem]"
                 style={{
                   fontSize: 'clamp(2.75rem, 9vw, 8rem)',
                   lineHeight: '1.1',
-                  minHeight: 'auto',
-                  maxHeight: 'none',
-                  overflow: 'visible',
+                  overflow: 'hidden',
                   wordWrap: 'break-word',
                   wordBreak: 'break-word'
                 }}
