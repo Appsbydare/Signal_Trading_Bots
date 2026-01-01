@@ -5,6 +5,7 @@ interface CountrySelectProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   required?: boolean;
+  className?: string; // Add className prop
 }
 
 const countries = [
@@ -41,14 +42,14 @@ const countries = [
   "Zimbabwe"
 ];
 
-export function CountrySelect({ value, onChange, disabled, required }: CountrySelectProps) {
+export function CountrySelect({ value, onChange, disabled, required, className }: CountrySelectProps) {
   return (
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
       required={required}
-      className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-white placeholder:text-zinc-500 focus:border-blue-500 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+      className={`w-full rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-white placeholder:text-zinc-500 focus:border-blue-500 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed ${className || ''}`}
     >
       <option value="" disabled>
         Select a country

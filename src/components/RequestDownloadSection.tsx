@@ -61,7 +61,7 @@ export function RequestDownloadSection() {
                                 <li>• Click the button below to request a download link</li>
                                 <li>• We'll send a secure link to your email</li>
                                 <li>• The link expires in 1 hour and can only be used once</li>
-                                <li>• You can request a new link anytime from this page</li>
+                                <li>• You can request a new link once per 24 hours from this page</li>
                             </ul>
                         </div>
                     </div>

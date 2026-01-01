@@ -60,6 +60,61 @@ interface MessageResponse extends StartResponse {
 
 const STORAGE_KEY = "stb_chat_conversation_id";
 
+// Format message with basic markdown-like formatting
+function formatMessage(content: string): string {
+  let formatted = content;
+
+  // Convert markdown headers (### then ##)
+  formatted = formatted.replace(/^###\s+(.+)$/gm, '<h3 class="font-bold text-base mt-3 mb-2">$1</h3>');
+  formatted = formatted.replace(/^##\s+(.+)$/gm, '<h2 class="font-bold text-lg mt-4 mb-2">$1</h2>');
+  
+  // Convert inline code `text` to <code> (before bold to avoid conflicts)
+  formatted = formatted.replace(/`([^`]+)`/g, '<code class="bg-zinc-800 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>');
+  
+  // Convert domain-only URLs BEFORE bold conversion (e.g., signaltradingbots.com/portal)
+  // This ensures URLs are converted to links even when inside bold text
+  formatted = formatted.replace(/(?<![a-zA-Z0-9_@])((?:www\.)?[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]\.(?:com|net|org|io|dev|ai|app|co|uk|us|info|biz)(?:\/[^\s<"'>*]*)?)(?![a-zA-Z0-9])/g, (match) => {
+    // Skip if it's part of an email address
+    if (match.includes('@')) return match;
+    return `<a href="https://${match}" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:text-blue-600 underline">${match}</a>`;
+  });
+  
+  // Convert **bold** to <strong>
+  formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>');
+  
+  // Convert markdown links [text](url)
+  formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:text-blue-600 underline">$1</a>');
+  
+  // Convert plain URLs (must come after markdown links and domain-only URLs)
+  // Skip URLs that are already inside anchor tags
+  formatted = formatted.replace(/(?<!href="|">|>)(https?:\/\/[^\s<]+)(?!<\/a>)/g, (match, url, offset, string) => {
+    // Check if we're already inside an anchor tag
+    const before = string.substring(0, offset);
+    const lastOpenTag = before.lastIndexOf('<a');
+    const lastCloseTag = before.lastIndexOf('</a>');
+    if (lastOpenTag > lastCloseTag) return match; // Already inside an anchor tag
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:text-blue-600 underline">${url}</a>`;
+  });
+  
+  // Convert numbered lists (1. 2. 3.) - must not be part of a header
+  formatted = formatted.replace(/^(\d+)\.\s+(.+)$/gm, (match, num, text) => {
+    // Skip if this looks like it was already processed as a header
+    if (text.includes('<h')) return match;
+    return `<div class="ml-2 mb-1.5"><span class="font-semibold">${num}.</span> ${text}</div>`;
+  });
+  
+  // Convert bullet points (- or •)
+  formatted = formatted.replace(/^[-•]\s+(.+)$/gm, '<div class="ml-2 mb-1.5 flex gap-2"><span class="text-zinc-400">•</span><span class="flex-1">$1</span></div>');
+  
+  // Convert double line breaks to spacing
+  formatted = formatted.replace(/\n\n/g, '<div class="h-3"></div>');
+  
+  // Convert single line breaks to <br>
+  formatted = formatted.replace(/\n/g, '<br />');
+  
+  return formatted;
+}
+
 export default function VirtualSupportChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [conversationId, setConversationId] = useState<number | null>(null);
@@ -75,6 +130,52 @@ export default function VirtualSupportChat() {
   const [guestEmail, setGuestEmail] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const isCreatingNewChatRef = useRef(false);
+
+  // Function to start a new conversation
+  async function startNewChat() {
+    // Set flag to prevent useEffect from interfering
+    isCreatingNewChatRef.current = true;
+    
+    // Clear local storage first
+    window.localStorage.removeItem(STORAGE_KEY);
+    
+    // Reset all state
+    setTicketInfo(null);
+    setShowEscalateForm(false);
+    setIssueDescription("");
+    setInput("");
+    setMessages([]);
+    setConversationId(null);
+    setInitialising(true);
+    
+    try {
+      // Create a brand new conversation (don't check localStorage)
+      const res = await fetch("/api/chat/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}), // Empty body = force new conversation
+      });
+      const data = (await res.json()) as StartResponse;
+      
+      if (data.success) {
+        setConversationId(data.conversation.id);
+        window.localStorage.setItem(
+          STORAGE_KEY,
+          String(data.conversation.id),
+        );
+        setMessages(data.messages ?? []);
+      }
+    } catch (error) {
+      console.error("Failed to start new conversation:", error);
+    } finally {
+      setInitialising(false);
+      // Reset flag after a short delay to ensure state updates complete
+      setTimeout(() => {
+        isCreatingNewChatRef.current = false;
+      }, 100);
+    }
+  }
 
   useEffect(() => {
     if (!isOpen) return;
@@ -93,6 +194,8 @@ export default function VirtualSupportChat() {
     }
 
     async function ensureConversation() {
+      // Don't interfere if startNewChat() is running
+      if (isCreatingNewChatRef.current) return;
       if (conversationId !== null) return;
 
       setInitialising(true);
@@ -293,16 +396,29 @@ export default function VirtualSupportChat() {
                 <p className="text-xs text-zinc-400">Virtual Agents</p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="rounded-lg p-1.5 text-zinc-400 transition-all duration-200 hover:bg-zinc-800 hover:text-white hover:rotate-90"
-              aria-label="Close chat"
-            >
-              <svg className="h-5 w-5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void startNewChat()}
+                className="rounded-lg p-1.5 text-zinc-400 transition-all duration-200 hover:bg-zinc-800 hover:text-white group"
+                aria-label="Start new chat"
+                title="Start new conversation"
+              >
+                <svg className="h-5 w-5 transition-transform group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="rounded-lg p-1.5 text-zinc-400 transition-all duration-200 hover:bg-zinc-800 hover:text-white hover:rotate-90"
+                aria-label="Close chat"
+              >
+                <svg className="h-5 w-5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Messages area */}
@@ -350,20 +466,25 @@ export default function VirtualSupportChat() {
 
                   {/* Message Content */}
                   <div
-                    className={`flex max-w-[75%] flex-col ${
+                    className={`flex max-w-[85%] flex-col ${
                       m.sender_type === "customer" ? "items-end" : "items-start"
                     }`}
                   >
                     <div
                       className={
                         m.sender_type === "customer"
-                          ? "rounded-2xl rounded-tr-sm bg-gradient-to-br from-[#5e17eb] to-[#4512c2] px-4 py-2.5 text-sm text-white shadow-lg"
+                          ? "rounded-2xl rounded-tr-sm bg-gradient-to-br from-[#5e17eb] to-[#4512c2] px-4 py-3 text-sm leading-relaxed text-white shadow-lg"
                           : m.sender_type === "system"
-                          ? "rounded-xl bg-blue-500/10 border border-blue-500/30 px-4 py-2.5 text-sm text-blue-300"
-                          : "rounded-2xl rounded-tl-sm bg-zinc-900 border border-zinc-800 px-4 py-2.5 text-sm text-zinc-100 shadow-lg"
+                          ? "rounded-xl bg-blue-500/10 border border-blue-500/30 px-4 py-3 text-sm leading-relaxed text-blue-300"
+                          : "rounded-2xl rounded-tl-sm bg-zinc-900 border border-zinc-800 px-4 py-3 text-sm leading-relaxed text-zinc-100 shadow-lg"
                       }
                     >
-                      {m.content}
+                      <div 
+                        className="whitespace-pre-wrap break-words"
+                        dangerouslySetInnerHTML={{ 
+                          __html: formatMessage(m.content) 
+                        }}
+                      />
                     </div>
                     <span className="mt-1 px-2 text-xs text-zinc-600">
                       {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

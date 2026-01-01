@@ -55,9 +55,9 @@ export function SetPasswordForm({ hasPassword = false }: SetPasswordFormProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           newPassword,
-          currentPassword: hasPassword ? currentPassword : undefined 
+          currentPassword: hasPassword ? currentPassword : undefined
         }),
       });
 
@@ -71,7 +71,7 @@ export function SetPasswordForm({ hasPassword = false }: SetPasswordFormProps) {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      
+
       // Redirect to portal after 2 seconds to refresh the page and show updated status
       setTimeout(() => {
         window.location.href = "/portal";
@@ -95,7 +95,7 @@ export function SetPasswordForm({ hasPassword = false }: SetPasswordFormProps) {
             <div>
               <h3 className="font-semibold text-amber-300 text-sm">Set a Password to Secure Your Account</h3>
               <p className="mt-1 text-xs text-amber-200/80">
-                Your account was created automatically when you purchased. Set a password now so you can log in later. Without a password, you'll need to request a magic link email each time.
+                Set a password now so you can log in directly with email and password. Without a password, you'll need to use social login or request a magic link.
               </p>
             </div>
           </div>
@@ -128,7 +128,7 @@ export function SetPasswordForm({ hasPassword = false }: SetPasswordFormProps) {
             />
           </div>
         )}
-        
+
         <div>
           <label className="mb-2 block text-sm font-medium text-zinc-300">New Password</label>
           <input
@@ -140,7 +140,7 @@ export function SetPasswordForm({ hasPassword = false }: SetPasswordFormProps) {
             placeholder="Enter a strong password"
             className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-[#5e17eb] focus:outline-none focus:ring-2 focus:ring-[#5e17eb]/50"
           />
-          
+
           {/* Password Requirements */}
           {newPassword && (
             <div className="mt-3 space-y-2">
