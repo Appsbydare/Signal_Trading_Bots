@@ -507,6 +507,7 @@ export async function sendLicenseEmail(params: {
     <h2 style="color: #667eea; font-size: 20px; margin-top: 30px;">Need Help?</h2>
     <p style="margin-bottom: 10px;">Our support team is here to assist you:</p>
     <ul style="padding-left: 20px;">
+      <li style="margin-bottom: 8px;">Read our <a href="https://www.signaltradingbots.com/usermanual" style="color: #667eea;">User Manual</a> for detailed setup guides</li>
       <li style="margin-bottom: 8px;">Visit our <a href="https://www.signaltradingbots.com/faq" style="color: #667eea;">FAQ page</a></li>
       <li style="margin-bottom: 8px;">Check our <a href="https://www.signaltradingbots.com/resources" style="color: #667eea;">documentation</a></li>
       <li style="margin-bottom: 8px;">Contact us at <a href="mailto:${FROM_EMAIL}" style="color: #667eea;">${FROM_EMAIL}</a></li>

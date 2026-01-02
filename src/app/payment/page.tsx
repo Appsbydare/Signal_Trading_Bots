@@ -9,7 +9,7 @@ import { EmailVerification } from "@/components/EmailVerification";
 import { CountrySelect } from "@/components/CountrySelect";
 
 // Initialize Stripe (only if key is available)
-const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
   : null;
 
@@ -38,7 +38,7 @@ function PaymentForm() {
   const [loadingUser, setLoadingUser] = useState(true);
 
   const [creatingOrder, setCreatingOrder] = useState(false);
-  
+
   // Check if user is logged in and pre-fill their data
   useEffect(() => {
     fetch("/api/auth/customer/me")
@@ -47,11 +47,11 @@ function PaymentForm() {
         if (data?.customer) {
           setIsLoggedIn(true);
           setLoggedInUserEmail(data.customer.email);
-          
+
           // Auto-fill form with customer data from customers table
           const autoFilledName = data.customer.name || "";
           const autoFilledCountry = data.customer.country || "";
-          
+
           setFormData(prev => ({
             ...prev,
             email: data.customer.email,
@@ -59,7 +59,7 @@ function PaymentForm() {
             country: autoFilledCountry,
           }));
           setEmailVerified(true); // Skip email verification for logged-in users
-          
+
           console.log("Auto-filled customer data:", {
             name: autoFilledName,
             country: autoFilledCountry,
@@ -71,7 +71,7 @@ function PaymentForm() {
         setLoadingUser(false);
       });
   }, []);
-  
+
   // Stripe-specific state
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [stripeOrderId, setStripeOrderId] = useState<string | null>(null);
@@ -98,7 +98,7 @@ function PaymentForm() {
       country: formData.country,
       isLoggedIn,
     });
-    
+
     if (selectedPayment === "card" && !clientSecret && formData.email && formData.fullName && formData.country) {
       console.log("Creating PaymentIntent...");
       createStripePaymentIntent();
@@ -107,7 +107,7 @@ function PaymentForm() {
 
   const createStripePaymentIntent = async () => {
     if (loadingStripe || clientSecret) return;
-    
+
     setLoadingStripe(true);
     try {
       const response = await fetch("/api/stripe/create-payment-intent", {
@@ -181,13 +181,13 @@ function PaymentForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // For card payments, do nothing - Stripe form handles submission
     if (selectedPayment === "card") {
       console.log("Card payment - Stripe form will handle submission");
       return;
     }
-    
+
     // This only handles crypto payments
     if (selectedPayment === "crypto") {
       if (!agreedToTerms || !selectedCrypto) return;
@@ -262,7 +262,7 @@ function PaymentForm() {
                         Your new license will be added to your account automatically.
                       </p>
                     )}
-                    
+
                     {/* Toggle for purchasing for different email */}
                     <div className="mt-3 pt-3 border-t border-blue-500/20">
                       <label className="flex items-start gap-2 cursor-pointer">
@@ -274,8 +274,8 @@ function PaymentForm() {
                             setPurchaseForDifferentEmail(checked);
                             if (checked) {
                               // Clear all fields for recipient's information
-                              setFormData(prev => ({ 
-                                ...prev, 
+                              setFormData(prev => ({
+                                ...prev,
                                 email: "",
                                 fullName: "",
                                 country: "",
@@ -290,8 +290,8 @@ function PaymentForm() {
                                   if (data?.customer) {
                                     const autoFilledName = data.customer.name || "";
                                     const autoFilledCountry = data.customer.country || "";
-                                    setFormData(prev => ({ 
-                                      ...prev, 
+                                    setFormData(prev => ({
+                                      ...prev,
                                       email: data.customer.email,
                                       fullName: autoFilledName,
                                       country: autoFilledCountry,
@@ -427,383 +427,409 @@ function PaymentForm() {
               </div>
             </section>
 
-          {/* Important Warning */}
-          <section className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-6">
-            <div className="mb-3 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20">
-                <svg className="h-6 w-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M4.93 19h14.14a2 2 0 001.79-2.9L13.79 4.9a2 2 0 00-3.58 0L3.14 16.1A2 2 0 004.93 19z" />
-                </svg>
-              </div>
-              <h2 className="text-lg font-semibold text-amber-300">Important Warning</h2>
-            </div>
-            <div className="space-y-3 text-sm text-amber-100/90">
-              <p>
-                <span className="font-semibold text-amber-200">Demo First:</span> Test with a demo account to understand SL/TP
-                settings for your signal provider.
-              </p>
-              <p>
-                <span className="font-semibold text-amber-200">Not Financial Advice:</span> signaltradingbots is a software
-                company, not financial advisers.
-              </p>
-              <p>
-                <span className="font-semibold text-amber-200">High Risk:</span> 95%+ of traders lose money. Practice with demo first!
-              </p>
-            </div>
-          </section>
-
-          {/* Payment Methods */}
-          <section className={`rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 ${!emailVerified ? 'opacity-50 pointer-events-none' : ''}`}>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-white">Select Payment Method</h2>
-              {!emailVerified && (
-                <span className="flex items-center gap-2 text-sm text-amber-400">
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+            {/* Important Warning */}
+            <section className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-6">
+              <div className="mb-3 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20">
+                  <svg className="h-6 w-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M4.93 19h14.14a2 2 0 001.79-2.9L13.79 4.9a2 2 0 00-3.58 0L3.14 16.1A2 2 0 004.93 19z" />
                   </svg>
-                  Verify email first
-                </span>
-              )}
-            </div>
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={() => emailVerified && setSelectedPayment("card")}
-                disabled={!emailVerified}
-                className={`w-full rounded-lg border p-4 text-left transition-colors ${
-                  selectedPayment === "card"
-                    ? "border-blue-500 bg-blue-500/10"
-                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                } disabled:cursor-not-allowed`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded bg-blue-500/20">
-                      <svg className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-white">Credit / Debit Card</p>
-                      <p className="text-sm text-zinc-400">Visa, Mastercard, Amex, etc.</p>
-                    </div>
-                  </div>
-                  <span className="rounded-md bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">Available</span>
                 </div>
-              </button>
+                <h2 className="text-lg font-semibold text-amber-300">Important Warning</h2>
+              </div>
+              <div className="space-y-3 text-sm text-amber-100/90">
+                <p>
+                  <span className="font-semibold text-amber-200">Demo First:</span> Test with a demo account to understand SL/TP
+                  settings for your signal provider.
+                </p>
+                <p>
+                  <span className="font-semibold text-amber-200">Not Financial Advice:</span> signaltradingbots is a software
+                  company, not financial advisers.
+                </p>
+                <p>
+                  <span className="font-semibold text-amber-200">High Risk:</span> 95%+ of traders lose money. Practice with demo first!
+                </p>
+              </div>
+            </section>
 
-              <button
-                type="button"
-                onClick={() => emailVerified && setSelectedPayment("crypto")}
-                disabled={!emailVerified}
-                className={`w-full rounded-lg border p-4 text-left transition-colors ${
-                  selectedPayment === "crypto"
-                    ? "border-green-500 bg-green-500/10"
-                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                } disabled:cursor-not-allowed`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded bg-green-500/20">
-                      <span className="text-xl font-bold text-green-400">₿</span>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-white">Cryptocurrency</p>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm text-zinc-400">USDT, Bitcoin, BNB & more</p>
-                        <div className="flex gap-1">
-                          <span className="rounded border border-orange-500/30 bg-orange-500/10 px-1.5 py-0.5 text-[10px] font-medium text-orange-400">TRC20</span>
-                          <span className="rounded border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-medium text-blue-400">ERC20</span>
-                          <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 text-[10px] font-medium text-yellow-400">BSC</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <span className="rounded-md bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">Available</span>
+            {/* User Manual Section */}
+            <section className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-6">
+              <div className="mb-3 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/20">
+                  <svg className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
                 </div>
-              </button>
+                <h2 className="text-lg font-semibold text-blue-300">Need Help Getting Started?</h2>
+              </div>
+              <div className="space-y-3 text-sm text-blue-100/90">
+                <p>
+                  After your purchase, check out our comprehensive{" "}
+                  <Link href="/usermanual" className="font-semibold text-blue-200 underline hover:text-blue-100">
+                    User Manual
+                  </Link>{" "}
+                  for step-by-step guides on:
+                </p>
+                <ul className="list-disc space-y-1 pl-5">
+                  <li>Quick start setup and configuration</li>
+                  <li>MT5 and Telegram integration</li>
+                  <li>Strategy settings and customization</li>
+                  <li>Troubleshooting common issues</li>
+                </ul>
+                <p className="pt-2">
+                  The user manual link will also be included in your purchase confirmation email.
+                </p>
+              </div>
+            </section>
 
-              <button
-                type="button"
-                onClick={() => setSelectedPayment("binance")}
-                className={`w-full rounded-lg border p-4 text-left transition-colors ${
-                  selectedPayment === "binance"
-                    ? "border-yellow-500 bg-yellow-500/10"
-                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500/20">
-                      <span className="text-lg font-bold text-yellow-400">BNB</span>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-white">Binance Pay</p>
-                      <p className="text-sm text-zinc-400">Quick crypto payment via Binance</p>
-                    </div>
-                  </div>
-                  <span className="rounded-md bg-orange-500/20 px-3 py-1 text-xs font-medium text-orange-400">Coming Soon</span>
-                </div>
-              </button>
-            </div>
-          </section>
-
-          {/* Crypto Selection - Show when crypto payment is selected */}
-          {selectedPayment === "crypto" && (
-            <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
-              <h2 className="mb-4 text-lg font-semibold text-white">Select Cryptocurrency</h2>
+            {/* Payment Methods */}
+            <section className={`rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 ${!emailVerified ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-white">Select Payment Method</h2>
+                {!emailVerified && (
+                  <span className="flex items-center gap-2 text-sm text-amber-400">
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                    </svg>
+                    Verify email first
+                  </span>
+                )}
+              </div>
               <div className="space-y-3">
-                {cryptoOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setSelectedCrypto(option.value)}
-                    className={`w-full rounded-lg border p-4 text-left transition-colors ${
-                      selectedCrypto === option.value
-                        ? "border-green-500 bg-green-500/10"
-                        : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-700/50 text-2xl">
-                          {getCryptoIcon(option.coin)}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold text-white">{option.label}</p>
-                            <span className={`rounded border px-2 py-0.5 text-xs font-medium ${getNetworkBadgeColor(option.network)}`}>
-                              {option.network}
-                            </span>
+                <button
+                  type="button"
+                  onClick={() => emailVerified && setSelectedPayment("card")}
+                  disabled={!emailVerified}
+                  className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedPayment === "card"
+                      ? "border-blue-500 bg-blue-500/10"
+                      : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                    } disabled:cursor-not-allowed`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded bg-blue-500/20">
+                        <svg className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-white">Credit / Debit Card</p>
+                        <p className="text-sm text-zinc-400">Visa, Mastercard, Amex, etc.</p>
+                      </div>
+                    </div>
+                    <span className="rounded-md bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">Available</span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => emailVerified && setSelectedPayment("crypto")}
+                  disabled={!emailVerified}
+                  className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedPayment === "crypto"
+                      ? "border-green-500 bg-green-500/10"
+                      : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                    } disabled:cursor-not-allowed`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded bg-green-500/20">
+                        <span className="text-xl font-bold text-green-400">₿</span>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-white">Cryptocurrency</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm text-zinc-400">USDT, Bitcoin, BNB & more</p>
+                          <div className="flex gap-1">
+                            <span className="rounded border border-orange-500/30 bg-orange-500/10 px-1.5 py-0.5 text-[10px] font-medium text-orange-400">TRC20</span>
+                            <span className="rounded border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-medium text-blue-400">ERC20</span>
+                            <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 text-[10px] font-medium text-yellow-400">BSC</span>
                           </div>
-                          <p className="text-sm text-zinc-400">{option.description}</p>
                         </div>
                       </div>
-                      {selectedCrypto === option.value && (
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500">
-                          <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                      )}
                     </div>
-                  </button>
-                ))}
-              </div>
-              {!selectedCrypto && (
-                <p className="mt-3 text-sm text-amber-400">Please select a cryptocurrency to continue</p>
-              )}
-            </section>
-          )}
-
-          {/* Payment Methods Disclaimer */}
-          <section className="rounded-lg border border-zinc-800/50 bg-zinc-900/30 p-4">
-            <p className="text-xs text-zinc-500">
-              Payment method names and network identifiers are used for identification purposes only. 
-              We are not affiliated with, endorsed by, or partnered with any payment provider or blockchain network.
-            </p>
-          </section>
-
-          {/* Terms & Conditions - Show when card payment is selected */}
-          {selectedPayment === "card" && (
-            <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
-              <h2 className="mb-4 text-lg font-semibold text-white">Terms & Conditions</h2>
-              <div className="max-h-48 space-y-2 overflow-y-auto pr-2 text-sm text-zinc-400">
-                <ul className="list-disc space-y-1 pl-5">
-                  <li>All purchases are final and non-refundable once the license key has been delivered.</li>
-                  <li>Your license key will be sent to the provided email address within 24 hours of payment confirmation.</li>
-                  <li>Each license is valid for one trading account activation only.</li>
-                  <li>Cryptocurrency payments may take up to 1 hour for blockchain confirmation.</li>
-                  <li>You agree to use the software in accordance with our Terms of Service.</li>
-                </ul>
-              </div>
-              <div className="mt-4 flex items-start gap-2">
-                <input
-                  type="checkbox"
-                  id="terms"
-                  required
-                  checked={agreedToTerms}
-                  onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-zinc-700 bg-zinc-800 text-blue-500 focus:ring-blue-500"
-                />
-                <label htmlFor="terms" className="text-sm text-zinc-300">
-                  I agree to the terms and conditions, and understand that cryptocurrency payments are non-refundable{" "}
-                  <span className="text-red-400">*</span>
-                </label>
-              </div>
-            </section>
-          )}
-
-          {/* Stripe Payment Form - Show when card payment is selected */}
-          {selectedPayment === "card" && (
-            <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
-              <h2 className="mb-4 text-lg font-semibold text-white">Card Payment</h2>
-              
-              {/* Show message if required fields are missing */}
-              {!formData.fullName || !formData.country ? (
-                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-6">
-                  <div className="flex items-start gap-3">
-                    <svg className="h-5 w-5 flex-shrink-0 text-amber-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                    <div>
-                      <p className="text-sm font-medium text-amber-300">Complete Customer Information</p>
-                      <p className="mt-1 text-sm text-amber-200/80">
-                        Please fill in all required fields in the Customer Information section above to continue.
-                      </p>
-                      <ul className="mt-2 text-sm text-amber-200/80 list-disc list-inside">
-                        {!formData.fullName && <li>Full Name is required</li>}
-                        {!formData.country && <li>Country is required</li>}
-                      </ul>
-                    </div>
+                    <span className="rounded-md bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">Available</span>
                   </div>
-                </div>
-              ) : loadingStripe && !clientSecret ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-center">
-                    <svg
-                      className="mx-auto h-10 w-10 animate-spin text-blue-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    <p className="mt-3 text-sm text-zinc-400">Initializing secure payment...</p>
-                  </div>
-                </div>
-              ) : showStripeForm && clientSecret && stripeOrderId ? (
-                <Elements
-                  stripe={stripePromise}
-                  options={{
-                    clientSecret,
-                    appearance: {
-                      theme: "night",
-                      variables: {
-                        colorPrimary: "#3b82f6",
-                        colorBackground: "#18181b",
-                        colorText: "#ffffff",
-                        colorDanger: "#ef4444",
-                        fontFamily: "system-ui, sans-serif",
-                        borderRadius: "8px",
-                      },
-                    },
-                  }}
-                >
-                  <StripeCardForm
-                    orderId={stripeOrderId}
-                    amount={price}
-                    plan={planName}
-                    agreedToTerms={agreedToTerms}
-                    onSuccess={() => {
-                      console.log("Payment successful");
-                    }}
-                    onError={(error) => {
-                      console.error("Payment error:", error);
-                    }}
-                  />
-                </Elements>
-              ) : null}
-            </section>
-          )}
+                </button>
 
-          {/* Terms & Conditions - Show when crypto payment is selected */}
-          {selectedPayment === "crypto" && (
-            <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
-              <h2 className="mb-4 text-lg font-semibold text-white">Terms & Conditions</h2>
-              <div className="max-h-48 space-y-2 overflow-y-auto pr-2 text-sm text-zinc-400">
-                <ul className="list-disc space-y-1 pl-5">
-                  <li>All purchases are final and non-refundable once the license key has been delivered.</li>
-                  <li>Your license key will be sent to the provided email address within 24 hours of payment confirmation.</li>
-                  <li>Each license is valid for one trading account activation only.</li>
-                  <li>Cryptocurrency payments may take up to 1 hour for blockchain confirmation.</li>
-                  <li>You agree to use the software in accordance with our Terms of Service.</li>
-                </ul>
-              </div>
-              <div className="mt-4 flex items-start gap-2">
-                <input
-                  type="checkbox"
-                  id="terms"
-                  required
-                  checked={agreedToTerms}
-                  onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-zinc-700 bg-zinc-800 text-blue-500 focus:ring-blue-500"
-                />
-                <label htmlFor="terms" className="text-sm text-zinc-300">
-                  I agree to the terms and conditions, and understand that cryptocurrency payments are non-refundable{" "}
-                  <span className="text-red-400">*</span>
-                </label>
-              </div>
-            </section>
-          )}
-
-          {/* Payment Summary */}
-          <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between text-zinc-400">
-                <span>Subtotal</span>
-                <span className="text-white">${price} USD</span>
-              </div>
-              <div className="flex justify-between text-zinc-400">
-                <span>Processing Fee</span>
-                <span className="text-white">$0 USD</span>
-              </div>
-              <div className="border-t border-zinc-700 pt-2">
-                <div className="flex justify-between text-lg font-semibold text-white">
-                  <span>Total</span>
-                  <span>${price} USD</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Action Buttons - Only show for crypto payments */}
-          {selectedPayment === "crypto" && (
-            <form onSubmit={handleSubmit}>
-              <div className="flex gap-4">
-                <Link
-                  href="/products"
-                  className="flex-1 rounded-md border border-zinc-700 bg-zinc-800 px-6 py-3 text-center font-medium text-white hover:bg-zinc-700"
-                >
-                  Cancel
-                </Link>
                 <button
-                  type="submit"
-                  disabled={
-                    !agreedToTerms || 
-                    !selectedCrypto ||
-                    creatingOrder
-                  }
-                  className="flex-1 rounded-md bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  type="button"
+                  onClick={() => setSelectedPayment("binance")}
+                  className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedPayment === "binance"
+                      ? "border-yellow-500 bg-yellow-500/10"
+                      : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                    }`}
                 >
-                  {creatingOrder ? "Creating Order..." : "Proceed to Payment"}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500/20">
+                        <span className="text-lg font-bold text-yellow-400">BNB</span>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-white">Binance Pay</p>
+                        <p className="text-sm text-zinc-400">Quick crypto payment via Binance</p>
+                      </div>
+                    </div>
+                    <span className="rounded-md bg-orange-500/20 px-3 py-1 text-xs font-medium text-orange-400">Coming Soon</span>
+                  </div>
                 </button>
               </div>
-            </form>
-          )}
+            </section>
 
-          {/* Cancel button for card payments */}
-          {selectedPayment === "card" && (
-            <div className="flex justify-center">
-              <Link
-                href="/products"
-                className="rounded-md border border-zinc-700 bg-zinc-800 px-8 py-3 text-center font-medium text-white hover:bg-zinc-700"
-              >
-                ← Back to Products
-              </Link>
-            </div>
-          )}
+            {/* Crypto Selection - Show when crypto payment is selected */}
+            {selectedPayment === "crypto" && (
+              <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
+                <h2 className="mb-4 text-lg font-semibold text-white">Select Cryptocurrency</h2>
+                <div className="space-y-3">
+                  {cryptoOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setSelectedCrypto(option.value)}
+                      className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedCrypto === option.value
+                          ? "border-green-500 bg-green-500/10"
+                          : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                        }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-700/50 text-2xl">
+                            {getCryptoIcon(option.coin)}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-white">{option.label}</p>
+                              <span className={`rounded border px-2 py-0.5 text-xs font-medium ${getNetworkBadgeColor(option.network)}`}>
+                                {option.network}
+                              </span>
+                            </div>
+                            <p className="text-sm text-zinc-400">{option.description}</p>
+                          </div>
+                        </div>
+                        {selectedCrypto === option.value && (
+                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500">
+                            <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                {!selectedCrypto && (
+                  <p className="mt-3 text-sm text-amber-400">Please select a cryptocurrency to continue</p>
+                )}
+              </section>
+            )}
+
+            {/* Payment Methods Disclaimer */}
+            <section className="rounded-lg border border-zinc-800/50 bg-zinc-900/30 p-4">
+              <p className="text-xs text-zinc-500">
+                Payment method names and network identifiers are used for identification purposes only.
+                We are not affiliated with, endorsed by, or partnered with any payment provider or blockchain network.
+              </p>
+            </section>
+
+            {/* Terms & Conditions - Show when card payment is selected */}
+            {selectedPayment === "card" && (
+              <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
+                <h2 className="mb-4 text-lg font-semibold text-white">Terms & Conditions</h2>
+                <div className="max-h-48 space-y-2 overflow-y-auto pr-2 text-sm text-zinc-400">
+                  <ul className="list-disc space-y-1 pl-5">
+                    <li>All purchases are final and non-refundable once the license key has been delivered.</li>
+                    <li>Your license key will be sent to the provided email address within 24 hours of payment confirmation.</li>
+                    <li>Each license is valid for one trading account activation only.</li>
+                    <li>Cryptocurrency payments may take up to 1 hour for blockchain confirmation.</li>
+                    <li>You agree to use the software in accordance with our Terms of Service.</li>
+                  </ul>
+                </div>
+                <div className="mt-4 flex items-start gap-2">
+                  <input
+                    type="checkbox"
+                    id="terms"
+                    required
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-zinc-700 bg-zinc-800 text-blue-500 focus:ring-blue-500"
+                  />
+                  <label htmlFor="terms" className="text-sm text-zinc-300">
+                    I agree to the terms and conditions, and understand that cryptocurrency payments are non-refundable{" "}
+                    <span className="text-red-400">*</span>
+                  </label>
+                </div>
+              </section>
+            )}
+
+            {/* Stripe Payment Form - Show when card payment is selected */}
+            {selectedPayment === "card" && (
+              <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
+                <h2 className="mb-4 text-lg font-semibold text-white">Card Payment</h2>
+
+                {/* Show message if required fields are missing */}
+                {!formData.fullName || !formData.country ? (
+                  <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-6">
+                    <div className="flex items-start gap-3">
+                      <svg className="h-5 w-5 flex-shrink-0 text-amber-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-amber-300">Complete Customer Information</p>
+                        <p className="mt-1 text-sm text-amber-200/80">
+                          Please fill in all required fields in the Customer Information section above to continue.
+                        </p>
+                        <ul className="mt-2 text-sm text-amber-200/80 list-disc list-inside">
+                          {!formData.fullName && <li>Full Name is required</li>}
+                          {!formData.country && <li>Country is required</li>}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                ) : loadingStripe && !clientSecret ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <svg
+                        className="mx-auto h-10 w-10 animate-spin text-blue-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      <p className="mt-3 text-sm text-zinc-400">Initializing secure payment...</p>
+                    </div>
+                  </div>
+                ) : showStripeForm && clientSecret && stripeOrderId ? (
+                  <Elements
+                    stripe={stripePromise}
+                    options={{
+                      clientSecret,
+                      appearance: {
+                        theme: "night",
+                        variables: {
+                          colorPrimary: "#3b82f6",
+                          colorBackground: "#18181b",
+                          colorText: "#ffffff",
+                          colorDanger: "#ef4444",
+                          fontFamily: "system-ui, sans-serif",
+                          borderRadius: "8px",
+                        },
+                      },
+                    }}
+                  >
+                    <StripeCardForm
+                      orderId={stripeOrderId}
+                      amount={price}
+                      plan={planName}
+                      agreedToTerms={agreedToTerms}
+                      onSuccess={() => {
+                        console.log("Payment successful");
+                      }}
+                      onError={(error) => {
+                        console.error("Payment error:", error);
+                      }}
+                    />
+                  </Elements>
+                ) : null}
+              </section>
+            )}
+
+            {/* Terms & Conditions - Show when crypto payment is selected */}
+            {selectedPayment === "crypto" && (
+              <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
+                <h2 className="mb-4 text-lg font-semibold text-white">Terms & Conditions</h2>
+                <div className="max-h-48 space-y-2 overflow-y-auto pr-2 text-sm text-zinc-400">
+                  <ul className="list-disc space-y-1 pl-5">
+                    <li>All purchases are final and non-refundable once the license key has been delivered.</li>
+                    <li>Your license key will be sent to the provided email address within 24 hours of payment confirmation.</li>
+                    <li>Each license is valid for one trading account activation only.</li>
+                    <li>Cryptocurrency payments may take up to 1 hour for blockchain confirmation.</li>
+                    <li>You agree to use the software in accordance with our Terms of Service.</li>
+                  </ul>
+                </div>
+                <div className="mt-4 flex items-start gap-2">
+                  <input
+                    type="checkbox"
+                    id="terms"
+                    required
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-zinc-700 bg-zinc-800 text-blue-500 focus:ring-blue-500"
+                  />
+                  <label htmlFor="terms" className="text-sm text-zinc-300">
+                    I agree to the terms and conditions, and understand that cryptocurrency payments are non-refundable{" "}
+                    <span className="text-red-400">*</span>
+                  </label>
+                </div>
+              </section>
+            )}
+
+            {/* Payment Summary */}
+            <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between text-zinc-400">
+                  <span>Subtotal</span>
+                  <span className="text-white">${price} USD</span>
+                </div>
+                <div className="flex justify-between text-zinc-400">
+                  <span>Processing Fee</span>
+                  <span className="text-white">$0 USD</span>
+                </div>
+                <div className="border-t border-zinc-700 pt-2">
+                  <div className="flex justify-between text-lg font-semibold text-white">
+                    <span>Total</span>
+                    <span>${price} USD</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Action Buttons - Only show for crypto payments */}
+            {selectedPayment === "crypto" && (
+              <form onSubmit={handleSubmit}>
+                <div className="flex gap-4">
+                  <Link
+                    href="/products"
+                    className="flex-1 rounded-md border border-zinc-700 bg-zinc-800 px-6 py-3 text-center font-medium text-white hover:bg-zinc-700"
+                  >
+                    Cancel
+                  </Link>
+                  <button
+                    type="submit"
+                    disabled={
+                      !agreedToTerms ||
+                      !selectedCrypto ||
+                      creatingOrder
+                    }
+                    className="flex-1 rounded-md bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {creatingOrder ? "Creating Order..." : "Proceed to Payment"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Cancel button for card payments */}
+            {selectedPayment === "card" && (
+              <div className="flex justify-center">
+                <Link
+                  href="/products"
+                  className="rounded-md border border-zinc-700 bg-zinc-800 px-8 py-3 text-center font-medium text-white hover:bg-zinc-700"
+                >
+                  ← Back to Products
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </div>

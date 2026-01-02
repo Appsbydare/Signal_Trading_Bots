@@ -34,10 +34,11 @@ export async function POST(request: NextRequest) {
     return jsonError(401, `Security verification failed: ${sec.message}`, "SECURITY_ERROR");
   }
 
-  const { licenseKey, sessionId, deviceId } = payload as {
+  const { licenseKey, sessionId, deviceId, sessionSerial } = payload as {
     licenseKey?: string;
     sessionId?: string;
     deviceId?: string;
+    sessionSerial?: string;
   };
 
   if (!licenseKey || !sessionId || !deviceId) {
@@ -57,6 +58,11 @@ export async function POST(request: NextRequest) {
     return jsonError(200, "Invalid session", "INVALID_SESSION");
   }
 
+  // Check session serial if provided and stored
+  if (sessionSerial && session.session_serial && session.session_serial !== sessionSerial) {
+    return jsonError(200, "Session invalid - duplicate instance detected", "SESSION_CONFLICT");
+  }
+
   const now = new Date();
   const lastSeen = new Date(session.last_seen_at);
   const ageSeconds = (now.getTime() - lastSeen.getTime()) / 1000;
@@ -67,7 +73,7 @@ export async function POST(request: NextRequest) {
     await import("@/lib/license-db").then(async ({ deactivateSession }) => {
       await deactivateSession(sessionId);
     });
-    
+
     // Log session expiration
     await logValidation({
       licenseKey,
@@ -76,7 +82,7 @@ export async function POST(request: NextRequest) {
       success: false,
       errorCode: 'SESSION_EXPIRED',
     });
-    
+
     return jsonError(200, "Session has expired", "SESSION_EXPIRED");
   }
 
@@ -85,6 +91,30 @@ export async function POST(request: NextRequest) {
   // Get license to check grace_period_allowed status
   const license = await getLicenseByKey(licenseKey);
 
+  // Check for pending login requests
+  let loginRequest = null;
+  if (license) {
+    const request = await import("@/lib/license-db").then(async ({ getLoginRequest }) => {
+      return await getLoginRequest(licenseKey);
+    });
+
+    if (request) {
+      // Check if request is recent (within 5 minutes)
+      const reqTime = new Date(request.timestamp);
+      const nowTime = new Date();
+      const diffMs = nowTime.getTime() - reqTime.getTime();
+      const fiveMinutesMs = 5 * 60 * 1000;
+
+      if (diffMs < fiveMinutesMs) {
+        loginRequest = {
+          action: "request_login_approval",
+          deviceName: request.deviceName,
+          deviceId: request.deviceId
+        };
+      }
+    }
+  }
+
   return NextResponse.json({
     success: true,
     message: "Heartbeat received",
@@ -92,6 +122,7 @@ export async function POST(request: NextRequest) {
       lastSeenAt: new Date().toISOString(),
       sessionActive: true,
       graceAllowed: (license as any)?.grace_period_allowed ?? true,  // Include grace status
+      loginRequest, // Include login request if any
     },
   });
 }

@@ -150,6 +150,7 @@ export async function sendStripeLicenseEmail(params: {
       <h2 style="color: #1f2937; font-size: 18px; margin-top: 32px; margin-bottom: 16px; font-weight: 600;">Need Help?</h2>
       <p style="margin-bottom: 12px; color: #374151; font-size: 14px;">Our support team is here to assist you:</p>
       <ul style="padding-left: 20px; color: #374151;">
+        <li style="margin-bottom: 8px; font-size: 14px;">Read our <a href="https://www.signaltradingbots.com/usermanual" style="color: #1f2937; text-decoration: none; font-weight: 600;">User Manual</a> for detailed setup guides</li>
         <li style="margin-bottom: 8px; font-size: 14px;">Visit our <a href="https://www.signaltradingbots.com/faq" style="color: #1f2937; text-decoration: none; font-weight: 600;">FAQ page</a></li>
         <li style="margin-bottom: 8px; font-size: 14px;">Check our <a href="https://www.signaltradingbots.com/resources" style="color: #1f2937; text-decoration: none; font-weight: 600;">documentation</a></li>
         <li style="margin-bottom: 8px; font-size: 14px;">Watch our <a href="https://www.signaltradingbots.com/resources" style="color: #1f2937; text-decoration: none; font-weight: 600;">video tutorials</a></li>

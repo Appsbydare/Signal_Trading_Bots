@@ -42,7 +42,7 @@ export default function Navbar() {
         const handleScroll = () => {
             const currentScrollY = window.scrollY;
             const scrollDifference = currentScrollY - lastScrollY;
-            
+
             // Always show at top of page
             if (currentScrollY < 10) {
                 setIsVisible(true);
@@ -50,17 +50,17 @@ export default function Navbar() {
             // Show navbar when scrolling up significantly (more than 50px)
             else if (scrollDifference < -50) {
                 setIsVisible(true);
-            } 
+            }
             // Hide navbar when scrolling down (more than 20px)
             else if (scrollDifference > 20 && currentScrollY > 80) {
                 setIsVisible(false);
             }
-            
+
             setLastScrollY(currentScrollY);
         };
 
         window.addEventListener('scroll', handleScroll, { passive: true });
-        
+
         return () => {
             window.removeEventListener('scroll', handleScroll);
         };
@@ -114,6 +114,9 @@ export default function Navbar() {
                             <div className="min-w-[180px] rounded-xl border border-zinc-800 bg-zinc-950 p-1.5 shadow-2xl ring-1 ring-zinc-800/50 backdrop-blur-xl">
                                 <Link href="/faq" className="block rounded-md px-4 py-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-white">
                                     FAQ & Help
+                                </Link>
+                                <Link href="/usermanual" className="block rounded-md px-4 py-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-white">
+                                    User Manual
                                 </Link>
                                 <Link href="/resources" className="block rounded-md px-4 py-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-white">
                                     Articles & Guides
@@ -193,15 +196,16 @@ export default function Navbar() {
 
                         <div className="space-y-2">
                             <p className="px-2 text-xs font-semibold uppercase text-zinc-500">Resources</p>
-                            <Link href="/resources" className="block rounded-md px-2 py-1.5 text-sm text-zinc-300 hover:bg-zinc-900 hover:text-white">Articles & Guides</Link>
                             <Link href="/faq" className="block rounded-md px-2 py-1.5 text-sm text-zinc-300 hover:bg-zinc-900 hover:text-white">FAQ</Link>
+                            <Link href="/usermanual" className="block rounded-md px-2 py-1.5 text-sm text-zinc-300 hover:bg-zinc-900 hover:text-white">User Manual</Link>
+                            <Link href="/resources" className="block rounded-md px-2 py-1.5 text-sm text-zinc-300 hover:bg-zinc-900 hover:text-white">Articles & Guides</Link>
                         </div>
 
                         <div className="h-px bg-zinc-900"></div>
 
                         <Link href="/demo" className="block rounded-md px-2 py-1.5 text-sm font-medium text-zinc-300 hover:bg-zinc-900 hover:text-white">Demo</Link>
                         <Link href="/contact" className="block rounded-md px-2 py-1.5 text-sm font-medium text-zinc-300 hover:bg-zinc-900 hover:text-white">Contact</Link>
-                        
+
                         {/* Mobile User Profile or Sign In */}
                         {!loading && (
                             customer ? (

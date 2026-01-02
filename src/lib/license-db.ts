@@ -22,6 +22,7 @@ export interface LicenseSessionRow {
   license_key: string;
   device_id: string;
   session_id: string;
+  session_serial: string | null;
   device_name: string | null;
   device_mac: string | null;
   created_at: string;
@@ -100,6 +101,7 @@ export interface CreateSessionArgs {
   deviceName?: string;
   deviceMac?: string;
   sessionId: string;
+  sessionSerial?: string;
 }
 
 export async function createSession(args: CreateSessionArgs): Promise<LicenseSessionRow> {
@@ -112,6 +114,7 @@ export async function createSession(args: CreateSessionArgs): Promise<LicenseSes
       session_id: args.sessionId,
       device_name: args.deviceName ?? null,
       device_mac: args.deviceMac ?? null,
+      session_serial: args.sessionSerial ?? null,
     })
     .select("*")
     .maybeSingle<LicenseSessionRow>();
@@ -126,11 +129,20 @@ export async function createSession(args: CreateSessionArgs): Promise<LicenseSes
   return data;
 }
 
-export async function refreshSession(sessionId: string): Promise<void> {
+export async function refreshSession(sessionId: string, sessionSerial?: string): Promise<void> {
   const client = getSupabaseClient();
+  const gatheredUpdates: any = {
+    last_seen_at: new Date().toISOString(),
+    active: true
+  };
+
+  if (sessionSerial) {
+    gatheredUpdates.session_serial = sessionSerial;
+  }
+
   const { error } = await client
     .from("license_sessions")
-    .update({ last_seen_at: new Date().toISOString(), active: true })
+    .update(gatheredUpdates)
     .eq("session_id", sessionId);
 
   if (error) {
@@ -214,6 +226,73 @@ export async function createLicense(args: CreateLicenseArgs): Promise<LicenseRow
   }
 
   return data;
+}
+
+export interface SetLoginRequestArgs {
+  licenseKey: string;
+  deviceId: string;
+  deviceName?: string;
+}
+
+export async function setLoginRequest(args: SetLoginRequestArgs): Promise<void> {
+  const client = getSupabaseClient();
+  const { error } = await client
+    .from("licenses")
+    .update({
+      login_request_device_id: args.deviceId,
+      login_request_device_name: args.deviceName ?? "Unknown Device",
+      login_request_timestamp: new Date().toISOString(),
+    })
+    .eq("license_key", args.licenseKey);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export interface LoginRequestData {
+  deviceId: string;
+  deviceName: string;
+  timestamp: string;
+}
+
+export async function getLoginRequest(licenseKey: string): Promise<LoginRequestData | null> {
+  const client = getSupabaseClient();
+  const { data, error } = await client
+    .from("licenses")
+    .select("login_request_device_id, login_request_device_name, login_request_timestamp")
+    .eq("license_key", licenseKey)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data?.login_request_device_id) {
+    return null;
+  }
+
+  return {
+    deviceId: data.login_request_device_id,
+    deviceName: data.login_request_device_name,
+    timestamp: data.login_request_timestamp,
+  };
+}
+
+export async function clearLoginRequest(licenseKey: string): Promise<void> {
+  const client = getSupabaseClient();
+  const { error } = await client
+    .from("licenses")
+    .update({
+      login_request_device_id: null,
+      login_request_device_name: null,
+      login_request_timestamp: null,
+    })
+    .eq("license_key", licenseKey);
+
+  if (error) {
+    throw error;
+  }
 }
 
 

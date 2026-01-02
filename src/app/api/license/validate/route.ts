@@ -42,9 +42,10 @@ export async function POST(request: NextRequest) {
     return jsonError(401, `Security verification failed: ${sec.message}`, "SECURITY_ERROR");
   }
 
-  const { licenseKey, deviceId } = payload as {
+  const { licenseKey, deviceId, sessionSerial } = payload as {
     licenseKey?: string;
     deviceId?: string;
+    sessionSerial?: string;
     appVersion?: string;
   };
 
@@ -93,8 +94,9 @@ export async function POST(request: NextRequest) {
       licenseKey: license.license_key,
       deviceId,
       sessionId,
+      sessionSerial,
     });
-    
+
     // Send new device activation email
     try {
       await sendNewDeviceEmail({
@@ -113,8 +115,8 @@ export async function POST(request: NextRequest) {
     const expired = ageSeconds > licenseConfig.heartbeatGraceSeconds;
 
     if (session.device_id === deviceId) {
-      // Same device -> refresh
-      await refreshSession(session.session_id);
+      // Same device -> refresh and update serial
+      await refreshSession(session.session_id, sessionSerial);
     } else if (expired) {
       // Different device but old session -> deactivate old and create new
       // Mark existing inactive and create new record
@@ -126,20 +128,38 @@ export async function POST(request: NextRequest) {
         licenseKey: license.license_key,
         deviceId,
         sessionId,
+        sessionSerial,
       });
     } else {
       // Active session on another device - DUPLICATE DETECTED
+
+      // Check if this is a login request
+      if (payload.action === 'request_login') {
+        const deviceName = payload.deviceName || 'Unknown Device';
+        await import("@/lib/license-db").then(async ({ setLoginRequest }) => {
+          await setLoginRequest({
+            licenseKey: license.license_key,
+            deviceId,
+            deviceName,
+          });
+        });
+
+        return jsonError(200, "Login request sent to the active device. Please wait for approval.", "LOGIN_REQUESTED", {
+          wait: true,
+        });
+      }
+
       const supabase = getSupabaseClient();
-      
+
       // Mark this license as having duplicate usage
       await supabase
         .from("licenses")
-        .update({ 
+        .update({
           duplicate_detected: true,
-          grace_period_allowed: false 
+          grace_period_allowed: false
         })
         .eq("license_key", license.license_key);
-      
+
       // Log the duplicate attempt
       await logValidation({
         licenseKey,
@@ -150,7 +170,7 @@ export async function POST(request: NextRequest) {
         ipAddress: request.headers.get('x-forwarded-for') ?? undefined,
         userAgent: request.headers.get('user-agent') ?? undefined,
       });
-      
+
       // Send duplicate detection email
       try {
         await sendDuplicateDetectedEmail({
@@ -162,10 +182,11 @@ export async function POST(request: NextRequest) {
       } catch (emailError) {
         console.error("Failed to send duplicate detection email:", emailError);
       }
-      
+
       // Active session on another device
       return jsonError(200, "License is already active on another device", "LICENSE_IN_USE", {
         activeDeviceId: session.device_id,
+        activeDeviceName: session.device_name, // Return device name for UI display
         lastSeenAt: session.last_seen_at,
         graceAllowed: false,  // Tell app not to grant grace period
       });

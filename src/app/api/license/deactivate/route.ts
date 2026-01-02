@@ -57,6 +57,11 @@ export async function POST(request: NextRequest) {
     success: true,
   });
 
+  // Clear any pending login request since we are voluntarily deactivating
+  await import("@/lib/license-db").then(async ({ clearLoginRequest }) => {
+    await clearLoginRequest(licenseKey);
+  });
+
   return NextResponse.json({
     success: true,
     message: "Session deactivated successfully",
