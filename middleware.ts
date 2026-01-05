@@ -20,7 +20,7 @@ async function verifyToken(token: string, expectedRole: "customer" | "admin") {
     return payload;
   } catch {
     return null;
-  }
+  } 
 }
 
 export async function middleware(request: NextRequest) {

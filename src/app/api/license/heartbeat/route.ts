@@ -45,6 +45,15 @@ export async function POST(request: NextRequest) {
     return jsonError(400, "Missing licenseKey, sessionId, or deviceId", "INVALID_REQUEST");
   }
 
+  // Check if device is banned
+  const { isDeviceBanned } = await import("@/lib/license-db");
+  const banStatus = await isDeviceBanned(deviceId);
+  if (banStatus.banned) {
+    return jsonError(200, "Device is banned", "DEVICE_BANNED", {
+      reason: banStatus.reason
+    });
+  }
+
   const session = await getSessionById(sessionId);
   if (!session || session.license_key !== licenseKey || session.device_id !== deviceId) {
     // Log failed heartbeat
@@ -56,11 +65,6 @@ export async function POST(request: NextRequest) {
       errorCode: 'INVALID_SESSION',
     });
     return jsonError(200, "Invalid session", "INVALID_SESSION");
-  }
-
-  // Check session serial if provided and stored
-  if (sessionSerial && session.session_serial && session.session_serial !== sessionSerial) {
-    return jsonError(200, "Session invalid - duplicate instance detected", "SESSION_CONFLICT");
   }
 
   const now = new Date();
@@ -86,7 +90,9 @@ export async function POST(request: NextRequest) {
     return jsonError(200, "Session has expired", "SESSION_EXPIRED");
   }
 
-  await refreshSession(sessionId);
+  // Refresh session and update session_serial if it has changed
+  // Session serial changes on each app restart for security, this is normal behavior
+  await refreshSession(sessionId, sessionSerial);
 
   // Get license to check grace_period_allowed status
   const license = await getLicenseByKey(licenseKey);
@@ -111,6 +117,24 @@ export async function POST(request: NextRequest) {
           deviceName: request.deviceName,
           deviceId: request.deviceId
         };
+
+        // Log that a login request is being delivered to the active device
+        // We only log this once ideally (but heartbeat happens often, maybe track if already logged?)
+        // For now logging every heartbeat might be noisy. Let's log it only if it's very fresh (e.g. within 30s)
+        if (diffMs < 30 * 1000) {
+          await logValidation({
+            licenseKey,
+            deviceId, // The active device receiving the notification
+            deviceName: session.device_name ?? undefined,
+            eventType: 'login_requested',
+            success: true, // Notification delivered successfully
+            details: {
+              requesting_device_name: request.deviceName,
+              requesting_device_id: request.deviceId,
+              request_age_ms: diffMs
+            }
+          });
+        }
       }
     }
   }
@@ -123,6 +147,9 @@ export async function POST(request: NextRequest) {
       sessionActive: true,
       graceAllowed: (license as any)?.grace_period_allowed ?? true,  // Include grace status
       loginRequest, // Include login request if any
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL,
+      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      channelName: `license:${licenseKey}`
     },
   });
 }

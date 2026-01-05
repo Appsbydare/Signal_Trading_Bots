@@ -74,6 +74,13 @@ export function verifyRequestSignature(payload: Record<string, unknown>): Securi
 
 export function ensureHttps(request: NextRequest): SecurityCheckResult {
   const proto = request.headers.get("x-forwarded-proto") || request.nextUrl.protocol.replace(":", "");
+  const host = request.headers.get("host") || "";
+  
+  // Allow HTTP for localhost/127.0.0.1 (development)
+  if (host.includes("localhost") || host.includes("127.0.0.1")) {
+    return { ok: true, message: "OK (localhost development)" };
+  }
+  
   if (proto !== "https") {
     return { ok: false, message: "HTTPS is required" };
   }

@@ -1318,7 +1318,7 @@ export default function Home() {
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/products"
-              className="rounded-md bg-[var(--brand-blue)] px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[var(--brand-blue-deep)] hover:scale-105 hover:shadow-lg"
+              className="rounded-md bg-[var(--brand-blue)] px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[var(--brand-blue-soft)] hover:scale-105 hover:shadow-lg"
             >
               View Products
             </Link>

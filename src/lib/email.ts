@@ -346,38 +346,34 @@ export async function sendDuplicateDetectedEmail(params: {
   
   <div style="background-color: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
     <p style="font-size: 16px; margin-bottom: 20px; color: #dc2626; font-weight: bold;">
-      Your license was used on multiple devices simultaneously.
+      A new login attempt was detected while you were active.
     </p>
     
     <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;">
       <p style="margin: 0 0 15px 0;"><strong>License Key:</strong> ${params.licenseKey}</p>
-      <p style="margin: 0 0 10px 0;"><strong>Detected on devices:</strong></p>
+      <p style="margin: 0 0 10px 0;"><strong>Attempt Details:</strong></p>
       <ul style="margin: 0; padding-left: 20px;">
-        <li>${params.deviceName1}</li>
-        <li>${params.deviceName2}</li>
+        <li><strong>New Device:</strong> ${params.deviceName2}</li>
+        <li><strong>Active Device:</strong> ${params.deviceName1}</li>
       </ul>
+    </div>
+    
+    <div style="background-color: #e8f4f8; border-left: 4px solid #0ea5e9; padding: 15px; margin: 20px 0; border-radius: 4px;">
+      <h3 style="margin: 0 0 10px 0; color: #0c4a6e; font-size: 16px;">Was this you?</h3>
+      <p style="margin: 0; color: #0c4a6e;">
+        If you are trying to switch devices, check your <strong>${params.deviceName1}</strong> (active device). 
+        You should see a popup asking to approve this login. Click "Yes" to switch instantly.
+      </p>
     </div>
     
     <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
       <p style="margin: 0; color: #856404;">
-        <strong>Important:</strong> Your license is restricted to use on one device at a time. 
-        This license has been flagged and <strong>grace period has been disabled</strong>.
+        <strong>Note:</strong> Your license allows only one active device at a time. Using multiple devices simultaneously is not permitted.
       </p>
     </div>
-    
-    <h2 style="color: #667eea; font-size: 18px; margin-top: 30px;">What happens now?</h2>
-    <ul style="padding-left: 20px;">
-      <li>The license will only work on the first active device</li>
-      <li>The second device will be blocked from trading</li>
-      <li>No grace period will be provided for this license</li>
-    </ul>
-    
-    <h2 style="color: #667eea; font-size: 18px; margin-top: 30px;">To resolve this:</h2>
-    <ol style="padding-left: 20px;">
-      <li>Close the trading bot on all devices</li>
-      <li>Use the license on only one device at a time</li>
-      <li>Contact support if you need to transfer to a different device</li>
-    </ol>
+
+    <h2 style="color: #667eea; font-size: 18px; margin-top: 30px;">Not you?</h2>
+    <p>If you did not attempt this login, your license key may be compromised. Please contact support immediately.</p>
     
     <div style="text-align: center; margin: 30px 0;">
       <a href="mailto:${FROM_EMAIL}" style="background-color: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
@@ -406,7 +402,7 @@ export async function sendDuplicateDetectedEmail(params: {
     body: JSON.stringify({
       from: FROM_EMAIL,
       to: params.to,
-      subject: "URGENT: License Duplicate Usage Detected",
+      subject: "New Login Attempt Blocked",
       html: html,
     }),
   });

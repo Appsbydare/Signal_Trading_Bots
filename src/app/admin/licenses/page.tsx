@@ -1,52 +1,50 @@
 import { redirect } from "next/navigation";
 import { getCurrentAdmin } from "@/lib/auth-server";
 import { getSupabaseClient } from "@/lib/supabase-storage";
-import { RevokeLicenseButton } from "@/components/RevokeLicenseButton";
-import { LicenseKeyDisplay } from "@/components/LicenseKeyDisplay";
+import { AdminLicenseRow } from "@/components/AdminLicenseRow";
+import { SecurityLogsTable } from "@/components/SecurityLogsTable";
 
-interface LicenseWithSessions {
-  id: number;
-  license_key: string;
-  email: string;
-  plan: string;
-  status: string;
-  created_at: string;
-  expires_at: string;
-  duplicate_detected: boolean;
-  grace_period_allowed: boolean;
-  active_sessions: number;
-}
-
-async function getLicensesWithSessionCount(): Promise<LicenseWithSessions[]> {
+async function getLicensesWithData() {
   const client = getSupabaseClient();
 
-  // Get all licenses
+  // 1. Get all licenses
   const { data: licenses, error: licenseError } = await client
     .from("licenses")
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (licenseError) {
-    throw licenseError;
-  }
+  if (licenseError) throw licenseError;
 
-  // For each license, count active sessions
-  const licensesWithSessions = await Promise.all(
-    (licenses || []).map(async (license) => {
-      const { count } = await client
-        .from("license_sessions")
-        .select("*", { count: "exact", head: true })
-        .eq("license_key", license.license_key)
-        .eq("active", true);
+  // 2. Get all sessions (active and inactive for history)
+  const { data: sessions, error: sessionError } = await client
+    .from("license_sessions")
+    .select("*")
+    .order("last_seen_at", { ascending: false });
 
-      return {
-        ...license,
-        active_sessions: count ?? 0,
-      };
-    })
-  );
+  if (sessionError) throw sessionError;
 
-  return licensesWithSessions;
+  // 3. Get all banned devices
+  const { data: banned, error: bannedError } = await client
+    .from("banned_devices")
+    .select("device_id");
+
+  if (bannedError) throw bannedError;
+  const bannedSet = new Set(banned?.map(b => b.device_id) || []);
+
+  // 4. Merge data
+  return (licenses || []).map((license) => {
+    const licenseSessions = sessions?.filter(s => s.license_key === license.license_key) || [];
+    const licenseBannedDevices = Array.from(new Set(
+      licenseSessions.filter(s => bannedSet.has(s.device_id)).map(s => s.device_id)
+    ));
+
+    return {
+      ...license,
+      active_sessions_count: licenseSessions.filter(s => s.active).length,
+      sessions: licenseSessions,
+      banned_devices: licenseBannedDevices
+    };
+  });
 }
 
 async function getRecentValidationLogs(limit: number = 50) {
@@ -79,11 +77,25 @@ export default async function AdminLicensesPage() {
     redirect("/admin/login");
   }
 
-  const licenses = await getLicensesWithSessionCount();
+  const licenses = await getLicensesWithData();
   const recentLogs = await getRecentValidationLogs(50);
 
+  // Create a quick lookup map for licenses
+  const licenseMap = new Map(licenses.map(l => [l.license_key, l]));
+
+  // Enrichment of logs
+  const enrichedLogs = recentLogs.map((log: any) => {
+    const licensedData = licenseMap.get(log.license_key);
+    return {
+      ...log,
+      user_email: licensedData?.email,
+      license_plan: licensedData?.plan,
+      license_status: licensedData?.status
+    };
+  });
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full mx-auto px-4">
       <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-white">License Management</h1>
@@ -132,7 +144,7 @@ export default async function AdminLicensesPage() {
             Active Sessions
           </div>
           <div className="mt-2 text-3xl font-semibold text-[#5e17eb]">
-            {licenses.reduce((sum, l) => sum + l.active_sessions, 0)}
+            {licenses.reduce((sum, l) => sum + (l.active_sessions || 0), 0)}
           </div>
         </div>
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 shadow-sm">
@@ -156,28 +168,28 @@ export default async function AdminLicensesPage() {
           <table className="w-full">
             <thead className="border-b border-zinc-800 bg-zinc-800/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500 w-48">
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500 w-48">
                   License Key
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                   Email
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                   Plan
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                   Expires
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                   Sessions
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                   Flags
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500 min-w-[100px]">
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500 min-w-[100px]">
                   Actions
                 </th>
               </tr>
@@ -190,102 +202,9 @@ export default async function AdminLicensesPage() {
                   </td>
                 </tr>
               ) : (
-                licenses.map((license) => {
-                  const expiresAt = new Date(license.expires_at);
-                  const isExpired = expiresAt < new Date();
-                  const daysUntilExpiry = Math.ceil(
-                    (expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-                  );
-
-                  return (
-                    <tr key={license.id} className="hover:bg-zinc-800/30">
-                      <td className="px-6 py-4">
-                        <LicenseKeyDisplay licenseKey={license.license_key} />
-                      </td>
-                      <td className="px-6 py-4 text-sm text-zinc-300">{license.email}</td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${license.plan === "test"
-                            ? "bg-yellow-500/20 text-yellow-400"
-                            : license.plan === "yearly"
-                              ? "bg-blue-500/20 text-blue-400"
-                              : license.plan === "monthly"
-                                ? "bg-purple-500/20 text-purple-400"
-                                : "bg-zinc-500/20 text-zinc-400"
-                            }`}
-                        >
-                          {license.plan}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${license.status === "active"
-                            ? "bg-emerald-500/20 text-emerald-400"
-                            : license.status === "expired"
-                              ? "bg-red-500/20 text-red-400"
-                              : "bg-zinc-500/20 text-zinc-400"
-                            }`}
-                        >
-                          {license.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-zinc-300">
-                        <div>
-                          {expiresAt.toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                        </div>
-                        <div
-                          className={`text-xs ${isExpired ? "text-red-400" : daysUntilExpiry <= 7 ? "text-orange-400" : "text-zinc-500"}`}
-                        >
-                          {isExpired
-                            ? "Expired"
-                            : daysUntilExpiry <= 0
-                              ? "Expires today"
-                              : `${daysUntilExpiry} days`}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center justify-center rounded-full px-2 py-1 text-xs font-semibold ${license.active_sessions > 0
-                            ? "bg-emerald-500/20 text-emerald-400"
-                            : "bg-zinc-500/20 text-zinc-500"
-                            }`}
-                        >
-                          {license.active_sessions}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2">
-                          {license.duplicate_detected && (
-                            <span
-                              className="inline-flex rounded-full bg-red-500/20 px-2 py-1 text-xs font-semibold text-red-400"
-                              title="Duplicate usage detected"
-                            >
-                              DUP
-                            </span>
-                          )}
-                          {!license.grace_period_allowed && (
-                            <span
-                              className="inline-flex rounded-full bg-orange-500/20 px-2 py-1 text-xs font-semibold text-orange-400"
-                              title="Grace period disabled"
-                            >
-                              NO-GRACE
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <RevokeLicenseButton
-                          licenseKey={license.license_key}
-                          email={license.email}
-                        />
-                      </td>
-                    </tr>
-                  );
-                })
+                licenses.map((license) => (
+                  <AdminLicenseRow key={license.id} license={license as any} />
+                ))
               )}
             </tbody>
           </table>
@@ -293,108 +212,18 @@ export default async function AdminLicensesPage() {
       </section>
 
       {/* Recent Activity Log - Only show if validation log table exists */}
-      {recentLogs.length > 0 && (
-        <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 shadow-sm">
-          <div className="border-b border-zinc-800 p-6">
-            <h2 className="text-lg font-semibold text-white">Recent Validation Activity</h2>
-            <p className="mt-1 text-sm text-zinc-400">Last 50 validation attempts and events</p>
-          </div>
+      <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 shadow-sm">
+        <div className="border-b border-zinc-800 p-6">
+          <h2 className="text-lg font-semibold text-white">Security & Validation Audit Log</h2>
+          <p className="mt-1 text-sm text-zinc-400">Detailed track of all validation attempts, conflicts, and bans</p>
+        </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="border-b border-zinc-800 bg-zinc-800/50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                    Timestamp
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                    License Key
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                    Event Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                    Device ID
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                    Result
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                    Error Code
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800">
-                {recentLogs.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-sm text-zinc-500">
-                      No validation logs found
-                    </td>
-                  </tr>
-                ) : (
-                  recentLogs.map((log: any) => {
-                    const timestamp = new Date(log.created_at);
-                    return (
-                      <tr key={log.id} className="hover:bg-zinc-800/30">
-                        <td className="px-6 py-4 text-sm text-zinc-300">
-                          {timestamp.toLocaleString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </td>
-                        <td className="px-6 py-4">
-                          <code className="text-xs font-mono text-zinc-400">
-                            {log.license_key?.substring(0, 20) || "N/A"}...
-                          </code>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${log.event_type === "validation"
-                              ? "bg-blue-500/20 text-blue-400"
-                              : log.event_type === "duplicate_detected"
-                                ? "bg-red-500/20 text-red-400"
-                                : log.event_type === "deactivation"
-                                  ? "bg-zinc-500/20 text-zinc-400"
-                                  : "bg-orange-500/20 text-orange-400"
-                              }`}
-                          >
-                            {log.event_type}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <code className="text-xs font-mono text-zinc-500">
-                            {log.device_id?.substring(0, 12) || "N/A"}...
-                          </code>
-                        </td>
-                        <td className="px-6 py-4">
-                          {log.success ? (
-                            <span className="inline-flex items-center text-sm text-emerald-400">
-                              ✓ Success
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center text-sm text-red-400">
-                              ✗ Failed
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4">
-                          {log.error_code ? (
-                            <code className="text-xs font-mono text-red-400">{log.error_code}</code>
-                          ) : (
-                            <span className="text-xs text-zinc-400">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+        <div className="p-0">
+          <div className="min-w-full inline-block align-middle">
+            <SecurityLogsTable logs={enrichedLogs} />
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* Admin Actions Info */}
       <section className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-6">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { getCurrentCustomer } from "@/lib/auth-server";
 import { getLicensesForEmail } from "@/lib/license-db";
@@ -15,25 +16,15 @@ export const metadata = {
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+import { CustomerSessionList } from "@/components/CustomerSessionList";
+import { getSessionsForLicense, getSessionHistoryForLicense } from "@/lib/license-db";
+
+// ... existing imports ...
+
 export default async function PortalPage() {
   const customer = await getCurrentCustomer();
-
-  // Middleware should normally prevent this, but keep a safe-guard.
   if (!customer) {
-    return (
-      <div className="mx-auto max-w-xl py-16 text-center">
-        <h1 className="mb-4 text-2xl font-semibold">You are not logged in</h1>
-        <p className="mb-6 text-sm text-zinc-400">
-          Please log in to access your customer portal.
-        </p>
-        <Link
-          href="/login"
-          className="inline-flex items-center rounded-md bg-[#5e17eb] px-4 py-2 text-sm font-medium text-white hover:bg-[#4512c2]"
-        >
-          Go to login
-        </Link>
-      </div>
-    );
+    redirect("/login?next=/portal");
   }
 
   const [licenses, promo, tickets] = await Promise.all([
@@ -41,6 +32,16 @@ export default async function PortalPage() {
     getPromotionalImage(),
     listTicketsForCustomer(customer.id),
   ]);
+
+  // Fetch active sessions for all licenses
+  const sessions = await Promise.all(
+    licenses.map(l => getSessionsForLicense(l.license_key))
+  ).then(results => results.flat().sort((a, b) => new Date(b.last_seen_at).getTime() - new Date(a.last_seen_at).getTime()));
+
+  // Fetch history sessions for all licenses
+  const historySessions = await Promise.all(
+    licenses.map(l => getSessionHistoryForLicense(l.license_key))
+  ).then(results => results.flat().sort((a, b) => new Date(b.last_seen_at).getTime() - new Date(a.last_seen_at).getTime()));
 
   // Show security warning only if user hasn't set their password yet
   const showSecurityWarning = !customer.password_set_by_user;
@@ -123,6 +124,18 @@ export default async function PortalPage() {
           <LicenseTable licenses={licenses} />
         )}
       </section>
+
+      {/* Active Devices */}
+      <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 shadow-sm">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-white">Active Devices</h2>
+          <p className="text-sm text-zinc-400">
+            Manage devices currently logged in with your licenses.
+          </p>
+        </div>
+        <CustomerSessionList sessions={sessions} historySessions={historySessions} />
+      </section>
+
 
       {/* Download Software */}
       <RequestDownloadSection />

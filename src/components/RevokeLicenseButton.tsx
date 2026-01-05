@@ -55,12 +55,12 @@ export function RevokeLicenseButton({ licenseKey, email }: RevokeLicenseButtonPr
             onClick={handleRevoke}
             disabled={isRevoking}
             className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${isRevoking
-                ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                ? "bg-orange-600 text-white cursor-not-allowed"
                 : "bg-red-600 text-white hover:bg-red-700"
                 }`}
             title="Revoke this license and deactivate all sessions"
         >
-            {isRevoking ? "Revoking..." : "Revoke"}
+            {isRevoking ? "Pending Revoke..." : "Revoke"}
         </button>
     );
 }

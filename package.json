@@ -18,6 +18,7 @@
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.89.0",
     "bcryptjs": "^2.4.3",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.23.24",
     "jose": "^5.9.3",
     "jspdf": "^3.0.4",

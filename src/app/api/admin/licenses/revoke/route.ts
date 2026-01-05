@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/auth-server";
 import { getSupabaseClient } from "@/lib/supabase-storage";
+import { broadcastLicenseEvent } from "@/lib/license-db";
 
 /**
  * POST /api/admin/licenses/revoke
@@ -68,6 +69,13 @@ export async function POST(request: NextRequest) {
             console.error("Error deactivating sessions:", sessionError);
             // Don't fail the request - license is already revoked
         }
+
+        // Broadcast realtime event to connected clients
+        await broadcastLicenseEvent(licenseKey, 'revocation', {
+            type: "license_revoked",
+            message: "Your license has been revoked by an administrator.",
+            timestamp: new Date().toISOString(),
+        });
 
         console.log(`✅ Admin ${admin.email} revoked license ${licenseKey}`);
 
