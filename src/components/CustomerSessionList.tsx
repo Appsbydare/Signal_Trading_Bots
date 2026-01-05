@@ -8,6 +8,7 @@ interface LicenseSession {
     session_id: string;
     device_id: string;
     device_name: string | null;
+    created_at: string;
     last_seen_at: string;
     active: boolean;
     license_key: string;
@@ -62,6 +63,19 @@ export function CustomerSessionList({ sessions, historySessions = [] }: { sessio
                                 </div>
                                 <div className={`h-2 w-2 rounded-full ${session.active ? "bg-emerald-500" : "bg-zinc-500"}`} title={session.active ? "Online" : "Offline"} />
                             </div>
+
+                            {/* New Login Badge */}
+                            {(new Date().getTime() - new Date(session.created_at).getTime() < 24 * 60 * 60 * 1000) && (
+                                <div className="mt-2">
+                                    <span className="inline-flex items-center gap-1 rounded bg-blue-500/10 px-2 py-0.5 text-[10px] uppercase font-bold text-blue-400 border border-blue-500/20">
+                                        <span className="relative flex h-1.5 w-1.5">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500"></span>
+                                        </span>
+                                        New Login
+                                    </span>
+                                </div>
+                            )}
 
                             <div className="mt-4 flex flex-col gap-1 text-xs text-zinc-400">
                                 <div className="flex justify-between">

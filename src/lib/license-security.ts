@@ -60,6 +60,15 @@ export function verifyRequestSignature(payload: Record<string, unknown>): Securi
     .update(message, "utf8")
     .digest("hex");
 
+  console.log('[Validate] Signature Debug:', {
+    timestamp,
+    sortedJson,
+    message: message.substring(0, 100) + '...',
+    expected: expected.substring(0, 20) + '...',
+    received: signature.substring(0, 20) + '...',
+    apiSecret: licenseConfig.apiSecret.substring(0, 10) + '...'
+  });
+
   const valid = crypto.timingSafeEqual(
     Buffer.from(expected, "utf8"),
     Buffer.from(signature, "utf8"),
@@ -75,12 +84,12 @@ export function verifyRequestSignature(payload: Record<string, unknown>): Securi
 export function ensureHttps(request: NextRequest): SecurityCheckResult {
   const proto = request.headers.get("x-forwarded-proto") || request.nextUrl.protocol.replace(":", "");
   const host = request.headers.get("host") || "";
-  
+
   // Allow HTTP for localhost/127.0.0.1 (development)
   if (host.includes("localhost") || host.includes("127.0.0.1")) {
     return { ok: true, message: "OK (localhost development)" };
   }
-  
+
   if (proto !== "https") {
     return { ok: false, message: "HTTPS is required" };
   }

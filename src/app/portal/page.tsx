@@ -2,24 +2,21 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getCurrentCustomer } from "@/lib/auth-server";
-import { getLicensesForEmail } from "@/lib/license-db";
+import { getLicensesForEmail, getSessionsForLicense, getSessionHistoryForLicense } from "@/lib/license-db";
 import { getPromotionalImage } from "@/lib/promotional-image";
 import { listTicketsForCustomer } from "@/lib/tickets-db";
 import { LicenseTable } from "@/components/LicenseTable";
 import { RequestDownloadSection } from "@/components/RequestDownloadSection";
-
-export const metadata = {
-  title: "Customer Portal | signaltradingbots",
-};
+import { CustomerSessionList } from "@/components/CustomerSessionList";
+import { RealtimeLicenseTracker } from "@/components/RealtimeLicenseTracker";
 
 // Force dynamic rendering to always show fresh license data
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-import { CustomerSessionList } from "@/components/CustomerSessionList";
-import { getSessionsForLicense, getSessionHistoryForLicense } from "@/lib/license-db";
-
-// ... existing imports ...
+export const metadata = {
+  title: "Customer Portal | signaltradingbots",
+};
 
 export default async function PortalPage() {
   const customer = await getCurrentCustomer();
@@ -34,9 +31,13 @@ export default async function PortalPage() {
   ]);
 
   // Fetch active sessions for all licenses
+  // Sort by last_seen_at descending (newest first)
   const sessions = await Promise.all(
     licenses.map(l => getSessionsForLicense(l.license_key))
-  ).then(results => results.flat().sort((a, b) => new Date(b.last_seen_at).getTime() - new Date(a.last_seen_at).getTime()));
+  ).then(results => results.flat().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+
+  // NOTE: Changed sort to 'created_at' for Active Sessions to strictly show NEWEST Logins at top.
+  // Although 'last_seen_at' is similar, 'created_at' is the login time.
 
   // Fetch history sessions for all licenses
   const historySessions = await Promise.all(
@@ -48,6 +49,7 @@ export default async function PortalPage() {
 
   return (
     <div className="space-y-6">
+      <RealtimeLicenseTracker />
       {/* Header */}
       <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
         <div>
@@ -125,10 +127,10 @@ export default async function PortalPage() {
         )}
       </section>
 
-      {/* Active Devices */}
+      {/* Active Sessions */}
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 shadow-sm">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold text-white">Active Devices</h2>
+          <h2 className="text-lg font-semibold text-white">Active Sessions</h2>
           <p className="text-sm text-zinc-400">
             Manage devices currently logged in with your licenses.
           </p>

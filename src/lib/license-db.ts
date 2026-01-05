@@ -206,8 +206,32 @@ export async function refreshSession(sessionId: string, sessionSerial?: string, 
   }
 }
 
-export async function deactivateSession(sessionId: string): Promise<void> {
+export async function deactivateSession(sessionId: string, notify: boolean = true): Promise<void> {
   const client = getSupabaseClient();
+
+  // 1. Get session details FIRST to know license key for broadcast
+  let session = null;
+  try {
+    session = await getSessionById(sessionId);
+  } catch (e) {
+    console.error("Failed to fetch session for deactivation:", e);
+  }
+
+  // 2. Broadcast revocation if valid session found and notify is true
+  if (notify && session) {
+    try {
+      await broadcastLicenseEvent(session.license_key, 'revocation', {
+        sessionId: sessionId,
+        licenseKey: session.license_key
+      });
+    } catch (e) {
+      console.error("Failed to broadcast revocation:", e);
+    }
+  }
+
+  // 3. Deactivate session (set active = false)
+  // We do NOT delete it, so we can keep history logs of past sessions!
+  // Customer portal relies on filtered active=true/false lists.
   const { error } = await client
     .from("license_sessions")
     .update({ active: false })
@@ -215,22 +239,6 @@ export async function deactivateSession(sessionId: string): Promise<void> {
 
   if (error) {
     throw error;
-  }
-
-  // Broadcast revocation event
-  // We need the license key to broadcast to the correct channel
-  // Fetch session details first or assume the caller has it?
-  // Use a separate query to get license key if needed
-  try {
-    const session = await getSessionById(sessionId);
-    if (session) {
-      await broadcastLicenseEvent(session.license_key, 'revocation', {
-        sessionId: sessionId,
-        licenseKey: session.license_key
-      });
-    }
-  } catch (e) {
-    console.error("Failed to broadcast revocation:", e);
   }
 }
 

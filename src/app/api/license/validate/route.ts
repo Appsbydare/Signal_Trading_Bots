@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
 
       // Mark existing inactive and create new record
       await import("@/lib/license-db").then(async ({ deactivateSession }) => {
-        await deactivateSession(session!.session_id);
+        await deactivateSession(session!.session_id, false); // Do not broadcast revocation for silent rotation
       });
 
       const sessionId = `SESSION-${crypto.randomUUID()}`;

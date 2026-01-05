@@ -143,31 +143,20 @@ export function AdminLicenseRow({ license }: { license: EnrichedLicense }) {
                         </svg>
                     </button>
                 </td>
-                <td className="px-4 py-3">
-                    {license.duplicate_detected && (
-                        <div className="flex flex-col items-start gap-1">
-                            <span className="inline-flex rounded-full bg-red-500/20 px-2 py-1 text-xs font-semibold text-red-400 animate-pulse">DUP DETECTED</span>
-                        </div>
-                    )}
-                </td>
+                {/* Flags column removed */}
                 <td className="px-4 py-3">
                     <RevokeLicenseButton licenseKey={license.license_key} email={license.email} />
                 </td>
             </tr>
             {expanded && (
                 <tr className="bg-zinc-900/40">
-                    <td colSpan={8} className="px-6 py-4">
+                    <td colSpan={7} className="px-6 py-4">
                         <div className="space-y-6">
 
                             {/* Section 1: Active Sessions */}
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
                                     <h4 className="text-xs font-semibold uppercase tracking-wider text-emerald-500/80">Active Sessions</h4>
-                                    {license.duplicate_detected && (
-                                        <span className="text-[10px] font-bold text-red-400 animate-pulse bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20">
-                                            DUPLICATE USAGE DETECTED
-                                        </span>
-                                    )}
                                 </div>
                                 {activeSessions.length === 0 ? (
                                     <p className="text-sm text-zinc-500 italic">No active sessions.</p>

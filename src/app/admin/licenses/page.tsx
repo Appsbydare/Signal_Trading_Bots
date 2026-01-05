@@ -3,6 +3,7 @@ import { getCurrentAdmin } from "@/lib/auth-server";
 import { getSupabaseClient } from "@/lib/supabase-storage";
 import { AdminLicenseRow } from "@/components/AdminLicenseRow";
 import { SecurityLogsTable } from "@/components/SecurityLogsTable";
+import { RealtimeLicenseTracker } from "@/components/RealtimeLicenseTracker";
 
 async function getLicensesWithData() {
   const client = getSupabaseClient();
@@ -44,6 +45,13 @@ async function getLicensesWithData() {
       sessions: licenseSessions,
       banned_devices: licenseBannedDevices
     };
+  }).sort((a, b) => {
+    // Sort by active sessions first (descending)
+    if (a.active_sessions_count !== b.active_sessions_count) {
+      return b.active_sessions_count - a.active_sessions_count;
+    }
+    // Then by creation date (descending)
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 }
 
@@ -94,8 +102,21 @@ export default async function AdminLicensesPage() {
     };
   });
 
+  // Calculate statistics
+  const totalActiveSessions = licenses.reduce((sum, l) => sum + (l.active_sessions_count || 0), 0);
+
+  // Calculate new logins (sessions created in last 24h)
+  const oneDayAgo = new Date();
+  oneDayAgo.setHours(oneDayAgo.getHours() - 24);
+
+  const newLoginsCount = licenses.reduce((count, license) => {
+    const recentSessions = license.sessions?.filter((s: any) => new Date(s.created_at) > oneDayAgo) || [];
+    return count + recentSessions.length;
+  }, 0);
+
   return (
     <div className="space-y-6 w-full max-w-full mx-auto px-4">
+      <RealtimeLicenseTracker />
       <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-white">License Management</h1>
@@ -118,6 +139,13 @@ export default async function AdminLicensesPage() {
               Log out
             </button>
           </form>
+          <div className="rounded-md border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-400 flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            Live Updates
+          </div>
         </div>
       </div>
 
@@ -144,15 +172,15 @@ export default async function AdminLicensesPage() {
             Active Sessions
           </div>
           <div className="mt-2 text-3xl font-semibold text-[#5e17eb]">
-            {licenses.reduce((sum, l) => sum + (l.active_sessions || 0), 0)}
+            {totalActiveSessions}
           </div>
         </div>
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 shadow-sm">
           <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-            Duplicate Flags
+            New Login Devices (24h)
           </div>
-          <div className="mt-2 text-3xl font-semibold text-red-400">
-            {licenses.filter((l) => l.duplicate_detected).length}
+          <div className="mt-2 text-3xl font-semibold text-blue-400">
+            {newLoginsCount}
           </div>
         </div>
       </section>
@@ -186,9 +214,7 @@ export default async function AdminLicensesPage() {
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                   Sessions
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  Flags
-                </th>
+                {/* Flags column removed */}
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500 min-w-[100px]">
                   Actions
                 </th>
@@ -197,7 +223,7 @@ export default async function AdminLicensesPage() {
             <tbody className="divide-y divide-zinc-800">
               {licenses.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-sm text-zinc-500">
+                  <td colSpan={7} className="px-6 py-12 text-center text-sm text-zinc-500">
                     No licenses found
                   </td>
                 </tr>
