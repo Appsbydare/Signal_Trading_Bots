@@ -9,16 +9,49 @@ export async function broadcastLicenseEvent(licenseKey: string, eventType: strin
   const client = getSupabaseClient();
   const channel = client.channel(`license:${licenseKey}`);
 
-  await channel.subscribe(async (status) => {
-    if (status === 'SUBSCRIBED') {
-      await channel.send({
-        type: 'broadcast',
-        event: eventType,
-        payload: payload
-      });
-      // Cleanup
-      client.removeChannel(channel);
-    }
+  // Serverless environments need to wait for the socket event to actually send
+  return new Promise((resolve) => {
+    let handled = false;
+
+    // Timeout to prevent hanging
+    const timeout = setTimeout(() => {
+      if (!handled) {
+        console.warn(`[Broadcast] Timeout waiting for subscription to ${licenseKey}`);
+        client.removeChannel(channel);
+        handled = true;
+        resolve();
+      }
+    }, 4000);
+
+    channel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        if (handled) return;
+
+        try {
+          await channel.send({
+            type: 'broadcast',
+            event: eventType,
+            payload: payload
+          });
+          console.log(`[Broadcast] Sent '${eventType}' to license:${licenseKey}`);
+        } catch (err) {
+          console.error(`[Broadcast] Failed to send:`, err);
+        } finally {
+          clearTimeout(timeout);
+          client.removeChannel(channel);
+          handled = true;
+          resolve();
+        }
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        if (!handled) {
+          console.error(`[Broadcast] Channel status failed: ${status}`);
+          clearTimeout(timeout);
+          client.removeChannel(channel);
+          handled = true;
+          resolve();
+        }
+      }
+    });
   });
 }
 
