@@ -17,22 +17,21 @@ export async function POST(request: NextRequest) {
 
     // Check if customer exists
     const customer = await getCustomerByEmail(email);
-    
+
     if (!customer) {
       return NextResponse.json(
-        { 
-          success: false, 
-          message: "No account found with this email address. Please check your email or contact support if you believe this is an error." 
+        {
+          success: false,
+          message: "No account found with this email address. Please check your email or contact support if you believe this is an error."
         },
         { status: 404 }
       );
     }
 
-    // Generate magic link
-    const host = request.headers.get("host") || "www.signaltradingbots.com";
-    const protocol = host.includes("localhost") ? "http" : "https";
+    // Generate magic link with production URL
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://signaltradingbots.com";
     const token = await createMagicLinkToken(email);
-    const magicLinkUrl = `${protocol}://${host}/api/auth/magic-login?token=${token}`;
+    const magicLinkUrl = `${baseUrl}/api/auth/magic-login?token=${token}`;
 
     // Send email
     try {
