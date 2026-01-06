@@ -65,7 +65,7 @@ export default function RegisterPage() {
             full_name: fullName,
             country: country,
           },
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "https://signaltradingbots.com"}/auth/callback?next=/portal`,
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "https://signaltradingbots.com"}/auth/callback`,
         },
       });
 
@@ -92,7 +92,7 @@ export default function RegisterPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "https://signaltradingbots.com"}/auth/callback?next=/portal`,
+          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "https://signaltradingbots.com"}/auth/callback`,
         },
       });
       if (error) throw error;

@@ -65,7 +65,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "https://signaltradingbots.com"}/auth/callback?next=/portal`,
+          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "https://signaltradingbots.com"}/auth/callback`,
         },
       });
       if (error) throw error;

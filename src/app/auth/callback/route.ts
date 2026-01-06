@@ -52,7 +52,8 @@ export async function GET(request: Request) {
                         customer.password_set_by_user
                     );
 
-                    const response = NextResponse.redirect(`${origin}${next}`);
+                    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || origin;
+                    const response = NextResponse.redirect(`${baseUrl}${next}`);
                     response.cookies.set(CUSTOMER_COOKIE_NAME, token, {
                         httpOnly: true,
                         sameSite: "lax",
@@ -64,10 +65,12 @@ export async function GET(request: Request) {
                 }
             }
 
-            return NextResponse.redirect(`${origin}${next}`);
+            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || origin;
+            return NextResponse.redirect(`${baseUrl}${next}`);
         }
     }
 
     // Return the user to an error page with instructions
-    return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || origin;
+    return NextResponse.redirect(`${baseUrl}/auth/auth-code-error`);
 }
