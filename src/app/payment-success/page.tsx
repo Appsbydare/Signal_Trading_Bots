@@ -65,6 +65,8 @@ function PaymentSuccessContent() {
     }
   };
 
+  const isUpgrade = searchParams.get("isUpgrade") === "true";
+
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 py-12">
@@ -130,6 +132,69 @@ function PaymentSuccessContent() {
                 </Link>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isUpgrade) {
+    return (
+      <div className="min-h-screen bg-zinc-950 py-12">
+        <div className="mx-auto max-w-2xl px-6">
+          <div className="text-center">
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-500/20">
+              <svg
+                className="h-12 w-12 text-emerald-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+
+            <h1 className="mb-4 text-4xl font-bold text-white">
+              Upgrade Successful! 🚀
+            </h1>
+
+            <p className="mb-8 text-lg text-zinc-300">
+              Your license has been successfully upgraded to <span className="font-semibold text-white">{orderDetails.plan}</span>.
+              <br />
+              All existing settings regarding your license key remain unchanged.
+            </p>
+
+            <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 mb-8 max-w-md mx-auto">
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between border-b border-zinc-700 pb-2">
+                  <span className="text-zinc-400">Order ID</span>
+                  <span className="font-mono text-white">{orderId}</span>
+                </div>
+                <div className="flex justify-between border-b border-zinc-700 pb-2">
+                  <span className="text-zinc-400">New Plan</span>
+                  <span className="font-semibold text-emerald-400">{orderDetails.plan}</span>
+                </div>
+                <div className="flex justify-between pt-1">
+                  <span className="text-zinc-400">Status</span>
+                  <span className="text-green-400">Active & Upgraded</span>
+                </div>
+              </div>
+            </div>
+
+            <Link
+              href="/portal"
+              className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-8 py-4 text-lg font-semibold text-white transition hover:bg-blue-500 hover:scale-105"
+            >
+              Go to Customer Portal
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
           </div>
         </div>
       </div>
@@ -216,8 +281,8 @@ function PaymentSuccessContent() {
                 }}
                 disabled={downloading || downloadStarted}
                 className={`block w-full rounded-md px-6 py-3 text-center font-medium text-white transition ${downloading || downloadStarted
-                    ? 'bg-gray-600 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700'
+                  ? 'bg-gray-600 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700'
                   }`}
               >
                 {downloading ? (
@@ -245,40 +310,31 @@ function PaymentSuccessContent() {
             </section>
           )}
 
-          {/* Download Expired - Show Regenerate Button */}
+          {/* Download Expired - Direct to Portal */}
           {orderDetails.downloadExpired && orderDetails.licenseKey && (
             <section className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-6">
               <h2 className="mb-3 text-lg font-semibold text-amber-300">
                 ⚠️ Download Link Expired
               </h2>
               <p className="mb-4 text-sm text-amber-200">
-                Your download link has expired. Click below to generate a new one:
+                Your download link has expired or has already been used.
               </p>
-              <button
-                onClick={async () => {
-                  try {
-                    const response = await fetch('/api/download/generate', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        licenseKey: orderDetails.licenseKey,
-                        email: orderDetails.email,
-                      }),
-                    });
-                    if (response.ok) {
-                      const data = await response.json();
-                      window.location.href = data.downloadUrl;
-                    } else {
-                      alert('Failed to generate download link. Please contact support.');
-                    }
-                  } catch (err) {
-                    alert('Error generating download link. Please try again.');
-                  }
-                }}
-                className="w-full rounded-md bg-amber-600 px-6 py-3 text-center font-medium text-white transition hover:bg-amber-700"
+              <p className="mb-4 text-sm text-amber-200">
+                For security reasons, download links are single-use and expire after 1 hour.
+              </p>
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 mb-4">
+                <p className="text-sm text-amber-100">
+                  <strong>To download the software:</strong>
+                  <br />
+                  Go to your Customer Portal and generate a new download link from there.
+                </p>
+              </div>
+              <Link
+                href="/portal"
+                className="block w-full rounded-md bg-amber-600 px-6 py-3 text-center font-medium text-white transition hover:bg-amber-700"
               >
-                Generate New Download Link
-              </button>
+                Go to Customer Portal
+              </Link>
             </section>
           )}
 

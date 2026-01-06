@@ -49,17 +49,20 @@ export async function POST(request: NextRequest) {
     if (verified) {
       // Generate DBOT-style license key
       const licenseKey = generateLicenseKey();
-      
+
       // Calculate expiry date based on plan
       const now = new Date();
       const expiresAt = new Date(now);
-      if (order.plan === "monthly") {
-        expiresAt.setMonth(expiresAt.getMonth() + 1);
-      } else if (order.plan === "yearly") {
+      const planLower = order.plan.toLowerCase();
+
+      if (planLower === "lifetime") {
+        expiresAt.setFullYear(expiresAt.getFullYear() + 100);
+      } else if (planLower.includes("yearly")) {
+        // Yearly plans: starter_yearly, pro_yearly
         expiresAt.setFullYear(expiresAt.getFullYear() + 1);
       } else {
-        // Default to yearly if plan not recognized
-        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+        // Monthly plans: starter, pro
+        expiresAt.setDate(expiresAt.getDate() + 30); 
       }
 
       // Insert license into Supabase

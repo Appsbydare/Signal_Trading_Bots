@@ -40,7 +40,9 @@ export async function sendStripeLicenseEmail(params: {
   const planName = planNames[params.plan.toLowerCase()] || params.plan;
   const expiryDate = params.plan.toLowerCase() === 'lifetime'
     ? 'Never (Lifetime Access)'
-    : 'Renews monthly';
+    : params.plan.toLowerCase().includes('yearly')
+      ? 'Renews annually'
+      : 'Renews monthly';
 
   const html = `
 <!DOCTYPE html>

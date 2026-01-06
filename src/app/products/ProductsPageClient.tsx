@@ -151,9 +151,10 @@ const products = [
 
 export function ProductsPageClient() {
   const [activeProduct, setActiveProduct] = useState<ProductId>("telegram-mt5");
-  const [customerLicenses, setCustomerLicenses] = useState<Array<{plan: string, expires_at: string}>>([]);
+  const [customerLicenses, setCustomerLicenses] = useState<Array<{ plan: string, expires_at: string }>>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loadingLicenses, setLoadingLicenses] = useState(true);
+  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
 
   // Fetch customer licenses if logged in
   useEffect(() => {
@@ -328,10 +329,30 @@ export function ProductsPageClient() {
                 <h2 className="mb-3 text-2xl font-semibold text-[var(--text-main)] md:text-3xl">
                   Simple plans for different trading stages
                 </h2>
-                <p className="mx-auto max-w-2xl text-sm text-[var(--text-muted)] md:text-base">
+                <p className="mx-auto max-w-2xl text-sm text-[var(--text-muted)] md:text-base mb-8">
                   Start on demo, then scale to live once you are comfortable. Pricing
                   details are available on the products and payment pages.
                 </p>
+
+                {/* Billing Toggle */}
+                <div className="flex justify-center items-center gap-3">
+                  <span className={`text-sm font-medium ${billingInterval === 'monthly' ? 'text-[var(--text-main)]' : 'text-[var(--text-muted)]'}`}>
+                    Monthly
+                  </span>
+                  <button
+                    onClick={() => setBillingInterval(prev => prev === 'monthly' ? 'yearly' : 'monthly')}
+                    className="relative h-7 w-12 rounded-full bg-zinc-700 transition-colors hover:bg-zinc-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5e17eb] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                  >
+                    <motion.div
+                      className="absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-sm"
+                      animate={{ x: billingInterval === 'monthly' ? 0 : 20 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    />
+                  </button>
+                  <span className={`text-sm font-medium ${billingInterval === 'yearly' ? 'text-[var(--text-main)]' : 'text-[var(--text-muted)]'}`}>
+                    Yearly <span className="text-[#5e17eb] font-bold text-xs ml-1">(Save 10%)</span>
+                  </span>
+                </div>
               </div>
               <motion.div
                 className="grid gap-6 md:grid-cols-3"
@@ -342,21 +363,33 @@ export function ProductsPageClient() {
               >
                 {pricingPlans.map((plan) => {
                   const planKey = plan.name.toLowerCase();
-                  const license = customerLicenses.find((l: any) => l.plan.toLowerCase() === planKey);
+                  const license = customerLicenses.find((l: any) => l.plan.toLowerCase().startsWith(planKey));
                   const isCurrentPlan = !!license;
                   const expiresAt = license?.expires_at;
                   const daysRemaining = expiresAt
                     ? Math.max(
-                        0,
-                        Math.ceil(
-                          (new Date(expiresAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-                        )
+                      0,
+                      Math.ceil(
+                        (new Date(expiresAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
                       )
+                    )
                     : undefined;
 
-                  // Show promo offer for Starter plan only if user has no licenses at all
                   const showPromoOffer = plan.name === "Starter" && customerLicenses.length === 0;
                   const isLifetime = plan.name === "Lifetime";
+
+
+                  const hasMonthlyPlan = license && !license.plan.toLowerCase().includes('yearly') && !isLifetime;
+                  const isViewingYearly = billingInterval === 'yearly' && !isLifetime;
+                  const canUpgradeToYearly = hasMonthlyPlan && isViewingYearly;
+
+
+                  let proratedCredit = 0;
+                  if (canUpgradeToYearly && daysRemaining) {
+                    const monthlyPrice = plan.name === "Pro" ? 49 : 29;
+                    const dailyRate = monthlyPrice / 30;
+                    proratedCredit = Math.min(dailyRate * Math.max(0, daysRemaining - 1), monthlyPrice);  
+                  }
 
                   return (
                     <motion.div key={plan.name} variants={cardVariants} className="h-full">
@@ -365,23 +398,25 @@ export function ProductsPageClient() {
                         badge={plan.badge}
                         price={
                           plan.name === "Starter"
-                            ? "$29/month"
+                            ? (billingInterval === 'monthly' ? "$29/month" : "$313/year")
                             : plan.name === "Pro"
-                              ? "$49/month"
+                              ? (billingInterval === 'monthly' ? "$49/month" : "$529/year")
                               : "$999 one-time"
                         }
                         yearlyNote={
                           plan.name === "Lifetime"
                             ? "All future versions and features included"
-                            : "Save 10% with yearly billing"
+                            : billingInterval === 'monthly'
+                              ? "Save 10% with yearly billing"
+                              : "Billed annually (10% discount applied)"
                         }
                         features={plan.features}
                         featured={plan.featured}
                         paymentLink={
                           plan.name === "Starter"
-                            ? "/payment?plan=starter"
+                            ? `/payment?plan=${billingInterval === 'monthly' ? 'starter' : 'starter_yearly'}`
                             : plan.name === "Pro"
-                              ? "/payment?plan=pro"
+                              ? `/payment?plan=${billingInterval === 'monthly' ? 'pro' : 'pro_yearly'}`
                               : "/payment?plan=lifetime"
                         }
                         viewDetailsHref="#choose-bot"
@@ -391,6 +426,13 @@ export function ProductsPageClient() {
                         daysRemaining={daysRemaining}
                         showPromoOffer={showPromoOffer}
                         isLifetime={isLifetime}
+                        canUpgradeToYearly={canUpgradeToYearly}
+                        upgradeYearlyLink={
+                          canUpgradeToYearly
+                            ? `/payment?plan=${plan.name.toLowerCase()}_yearly&upgrade=true&credit=${proratedCredit.toFixed(2)}`
+                            : undefined
+                        }
+                        proratedCredit={proratedCredit}
                       />
                     </motion.div>
                   );

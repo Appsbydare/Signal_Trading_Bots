@@ -6,13 +6,27 @@ import { createCryptoOrder } from "@/lib/orders-supabase";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { plan, email, fullName, country, coinNetwork } = body;
+    const { plan, email, fullName, country, coinNetwork, finalPrice, isUpgrade, creditAmount } = body;
 
     if (!plan || !email || !fullName || !country) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const displayPrice = plan === "lifetime" ? 999 : plan === "pro" ? 49 : 29;
+    // Use finalPrice if provided (for upgrades with proration), otherwise use priceMap
+    let displayPrice: number;
+    if (finalPrice !== undefined && finalPrice !== null) {
+      displayPrice = finalPrice;
+    } else {
+      const priceMap: Record<string, number> = {
+        lifetime: 999,
+        pro: 49,
+        starter: 29,
+        pro_yearly: 529,
+        starter_yearly: 313,
+      };
+      displayPrice = priceMap[plan as string] || 29;
+    }
+
     const selectedCoinNetwork = coinNetwork || "USDT-TRC20"; // Default to USDT-TRC20 if not provided
     const { wallet, orderCount } = await getNextWalletFromDB(selectedCoinNetwork);
     const embeddedPrice = getEmbeddedPrice(displayPrice, orderCount);

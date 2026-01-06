@@ -9,11 +9,11 @@ if (!isStripeConfigured) {
 }
 
 // Initialize Stripe with your secret key (only if configured)
-export const stripe = isStripeConfigured 
+export const stripe = isStripeConfigured
   ? new Stripe(STRIPE_SECRET_KEY!, {
-      apiVersion: '2025-12-15.clover',
-      typescript: true,
-    })
+    apiVersion: '2025-12-15.clover',
+    typescript: true,
+  })
   : null;
 
 /**
@@ -55,6 +55,7 @@ export async function createPaymentIntent(
     email: string;
     fullName: string;
     country: string;
+    isUpgrade?: string;
   }
 ) {
   if (!stripe) {

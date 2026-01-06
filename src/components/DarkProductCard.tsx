@@ -16,6 +16,9 @@ interface DarkProductCardProps {
   daysRemaining?: number;
   showPromoOffer?: boolean;
   isLifetime?: boolean;
+  canUpgradeToYearly?: boolean;
+  upgradeYearlyLink?: string;
+  proratedCredit?: number;
 }
 
 export function DarkProductCard({
@@ -33,12 +36,15 @@ export function DarkProductCard({
   daysRemaining,
   showPromoOffer = false,
   isLifetime = false,
+  canUpgradeToYearly = false,
+  upgradeYearlyLink,
+  proratedCredit,
 }: DarkProductCardProps) {
   return (
     <div className="relative group h-full">
       {/* Starry background effect */}
       <div
-        className="absolute inset-0 rounded-xl bg-gradient-to-br from-slate-900 via-slate-950 to-black opacity-95"
+        className="absolute inset-0 rounded-xl bg-gradient-to-br from-slate-900 via-slate-950 to-black"
         style={{
           backgroundImage: `
             radial-gradient(2px 2px at 20px 30px, white, rgba(255,255,255,.2)),
@@ -55,9 +61,9 @@ export function DarkProductCard({
 
       {/* Card content */}
       <div
-        className={`relative z-10 flex h-full flex-col rounded-xl border p-6 text-left shadow-lg transition-all duration-200 hover:-translate-y-1 hover:shadow-xl ${featured
-          ? "border-blue-500 bg-gradient-to-br from-slate-900/95 to-black/95"
-          : "border-blue-600/30 bg-gradient-to-br from-slate-900/90 to-black/90"
+        className={`relative z-10 flex h-full flex-col rounded-xl border p-6 text-left shadow-lg transition-all duration-200 hover:shadow-xl ${featured
+          ? "border-blue-500 bg-gradient-to-br from-slate-900 to-black"
+          : "border-blue-600/30 bg-gradient-to-br from-slate-900 to-black"
           }`}
       >
         {/* Top badge */}
@@ -111,9 +117,9 @@ export function DarkProductCard({
             <p className="text-sm font-semibold text-blue-300">✓ Current Plan</p>
             {daysRemaining !== undefined && expiresAt && (
               <p className="mt-1 text-xs text-blue-200">
-                {isLifetime 
+                {isLifetime
                   ? 'Lifetime Access'
-                  : daysRemaining > 0 
+                  : daysRemaining > 0
                     ? `Active for ${daysRemaining} more days`
                     : 'Expired - Renew to continue'
                 }
@@ -127,14 +133,25 @@ export function DarkProductCard({
           <Link
             href={viewDetailsHref}
             onClick={onViewDetailsClick}
-            className={`inline-flex w-full items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition ${featured
-              ? "bg-[#5e17eb] text-white hover:bg-[#4512c2]"
-              : "border border-[#5e17eb]/30 text-blue-200 hover:border-[#5e17eb] hover:text-white"
-              }`}
+            className="inline-flex w-full items-center justify-center rounded-md bg-[#5e17eb] text-white hover:bg-[#4512c2] px-4 py-2 text-sm font-medium transition"
           >
             View details
           </Link>
-          {isCurrentPlan && daysRemaining !== undefined && daysRemaining > 0 ? (
+          {canUpgradeToYearly && upgradeYearlyLink ? (
+            <>
+              <Link
+                href={upgradeYearlyLink}
+                className="inline-flex w-full items-center justify-center rounded-md bg-gradient-to-r from-emerald-900/80 to-teal-900/80 border border-emerald-500/30 px-4 py-2 text-sm font-medium text-emerald-100 transition hover:from-emerald-800 hover:to-teal-800 hover:border-emerald-500/50 shadow-lg shadow-emerald-900/20"
+              >
+                Upgrade to Yearly
+              </Link>
+              {proratedCredit && proratedCredit > 0 && (
+                <p className="text-xs text-center text-emerald-400/80 font-medium">
+                  ${proratedCredit.toFixed(2)} credit for remaining days
+                </p>
+              )}
+            </>
+          ) : isCurrentPlan && daysRemaining !== undefined && daysRemaining > 0 ? (
             <button
               disabled
               className="inline-flex w-full items-center justify-center rounded-md bg-zinc-700 px-4 py-2 text-sm font-medium text-zinc-400 cursor-not-allowed"

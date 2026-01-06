@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     // Check if Stripe is configured
     if (!isStripeEnabled()) {
       return NextResponse.json(
-        { 
+        {
           error: 'Payment system is not configured. Please contact support.',
           details: 'Stripe payment processing is currently unavailable.'
         },
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { plan, email, fullName, country } = body;
+    const { plan, email, fullName, country, isUpgrade, creditAmount } = body;
 
     // Validate required fields
     if (!plan || !email || !fullName || !country) {
@@ -27,8 +27,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine price based on plan
-    const displayPrice = plan === 'lifetime' ? 999 : plan === 'pro' ? 49 : 29;
-    const planName = plan === 'lifetime' ? 'Lifetime' : plan === 'pro' ? 'Pro' : 'Starter';
+    const pricingMap: Record<string, { price: number; name: string }> = {
+      lifetime: { price: 999, name: 'Lifetime' },
+      pro: { price: 49, name: 'Pro' },
+      starter: { price: 29, name: 'Starter' },
+      pro_yearly: { price: 529, name: 'Pro (Yearly)' },
+      starter_yearly: { price: 313, name: 'Starter (Yearly)' },
+    };
+
+    const selectedPlan = pricingMap[plan as string] || pricingMap.starter;
+    let displayPrice = selectedPlan.price;
+
+    // Apply upgrade credit if applicable
+    if (isUpgrade && creditAmount) {
+      displayPrice = Math.max(0.5, displayPrice - Number(creditAmount)); // Ensure at least $0.50 for Stripe
+    }
+
+    const planName = selectedPlan.name;
 
     // Generate unique order ID
     const orderId = `ORD-STRIPE-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -40,6 +55,7 @@ export async function POST(request: NextRequest) {
       email,
       fullName,
       country,
+      isUpgrade: isUpgrade ? "true" : "false",
     });
 
     // Store order in database

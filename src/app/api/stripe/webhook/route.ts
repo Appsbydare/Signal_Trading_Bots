@@ -3,7 +3,7 @@ import { verifyWebhookSignature } from '@/lib/stripe-server';
 import { generateLicenseKey } from '@/lib/license-keys';
 import { sendStripeLicenseEmail } from '@/lib/email-stripe';
 import { getStripeOrderByPaymentIntent, updateStripeOrderByPaymentIntent } from '@/lib/orders-supabase';
-import { createLicense } from '@/lib/license-db';
+import { createLicense, getLicensesForEmail, upgradeLicense } from '@/lib/license-db';
 import { getCustomerByEmail, createCustomer } from '@/lib/auth-users';
 import { createMagicLinkToken } from '@/lib/auth-tokens';
 import { createDownloadToken, getExeFileName } from '@/lib/download-tokens';
@@ -51,36 +51,87 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ received: true });
         }
 
-        // Generate license key
-        const licenseKey = generateLicenseKey();
-
-        // Calculate expiry date based on plan
-        const now = new Date();
-        const expiresAt = new Date(now);
-        if (order.plan.toLowerCase() === "starter") {
-          expiresAt.setMonth(expiresAt.getMonth() + 1);
-        } else if (order.plan.toLowerCase() === "pro") {
-          expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-        } else if (order.plan.toLowerCase() === "lifetime") {
-          expiresAt.setFullYear(expiresAt.getFullYear() + 100); // 100 years for lifetime
-        } else {
-          expiresAt.setFullYear(expiresAt.getFullYear() + 1); // Default to yearly
+        // IDEMPOTENCY CHECK: Skip if already processed
+        if (order.status === 'paid') {
+          console.log(`Order ${order.order_id} already processed, skipping duplicate webhook`);
+          return NextResponse.json({ received: true, message: 'Already processed' });
         }
 
-        // Create license in database
-        try {
-          await createLicense({
-            licenseKey,
-            email: order.email,
-            plan: order.plan,
-            expiresAt,
-            paymentId: paymentIntent.id,
-            amount: order.display_price,
-            currency: "USD",
-          });
-        } catch (dbError) {
-          console.error("Failed to create license in database:", dbError);
-          // Continue to send email even if license creation fails - can be retried
+        const isUpgrade = paymentIntent.metadata?.isUpgrade === "true";
+        let licenseKey = "";
+
+        if (isUpgrade) {
+          // UPGRADE FLOW
+          console.log(`Processing UPGRADE for ${order.email}`);
+
+          // Find existing active monthly license
+          const licenses = await getLicensesForEmail(order.email);
+          const activeMonthly = licenses.find(l =>
+            l.status === 'active' &&
+            !l.plan.toLowerCase().includes('yearly') &&
+            l.plan.toLowerCase() !== 'lifetime'
+          );
+
+          if (activeMonthly) {
+            licenseKey = activeMonthly.license_key;
+            const expiresAt = new Date();
+            expiresAt.setFullYear(expiresAt.getFullYear() + 1); // Upgrade to 1 Year from now
+
+            try {
+              await upgradeLicense({
+                licenseId: activeMonthly.id,
+                newPlan: order.plan,
+                newExpiresAt: expiresAt,
+                paymentId: paymentIntent.id,
+                amount: order.display_price,
+                oldPlan: activeMonthly.plan
+              });
+              console.log(`Upgraded license ${licenseKey} to ${order.plan}`);
+            } catch (err) {
+              console.error("Failed to upgrade license:", err);
+              // If upgrade fails, we might still want to treat it as paid, or retry?
+              // For now, allow it to fall through or just log error.
+            }
+          } else {
+            console.warn("Could not find active monthly license to upgrade. Creating new one as fallback.");
+            // Fallback to creating new license handled by the !licenseKey check below
+          }
+        }
+
+        if (!licenseKey) {
+          // STANDARD NEW LICENSE FLOW (or fallback)
+          licenseKey = generateLicenseKey();
+
+          // Calculate expiry date based on plan
+          const now = new Date();
+          const expiresAt = new Date(now);
+          const planLower = order.plan.toLowerCase();
+
+          if (planLower === "lifetime") {
+            expiresAt.setFullYear(expiresAt.getFullYear() + 100);
+          } else if (planLower.includes("yearly")) {
+            // Yearly plans: starter_yearly, pro_yearly
+            expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+          } else {
+            // Monthly plans: starter, pro
+            expiresAt.setDate(expiresAt.getDate() + 30);
+          }
+
+          // Create license in database
+          try {
+            await createLicense({
+              licenseKey,
+              email: order.email,
+              plan: order.plan,
+              expiresAt,
+              paymentId: paymentIntent.id,
+              amount: order.display_price,
+              currency: "USD",
+            });
+          } catch (dbError) {
+            console.error("Failed to create license in database:", dbError);
+            // Continue to send email even if license creation fails - can be retried
+          }
         }
 
         // Update order status in database
@@ -179,6 +230,15 @@ export async function POST(request: NextRequest) {
           // Don't fail the webhook - we can retry email later
         }
 
+        // Mark order as paid to prevent duplicate processing
+        try {
+          await updateStripeOrderByPaymentIntent(paymentIntent.id, 'paid');
+          console.log(`Order ${order.order_id} marked as paid`);
+        } catch (updateError) {
+          console.error('Failed to update order status:', updateError);
+          // Log but don't fail - order was processed successfully
+        }
+
         console.log('Order processed successfully:', order.order_id);
         break;
       }
@@ -212,4 +272,3 @@ export async function POST(request: NextRequest) {
 
 // Disable body parsing for webhook signature verification
 export const runtime = 'nodejs';
-

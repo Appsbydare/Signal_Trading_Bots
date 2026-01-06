@@ -10,7 +10,7 @@ import TelegramLogo from "../../assets/telegram.webp";
 import TradingBotLogo from "../../assets/Tradingbot - Copy.png";
 import MT5Logo from "../../assets/mt5.png";
 import { resourceArticles } from "@/data/resources";
-import { ProductSummaryCards } from "@/components/ProductSummaryCards";
+import { PricingSection } from "@/components/PricingSection";
 
 const heroMessages = [
   {
@@ -54,6 +54,7 @@ export default function Home() {
   const [displayedText, setDisplayedText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
+  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
 
   // Helper function to split text into two lines - balanced split
   const splitIntoTwoLines = (text: string) => {
@@ -972,54 +973,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing & product overview (LIGHT) */}
-      <section id="pricing" className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-16">
-        <div className="mx-auto max-w-6xl px-6 space-y-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center"
-          >
-            <h2 className="mb-3 text-2xl font-semibold text-[var(--text-main)] md:text-3xl">
-              Simple packages for every trading stage
-            </h2>
-            <p className="mx-auto max-w-2xl text-sm text-[var(--text-muted)] md:text-base">
-              Start with a monthly plan or secure a one‑time Lifetime license. Starter and Pro
-              include a 10% discount when you choose yearly billing.
-            </p>
-          </motion.div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {homePricingPlans.map((plan, index) => (
-              <motion.div
-                key={plan.name}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.15 }}
-              >
-                <DarkProductCard
-                  name={plan.name}
-                  badge={plan.badge}
-                  price={plan.price}
-                  yearlyNote={plan.yearlyNote}
-                  features={plan.features}
-                  featured={plan.featured}
-                  paymentLink={`/payment?plan=${plan.name.toLowerCase()}`}
-                />
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="pt-4">
-            <ProductSummaryCards />
-          </div>
-        </div>
-      </section>
+      {/* Pricing Section with License-Aware Logic */}
+      <PricingSection />
 
       {/* Resources teaser (LIGHT) */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-5">
+      < section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-5" >
         <div className="mx-auto max-w-6xl px-6 space-y-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1078,10 +1036,10 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section >
 
       {/* Manual vs Bot Comparison (DARK) */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-dark-3)] py-16 text-[var(--text-on-dark)]">
+      < section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-dark-3)] py-16 text-[var(--text-on-dark)]" >
         <div className="mx-auto max-w-6xl px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1141,10 +1099,10 @@ export default function Home() {
             </div>
           </motion.div>
         </div>
-      </section>
+      </section >
 
       {/* Comparison CTA (LIGHT) - SEPARATOR */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-16 border-y border-zinc-100">
+      < section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-16 border-y border-zinc-100" >
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -1164,10 +1122,10 @@ export default function Home() {
             <span aria-hidden="true">&rarr;</span>
           </Link>
         </motion.div>
-      </section>
+      </section >
 
       {/* Testimonials (DARK) */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-dark-2)] py-16 text-[var(--text-on-dark)]">
+      < section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-dark-2)] py-16 text-[var(--text-on-dark)]" >
         <div className="mx-auto max-w-6xl px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1206,7 +1164,7 @@ export default function Home() {
       </section>
 
       {/* Support highlight + FAQ (LIGHT) */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16">
+      < section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16" >
         <div className="mx-auto max-w-6xl px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1295,10 +1253,10 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section >
 
       {/* Final CTA Strip */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-dark-1)] py-12 text-[var(--text-on-dark)]">
+      < section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-dark-1)] py-12 text-[var(--text-on-dark)]" >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -1330,7 +1288,7 @@ export default function Home() {
             </Link>
           </div>
         </motion.div>
-      </section>
+      </section >
     </>
   );
 }

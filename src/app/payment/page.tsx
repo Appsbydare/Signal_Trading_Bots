@@ -16,10 +16,27 @@ const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 function PaymentForm() {
   const searchParams = useSearchParams();
   const plan = searchParams.get("plan") || "starter";
-  const isPro = plan === "pro";
+  const isYearly = plan.endsWith("_yearly");
+  const basePlan = isYearly ? plan.replace("_yearly", "") : plan;
+
+  const isPro = basePlan === "pro";
   const isLifetime = plan === "lifetime";
-  const price = isLifetime ? 999 : isPro ? 49 : 29;
-  const planName = isLifetime ? "Lifetime" : isPro ? "Pro" : "Starter";
+
+  // Check if this is an upgrade from monthly to yearly
+  const isUpgrade = searchParams.get("upgrade") === "true";
+  const creditAmount = parseFloat(searchParams.get("credit") || "0");
+
+  let basePrice = 29;
+  if (isLifetime) basePrice = 999;
+  else if (isPro) basePrice = isYearly ? 529 : 49;
+  else basePrice = isYearly ? 313 : 29; // Starter
+
+  // Apply credit if upgrading
+  const price = isUpgrade && creditAmount > 0 ? Math.max(0, basePrice - creditAmount) : basePrice;
+
+  const planName = isLifetime
+    ? "Lifetime"
+    : `${isPro ? "Pro" : "Starter"}${isYearly ? " (Yearly)" : ""}`;
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -118,6 +135,8 @@ function PaymentForm() {
           email: formData.email,
           fullName: formData.fullName,
           country: formData.country,
+          isUpgrade,
+          creditAmount,
         }),
       });
 
@@ -205,6 +224,9 @@ function PaymentForm() {
             fullName: formData.fullName,
             country: formData.country,
             coinNetwork: selectedCrypto,
+            finalPrice: price, // Pass the discounted price
+            isUpgrade,
+            creditAmount,
           }),
         });
 
@@ -245,6 +267,39 @@ function PaymentForm() {
           </div>
         ) : (
           <div className="space-y-6">
+            {/* Upgrade Banner */}
+            {isUpgrade && creditAmount > 0 && (
+              <section className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-6">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/20">
+                    <svg className="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-lg font-semibold text-emerald-300">Upgrading to Yearly Plan</h2>
+                    <p className="mt-1 text-sm text-emerald-200/90">
+                      You're upgrading from a monthly plan. We've applied a <strong>${creditAmount.toFixed(2)} credit</strong> for your remaining subscription days.
+                    </p>
+                    <div className="mt-3 rounded-md bg-emerald-500/20 p-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-emerald-200">Yearly Plan Price:</span>
+                        <span className="font-semibold text-emerald-100">${basePrice}</span>
+                      </div>
+                      <div className="flex justify-between text-sm mt-1">
+                        <span className="text-emerald-200">Prorated Credit:</span>
+                        <span className="font-semibold text-emerald-100">-${creditAmount.toFixed(2)}</span>
+                      </div>
+                      <div className="border-t border-emerald-500/30 mt-2 pt-2 flex justify-between text-base">
+                        <span className="font-semibold text-emerald-100">Total Due Today:</span>
+                        <span className="font-bold text-emerald-50">${price.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
             {/* Show logged-in user info */}
             {isLoggedIn && (
               <section className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-6">
@@ -263,52 +318,54 @@ function PaymentForm() {
                       </p>
                     )}
 
-                    {/* Toggle for purchasing for different email */}
-                    <div className="mt-3 pt-3 border-t border-blue-500/20">
-                      <label className="flex items-start gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={purchaseForDifferentEmail}
-                          onChange={(e) => {
-                            const checked = e.target.checked;
-                            setPurchaseForDifferentEmail(checked);
-                            if (checked) {
-                              // Clear all fields for recipient's information
-                              setFormData(prev => ({
-                                ...prev,
-                                email: "",
-                                fullName: "",
-                                country: "",
-                              }));
-                              setEmailVerified(false);
-                              setShowVerification(false);
-                            } else {
-                              // Restore logged-in user's information
-                              fetch("/api/auth/customer/me")
-                                .then(res => res.ok ? res.json() : null)
-                                .then(data => {
-                                  if (data?.customer) {
-                                    const autoFilledName = data.customer.name || "";
-                                    const autoFilledCountry = data.customer.country || "";
-                                    setFormData(prev => ({
-                                      ...prev,
-                                      email: data.customer.email,
-                                      fullName: autoFilledName,
-                                      country: autoFilledCountry,
-                                    }));
-                                  }
-                                });
-                              setEmailVerified(true);
-                              setShowVerification(false);
-                            }
-                          }}
-                          className="mt-0.5 h-4 w-4 rounded border-blue-500/50 bg-blue-500/20 text-blue-500 focus:ring-blue-500"
-                        />
-                        <span className="text-xs text-blue-200/90">
-                          Purchase for a different email address (gift or separate account)
-                        </span>
-                      </label>
-                    </div>
+                    {/* Toggle for purchasing for different email - Hidden during upgrades */}
+                    {!isUpgrade && (
+                      <div className="mt-3 pt-3 border-t border-blue-500/20">
+                        <label className="flex items-start gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={purchaseForDifferentEmail}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setPurchaseForDifferentEmail(checked);
+                              if (checked) {
+                                // Clear all fields for recipient's information
+                                setFormData(prev => ({
+                                  ...prev,
+                                  email: "",
+                                  fullName: "",
+                                  country: "",
+                                }));
+                                setEmailVerified(false);
+                                setShowVerification(false);
+                              } else {
+                                // Restore logged-in user's information
+                                fetch("/api/auth/customer/me")
+                                  .then(res => res.ok ? res.json() : null)
+                                  .then(data => {
+                                    if (data?.customer) {
+                                      const autoFilledName = data.customer.name || "";
+                                      const autoFilledCountry = data.customer.country || "";
+                                      setFormData(prev => ({
+                                        ...prev,
+                                        email: data.customer.email,
+                                        fullName: autoFilledName,
+                                        country: autoFilledCountry,
+                                      }));
+                                    }
+                                  });
+                                setEmailVerified(true);
+                                setShowVerification(false);
+                              }
+                            }}
+                            className="mt-0.5 h-4 w-4 rounded border-blue-500/50 bg-blue-500/20 text-blue-500 focus:ring-blue-500"
+                          />
+                          <span className="text-xs text-blue-200/90">
+                            Purchase for a different email address (gift or separate account)
+                          </span>
+                        </label>
+                      </div>
+                    )}
                   </div>
                 </div>
               </section>
@@ -501,8 +558,8 @@ function PaymentForm() {
                   onClick={() => emailVerified && setSelectedPayment("card")}
                   disabled={!emailVerified}
                   className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedPayment === "card"
-                      ? "border-blue-500 bg-blue-500/10"
-                      : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                    ? "border-blue-500 bg-blue-500/10"
+                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
                     } disabled:cursor-not-allowed`}
                 >
                   <div className="flex items-center justify-between">
@@ -526,8 +583,8 @@ function PaymentForm() {
                   onClick={() => emailVerified && setSelectedPayment("crypto")}
                   disabled={!emailVerified}
                   className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedPayment === "crypto"
-                      ? "border-green-500 bg-green-500/10"
-                      : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                    ? "border-green-500 bg-green-500/10"
+                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
                     } disabled:cursor-not-allowed`}
                 >
                   <div className="flex items-center justify-between">
@@ -555,8 +612,8 @@ function PaymentForm() {
                   type="button"
                   onClick={() => setSelectedPayment("binance")}
                   className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedPayment === "binance"
-                      ? "border-yellow-500 bg-yellow-500/10"
-                      : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                    ? "border-yellow-500 bg-yellow-500/10"
+                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
                     }`}
                 >
                   <div className="flex items-center justify-between">
@@ -586,8 +643,8 @@ function PaymentForm() {
                       type="button"
                       onClick={() => setSelectedCrypto(option.value)}
                       className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedCrypto === option.value
-                          ? "border-green-500 bg-green-500/10"
-                          : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                        ? "border-green-500 bg-green-500/10"
+                        : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
                         }`}
                     >
                       <div className="flex items-center justify-between">
@@ -738,6 +795,7 @@ function PaymentForm() {
                       onError={(error) => {
                         console.error("Payment error:", error);
                       }}
+                      isUpgrade={isUpgrade}
                     />
                   </Elements>
                 ) : null}

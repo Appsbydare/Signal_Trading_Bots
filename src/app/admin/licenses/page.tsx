@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { getCurrentAdmin } from "@/lib/auth-server";
 import { getSupabaseClient } from "@/lib/supabase-storage";
-import { AdminLicenseRow } from "@/components/AdminLicenseRow";
 import { SecurityLogsTable } from "@/components/SecurityLogsTable";
 import { RealtimeLicenseTracker } from "@/components/RealtimeLicenseTracker";
+import { AdminLicenseTable } from "@/components/AdminLicenseTable";
 
 async function getLicensesWithData() {
   const client = getSupabaseClient();
@@ -186,56 +186,7 @@ export default async function AdminLicensesPage() {
       </section>
 
       {/* Licenses Table */}
-      <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 shadow-sm">
-        <div className="border-b border-zinc-800 p-6">
-          <h2 className="text-lg font-semibold text-white">All Licenses</h2>
-          <p className="mt-1 text-sm text-zinc-400">Complete list of all licenses in the system</p>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="border-b border-zinc-800 bg-zinc-800/50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500 w-48">
-                  License Key
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  Email
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  Plan
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  Expires
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  Sessions
-                </th>
-                {/* Flags column removed */}
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500 min-w-[100px]">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800">
-              {licenses.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-sm text-zinc-500">
-                    No licenses found
-                  </td>
-                </tr>
-              ) : (
-                licenses.map((license) => (
-                  <AdminLicenseRow key={license.id} license={license as any} />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <AdminLicenseTable licenses={licenses as any} />
 
       {/* Recent Activity Log - Only show if validation log table exists */}
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 shadow-sm">

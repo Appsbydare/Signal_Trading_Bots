@@ -14,6 +14,7 @@ interface StripeCardFormProps {
   agreedToTerms: boolean;
   onSuccess: () => void;
   onError: (error: string) => void;
+  isUpgrade?: boolean;
 }
 
 export function StripeCardForm({
@@ -23,6 +24,7 @@ export function StripeCardForm({
   agreedToTerms,
   onSuccess,
   onError,
+  isUpgrade,
 }: StripeCardFormProps) {
   const stripe = useStripe();
   const elements = useElements();
@@ -54,12 +56,14 @@ export function StripeCardForm({
 
     console.log("Starting payment confirmation...");
 
+    const successUrl = `${window.location.origin}/payment-success?orderId=${orderId}${isUpgrade ? '&isUpgrade=true' : ''}`;
+
     try {
       // Confirm the payment
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/payment-success?orderId=${orderId}`,
+          return_url: successUrl,
         },
         redirect: "if_required",
       });
@@ -76,14 +80,14 @@ export function StripeCardForm({
           console.log("Payment succeeded:", paymentIntent.id);
           onSuccess();
           // Use window.location.replace to prevent back button issues
-          window.location.replace(`/payment-success?orderId=${orderId}`);
+          window.location.replace(`/payment-success?orderId=${orderId}${isUpgrade ? '&isUpgrade=true' : ''}`);
         } else if (paymentIntent.status === "processing") {
           // Payment is processing
           console.log("Payment processing:", paymentIntent.id);
           setErrorMessage("Payment is processing. Please wait...");
           // Redirect anyway - webhook will handle completion
           setTimeout(() => {
-            window.location.replace(`/payment-success?orderId=${orderId}`);
+            window.location.replace(`/payment-success?orderId=${orderId}${isUpgrade ? '&isUpgrade=true' : ''}`);
           }, 2000);
         } else if (paymentIntent.status === "requires_payment_method") {
           // Payment failed - need new payment method

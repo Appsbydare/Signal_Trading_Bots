@@ -24,11 +24,12 @@ interface EnrichedLicense {
     status: string;
     created_at: string;
     expires_at: string;
+    upgraded_from?: string | null;
     duplicate_detected: boolean;
     grace_period_allowed: boolean;
     active_sessions_count: number;
     sessions: LicenseSession[];
-    banned_devices: string[]; // List of banned device IDs for this license context
+    banned_devices: string[];
 }
 
 export function AdminLicenseRow({ license }: { license: EnrichedLicense }) {
@@ -36,7 +37,6 @@ export function AdminLicenseRow({ license }: { license: EnrichedLicense }) {
     const [historyExpanded, setHistoryExpanded] = useState(false);
     const router = useRouter();
     const [processing, setProcessing] = useState<string | null>(null);
-
 
     const expiresAt = new Date(license.expires_at);
     const isLifetime = license.plan.toLowerCase() === 'lifetime';
@@ -89,30 +89,65 @@ export function AdminLicenseRow({ license }: { license: EnrichedLicense }) {
         }
     };
 
+    const handleDeleteLicense = async () => {
+        if (!confirm("Are you sure you want to PERMANENTLY delete this license? This cannot be undone.")) return;
+        setProcessing(license.license_key);
+        try {
+            const res = await fetch("/api/admin/licenses/delete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ licenseKey: license.license_key })
+            });
+            if (res.ok) {
+                router.refresh();
+            } else {
+                const data = await res.json();
+                alert(data.error || "Failed to delete license");
+            }
+        } catch (e) {
+            alert("Error deleting license");
+        } finally {
+            setProcessing(null);
+        }
+    };
+
     const activeSessions = license.sessions.filter(s => s.active);
     const pastSessions = license.sessions.filter(s => !s.active).sort((a, b) => new Date(b.last_seen_at).getTime() - new Date(a.last_seen_at).getTime()).slice(0, 20);
 
-    // Helper to find device name for a banned ID
     const getDeviceName = (deviceId: string) => {
         const session = license.sessions.find(s => s.device_id === deviceId);
         return session?.device_name || "Unknown Device";
     };
 
+    const getPlanBadgeStyle = (planName: string) => {
+        const p = planName.toLowerCase();
+        if (p === 'test') return "bg-yellow-500/20 text-yellow-400 border border-yellow-500/20";
+        if (p === 'lifetime') return "bg-amber-500/20 text-amber-400 border border-amber-500/20";
+        if (p.includes('yearly')) return "bg-indigo-500/20 text-indigo-400 border border-indigo-500/20";
+        if (p.includes('pro')) return "bg-purple-500/20 text-purple-400 border border-purple-500/20";
+        if (p.includes('starter')) return "bg-blue-500/20 text-blue-400 border border-blue-500/20";
+        return "bg-zinc-500/20 text-zinc-400";
+    };
+
     return (
         <>
-            <tr className={`hover:bg-zinc-800/30 ${expanded ? "bg-zinc-800/10" : ""}`}>
+            <tr className={`hover:bg-zinc-800/30 ${expanded ? "bg-zinc-800/10" : ""} group`}>
                 <td className="px-4 py-3">
                     <LicenseKeyDisplay licenseKey={license.license_key} />
                 </td>
                 <td className="px-4 py-3 text-sm text-zinc-300">{license.email}</td>
                 <td className="px-4 py-3">
-                    <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${license.plan === "test" ? "bg-yellow-500/20 text-yellow-400" :
-                        license.plan === "yearly" ? "bg-blue-500/20 text-blue-400" :
-                            isLifetime ? "bg-purple-500/20 text-purple-400" :
-                                "bg-zinc-500/20 text-zinc-400"
-                        }`}>
-                        {license.plan}
-                    </span>
+                    <div className="flex flex-col gap-1 items-start">
+                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getPlanBadgeStyle(license.plan)}`}>
+                            {license.plan}
+                        </span>
+                        {license.upgraded_from && (
+                            <span className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-gradient-to-r from-indigo-500/20 to-purple-500/20 text-indigo-300 border border-indigo-500/20">
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                                Upgraded
+                            </span>
+                        )}
+                    </div>
                 </td>
                 <td className="px-4 py-3">
                     <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${license.status === "active" ? "bg-emerald-500/20 text-emerald-400" :
@@ -143,9 +178,25 @@ export function AdminLicenseRow({ license }: { license: EnrichedLicense }) {
                         </svg>
                     </button>
                 </td>
-                {/* Flags column removed */}
                 <td className="px-4 py-3">
-                    <RevokeLicenseButton licenseKey={license.license_key} email={license.email} />
+                    {license.status === 'revoked' ? (
+                        <button
+                            onClick={handleDeleteLicense}
+                            disabled={!!processing}
+                            title="Start Deletion (Irreversible)"
+                            className="p-1.5 rounded-md text-zinc-500 hover:text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                        >
+                            {processing === license.license_key ? (
+                                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            ) : (
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            )}
+                        </button>
+                    ) : (
+                        <RevokeLicenseButton licenseKey={license.license_key} email={license.email} />
+                    )}
                 </td>
             </tr>
             {expanded && (
@@ -153,7 +204,20 @@ export function AdminLicenseRow({ license }: { license: EnrichedLicense }) {
                     <td colSpan={7} className="px-6 py-4">
                         <div className="space-y-6">
 
-                            {/* Section 1: Active Sessions */}
+                            {license.upgraded_from && (
+                                <div className="rounded-md border border-indigo-500/20 bg-indigo-500/5 p-3 flex items-center gap-3">
+                                    <div className="p-2 rounded-full bg-indigo-500/20 text-indigo-400">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs font-semibold text-indigo-300 uppercase tracking-wide">Plan Upgrade History</div>
+                                        <div className="text-sm text-zinc-300">
+                                            Upgraded from <span className="text-white font-medium">{license.upgraded_from}</span> to <span className="text-white font-medium">{license.plan}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
                                     <h4 className="text-xs font-semibold uppercase tracking-wider text-emerald-500/80">Active Sessions</h4>
@@ -217,13 +281,11 @@ export function AdminLicenseRow({ license }: { license: EnrichedLicense }) {
                                 )}
                             </div>
 
-                            {/* Section 2: Banned Devices (Offline) */}
                             {license.banned_devices.length > 0 && (
                                 <div className="space-y-3">
                                     <h4 className="text-xs font-semibold uppercase tracking-wider text-red-400/80">Banned Devices</h4>
                                     <div className="grid gap-2">
                                         {license.banned_devices.map(deviceId => {
-                                            // Only show here if NOT in active sessions (duplicates active display)
                                             if (activeSessions.some(s => s.device_id === deviceId)) return null;
 
                                             return (
@@ -254,7 +316,6 @@ export function AdminLicenseRow({ license }: { license: EnrichedLicense }) {
                                 </div>
                             )}
 
-                            {/* Section 3: Connection History (Collapsible) */}
                             <div className="space-y-1 pt-2 border-t border-zinc-800/50">
                                 <button
                                     onClick={() => setHistoryExpanded(!historyExpanded)}

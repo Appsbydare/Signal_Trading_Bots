@@ -67,6 +67,7 @@ export interface LicenseRow {
   payment_id: string | null;
   amount: number | null;
   currency: string | null;
+  upgraded_from?: string | null;
 }
 
 export interface LicenseSessionRow {
@@ -344,6 +345,33 @@ export async function createLicense(args: CreateLicenseArgs): Promise<LicenseRow
   }
 
   return data;
+}
+
+export interface UpgradeLicenseArgs {
+  licenseId: number;
+  newPlan: string;
+  newExpiresAt: Date;
+  paymentId: string;
+  amount: number;
+  oldPlan?: string;
+}
+
+export async function upgradeLicense(args: UpgradeLicenseArgs): Promise<void> {
+  const client = getSupabaseClient();
+  const { error } = await client
+    .from("licenses")
+    .update({
+      plan: args.newPlan,
+      expires_at: args.newExpiresAt.toISOString(),
+      payment_id: args.paymentId,
+      amount: args.amount,
+      upgraded_from: args.oldPlan,
+    })
+    .eq("id", args.licenseId);
+
+  if (error) {
+    throw error;
+  }
 }
 
 export interface SetLoginRequestArgs {

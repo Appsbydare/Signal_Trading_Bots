@@ -9,6 +9,7 @@ interface License {
   license_key: string;
   status: string;
   expires_at: string;
+  upgraded_from?: string | null;
 }
 
 interface LicenseTableProps {
@@ -107,7 +108,20 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
             return (
               <tr key={lic.id}>
                 <td className="whitespace-nowrap px-3 py-3 text-xs text-zinc-300">
-                  <div className="font-medium capitalize">{lic.plan}</div>
+                  <div className="flex flex-col gap-1">
+                    <div className="font-medium capitalize">{lic.plan}</div>
+                    {lic.upgraded_from && (
+                      <div className="flex flex-col items-start gap-0.5">
+                        <span className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[0.6rem] font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-500/20">
+                          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                          Upgraded
+                        </span>
+                        <span className="text-[0.65rem] text-zinc-500">
+                          From {lic.upgraded_from}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-xs text-zinc-300">
                   <div className="flex items-center gap-2">
@@ -151,8 +165,8 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
                 <td className="whitespace-nowrap px-3 py-3 text-xs">
                   <span
                     className={`inline-flex rounded-full px-2 py-1 text-[0.7rem] ${isLifetime
-                        ? 'text-emerald-700 bg-emerald-50'
-                        : getLicenseStatusColor(daysRemaining)
+                      ? 'text-emerald-700 bg-emerald-50'
+                      : getLicenseStatusColor(daysRemaining)
                       }`}
                   >
                     {isLifetime ? 'Lifetime' : `${daysRemaining} days`}
@@ -182,4 +196,3 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
     </div>
   );
 }
-
