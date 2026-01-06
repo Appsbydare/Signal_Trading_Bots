@@ -5,11 +5,11 @@ import { CUSTOMER_COOKIE_NAME } from "@/lib/auth-tokens";
 export async function POST(request: NextRequest) {
   // Get the origin from the request headers
   const origin = request.headers.get("origin") || request.nextUrl.origin;
-  
+
   // Create redirect URL using the actual origin
   const redirectUrl = new URL("/login", origin);
-  
-  const response = NextResponse.redirect(redirectUrl);
+
+  const response = NextResponse.redirect(redirectUrl, { status: 303 });
 
   // Clear the customer cookie
   response.cookies.set(CUSTOMER_COOKIE_NAME, "", {
