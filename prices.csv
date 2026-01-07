@@ -1,0 +1,6 @@
+Price ID,Product ID,Product Name,Product Statement Descriptor,Product Tax Code,Description,Created (UTC),Amount,Currency,Interval,Interval Count,Usage Type,Aggregate Usage,Billing Scheme,Trial Period Days,Tax Behavior
+price_1SmsSk3PACU6F29s93Jn2zPh,prod_TkNDqoLNe9KOPk,SignalTradingBot Lifetime,,txcd_10202000,,2026-01-07 08:51,999.00,usd,,,,,per_unit,,exclusive
+price_1SmsR03PACU6F29sLlstd85p,prod_TkNBDivqLYEgz9,SignalTradingBot Pro - Yearly,,txcd_10202000,,2026-01-07 08:49,529.00,usd,year,1,licensed,,per_unit,,exclusive
+price_1SmsPw3PACU6F29sKW68rotv,prod_TkNAPMcHIdPf6y,SignalTradingBot Pro - Monthly,,txcd_10202000,,2026-01-07 08:48,49.00,usd,month,1,licensed,,per_unit,,exclusive
+price_1SmsP83PACU6F29sDMfmBuEZ,prod_TkN9jrY4j8PgP3,SignalTradingBot Starter - Yearly,,txcd_10202000,,2026-01-07 08:47,313.00,usd,year,1,licensed,,per_unit,,exclusive
+price_1SmsND3PACU6F29sNeLhpgKc,prod_TkN7AVWcKE5Foi,SignalTradingBot Starter - Monthly,,txcd_10202000,,2026-01-07 08:45,29.00,usd,month,1,licensed,,per_unit,,exclusive

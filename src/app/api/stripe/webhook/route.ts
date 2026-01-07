@@ -3,57 +3,396 @@ import { verifyWebhookSignature } from '@/lib/stripe-server';
 import { generateLicenseKey } from '@/lib/license-keys';
 import { sendStripeLicenseEmail } from '@/lib/email-stripe';
 import { getStripeOrderByPaymentIntent, updateStripeOrderByPaymentIntent } from '@/lib/orders-supabase';
-import { createLicense, getLicensesForEmail, upgradeLicense } from '@/lib/license-db';
+import { createLicense, getLicensesForEmail, upgradeLicense, getLicenseByKey } from '@/lib/license-db';
 import { getCustomerByEmail, createCustomer } from '@/lib/auth-users';
 import { createMagicLinkToken } from '@/lib/auth-tokens';
 import { createDownloadToken, getExeFileName } from '@/lib/download-tokens';
 import { isR2Enabled } from '@/lib/r2-client';
+import { createSubscription, updateSubscriptionStatus, getSubscriptionByStripeId } from '@/lib/subscription-db';
 import Stripe from 'stripe';
+
+// Helper to handle post-purchase actions (customer creation, emails)
+async function handlePostPurchase(
+  email: string,
+  fullName: string,
+  licenseKey: string,
+  plan: string,
+  amount: number,
+  orderId: string,
+  request: NextRequest,
+  downloadLinkEnabled: boolean = true
+) {
+  // 1. Check/Create Customer & Magic Link
+  let customer = await getCustomerByEmail(email);
+  if (!customer) {
+    try {
+      const randomPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
+      customer = await createCustomer({
+        email: email,
+        password: randomPassword,
+        name: fullName,
+      });
+      console.log("Auto-created customer for email:", email);
+    } catch (err: any) {
+      console.error("Failed to auto-create customer:", err);
+      if (err.code === '23505') {
+        customer = await getCustomerByEmail(email);
+      }
+    }
+  }
+
+  let magicLinkUrl = "https://www.signaltradingbots.com/login";
+  try {
+    const host = request.headers.get("host") || "www.signaltradingbots.com";
+    const protocol = host.includes("localhost") ? "http" : "https";
+    const token = await createMagicLinkToken(email);
+    magicLinkUrl = `${protocol}://${host}/api/auth/magic-login?token=${token}`;
+  } catch (err) {
+    console.error("Failed to generate magic link:", err);
+  }
+
+  // 2. Generate Download Link
+  let downloadUrl = "";
+  if (downloadLinkEnabled && isR2Enabled()) {
+    try {
+      const ipAddress = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "webhook";
+      const userAgent = request.headers.get("user-agent") || "stripe-webhook";
+      const downloadToken = await createDownloadToken({
+        licenseKey,
+        email: email,
+        fileName: getExeFileName(),
+        ipAddress,
+        userAgent,
+      });
+      const host = request.headers.get("host") || "www.signaltradingbots.com";
+      const protocol = host.includes("localhost") ? "http" : "https";
+      downloadUrl = `${protocol}://${host}/api/download/${downloadToken.token}`;
+    } catch (err) {
+      console.error("Failed to generate download link:", err);
+    }
+  }
+
+  // 3. Send Email
+  try {
+    await sendStripeLicenseEmail({
+      to: email,
+      fullName: fullName,
+      licenseKey,
+      plan,
+      orderId,
+      amount,
+      magicLinkUrl,
+      downloadUrl,
+    });
+    console.log('License email sent to:', email);
+  } catch (error) {
+    console.error('Failed to send license email:', error);
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
-    // Get the raw body for signature verification
     const body = await request.text();
     const signature = request.headers.get('stripe-signature');
 
     if (!signature) {
-      console.error('No Stripe signature found');
-      return NextResponse.json(
-        { error: 'No signature provided' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'No signature provided' }, { status: 400 });
     }
 
-    // Verify webhook signature
     let event: Stripe.Event;
     try {
       event = verifyWebhookSignature(body, signature);
     } catch (err) {
       console.error('Webhook signature verification failed:', err);
-      return NextResponse.json(
-        { error: 'Invalid signature' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
 
-    // Handle the event
     switch (event.type) {
+      // ----------------------------------------------------------------------
+      // NEW: Subscription Checkout Completed
+      // ----------------------------------------------------------------------
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+
+        if (session.mode === 'subscription') {
+          console.log('Checkout Session (Subscription) completed:', session.id);
+
+          const subscriptionId = session.subscription as string;
+          const customerId = session.customer as string;
+          const metadata = session.metadata || {};
+
+          const licenseKey = metadata.licenseKey;
+          const email = metadata.email;
+          const plan = metadata.plan;
+          const isUpgrade = metadata.isUpgrade === "true";
+
+          // Verify we have essential data
+          if (!licenseKey || !email || !plan) {
+            console.error('Missing metadata in checkout session:', session.id);
+            break;
+          }
+
+          // Handle Upgrade Logic if applicable
+          if (isUpgrade) {
+            const upgradeKey = metadata.upgradeLicenseKey;
+            // If we have a specific key to upgrade, we might want to mark the OLD license as upgraded
+            // But for subscriptions, we typically issue a NEW license key that is a subscription license
+            // and potentially disable the old one or mark it upgraded.
+            // For now, we'll just treat the new subscription as the valid license.
+            if (upgradeKey) {
+              // Optional: Mark old license as upgraded/replaced if needed
+              console.log(`User upgraded from ${upgradeKey} to subscription ${plan}`);
+            }
+          }
+
+          // 1. Create License Record
+          const expiresAt = new Date();
+          expiresAt.setDate(expiresAt.getDate() + 30); // Default validity, will be updated by subscription sync
+
+          await createLicense({
+            licenseKey,
+            email,
+            plan,
+            expiresAt,
+            paymentId: subscriptionId, // Use sub ID as payment ref
+            amount: session.amount_total ? session.amount_total / 100 : 0,
+            currency: session.currency || 'usd',
+            subscription_id: subscriptionId,
+            payment_type: 'subscription',
+            subscription_status: 'active'
+          });
+
+          // 2. Create Subscription Record
+          // We need to fetch the actual subscription object to get dates
+          // For now, we can create with basic data or wait for 'customer.subscription.created'
+          // However, 'checkout.session.completed' ensures we have all the metadata
+
+          // It's often better to let 'customer.subscription.updated' handle the details sync,
+          // but we want to send the email immediately.
+
+          await handlePostPurchase(
+            email,
+            metadata.fullName || "Valued Customer",
+            licenseKey,
+            plan,
+            session.amount_total ? session.amount_total / 100 : 0,
+            session.id, // Order ID for email
+            request
+          );
+        }
+        break;
+      }
+
+      // ----------------------------------------------------------------------
+      // NEW: Subscription Updated (Created, Renewed, Canceled, Changed)
+      // ----------------------------------------------------------------------
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object as Stripe.Subscription;
+        console.log(`Subscription ${event.type}:`, subscription.id);
+
+        const subscriptionId = subscription.id;
+        const status = subscription.status;
+
+        // Validate and convert Unix timestamps to Date objects
+        const currentPeriodStartTimestamp = (subscription as any).current_period_start;
+        const currentPeriodEndTimestamp = (subscription as any).current_period_end;
+
+        if (!currentPeriodStartTimestamp || !currentPeriodEndTimestamp) {
+          console.error('Missing period timestamps in subscription:', subscriptionId);
+          return NextResponse.json({ received: true, skipped: 'missing_timestamps' });
+        }
+
+        const currentPeriodStart = new Date(currentPeriodStartTimestamp * 1000);
+        const currentPeriodEnd = new Date(currentPeriodEndTimestamp * 1000);
+
+        // Validate that dates are valid
+        if (isNaN(currentPeriodStart.getTime()) || isNaN(currentPeriodEnd.getTime())) {
+          console.error('Invalid period dates in subscription:', subscriptionId);
+          return NextResponse.json({ received: true, skipped: 'invalid_dates' });
+        }
+
+        const cancelAtPeriodEnd = subscription.cancel_at_period_end;
+        const canceledAt = subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null;
+        const endedAt = subscription.ended_at ? new Date(subscription.ended_at * 1000) : null;
+
+        const metadata = subscription.metadata || {};
+        const licenseKey = metadata.licenseKey;
+        const email = metadata.email;
+        const plan = metadata.plan;
+
+        // Note: usage of 'metadata' relies on it being copied from Checkout Session to Subscription
+        // Ensure 'subscription_data.metadata' was set in Checkout Session creation.
+
+        // Upsert Subscription Record
+        // We first check if it exists
+        const existingSub = await getSubscriptionByStripeId(subscriptionId);
+
+        if (existingSub) {
+          await updateSubscriptionStatus(subscriptionId, {
+            status,
+            currentPeriodEnd,
+            cancelAtPeriodEnd,
+            canceledAt,
+            endedAt
+          });
+        } else if (licenseKey && email && plan) {
+          // Create if missing (e.g. if webhook arrived before checkout session ?)
+          await createSubscription({
+            stripeSubscriptionId: subscriptionId,
+            stripeCustomerId: subscription.customer as string,
+            licenseKey,
+            email,
+            planId: plan,
+            status,
+            currentPeriodStart,
+            currentPeriodEnd
+          });
+        }
+
+        // Update License Expiration & Status
+        // Finding license by key (if we have it) or by subscription_id
+        if (existingSub || licenseKey) {
+          const client = (await import('@/lib/supabase-storage')).getSupabaseClient();
+
+          // If active, extend license expiry to period end
+          if (status === 'active' || status === 'trialing') {
+            const updateData: any = {
+              subscription_status: status,
+              subscription_current_period_end: currentPeriodEnd.toISOString(),
+              subscription_cancel_at_period_end: cancelAtPeriodEnd,
+              expires_at: currentPeriodEnd.toISOString() // Sync license expiry with sub period
+            };
+
+            if (licenseKey) {
+              // Check if license exists
+              const { data: existingLicense } = await client
+                .from('licenses')
+                .select('id')
+                .eq('license_key', licenseKey)
+                .maybeSingle();
+
+              if (existingLicense) {
+                await client.from('licenses').update(updateData).eq('license_key', licenseKey);
+              } else {
+                // License missing (e.g. Standard Flow where PI event was skipped) - CREATE IT
+                console.log(`License missing for active subscription ${subscriptionId}, creating...`);
+
+                // Get price from subscription items
+                const priceItem = subscription.items.data[0]?.price;
+                const amountCents = priceItem?.unit_amount || 0;
+                const amountDollars = amountCents / 100;
+                const fullName = metadata.fullName || 'Valued Customer';
+
+                await createLicense({
+                  licenseKey,
+                  email: email || '',
+                  plan: plan || 'pro_monthly', // fallback
+                  expiresAt: currentPeriodEnd,
+                  paymentId: subscription.latest_invoice as string, // Link to invoice
+                  amount: amountDollars,
+                  currency: priceItem?.currency || 'usd',
+                  payment_type: 'subscription',
+                  subscription_id: subscriptionId,
+                  subscription_status: status
+                });
+
+                if (email) {
+                  // Generate a magic link for easy login
+                  const magicLinkToken = await createMagicLinkToken(email);
+                  const magicLinkUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/verify-magic-link?token=${magicLinkToken}`;
+
+                  await sendStripeLicenseEmail({
+                    to: email,
+                    fullName: fullName,
+                    licenseKey: licenseKey,
+                    plan: plan || 'Subscription',
+                    orderId: typeof subscription.latest_invoice === 'string' ? subscription.latest_invoice : subscription.latest_invoice?.id || 'SUB-INV',
+                    amount: amountDollars,
+                    magicLinkUrl: magicLinkUrl
+                  });
+                }
+              }
+
+            } else {
+              // No license key in metadata? Try to find by subscription_id
+              await client.from('licenses').update(updateData).eq('subscription_id', subscriptionId);
+            }
+          } else {
+            // Past due, canceled, unpaid
+            await client.from('licenses').update({
+              subscription_status: status,
+              subscription_cancel_at_period_end: cancelAtPeriodEnd
+            }).eq('subscription_id', subscriptionId);
+          }
+        }
+        break;
+      }
+
+      // ----------------------------------------------------------------------
+      // NEW: Subscription Deleted (Immediately ended)
+      // ----------------------------------------------------------------------
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+        console.log('Subscription deleted:', subscription.id);
+
+        await updateSubscriptionStatus(subscription.id, {
+          status: subscription.status,
+          endedAt: new Date()
+        });
+
+        // Mark license as expired/canceled?
+        // Usually we keep the expiry date as is, but if it was immediate cancel, we might need to check.
+        // For now, just updating status is enough.
+        break;
+      }
+
+      // ----------------------------------------------------------------------
+      // NEW: Invoice Payment Succeeded (Renewal)
+      // ----------------------------------------------------------------------
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object as Stripe.Invoice;
+        if (invoice.billing_reason === 'subscription_cycle') {
+          console.log('Subscription renewal success:', (invoice as any).subscription);
+          // 'customer.subscription.updated' usually fires too and handles dates,
+          // but we can send a renewal receipt email here if we want.
+        }
+        break;
+      }
+
+      // ----------------------------------------------------------------------
+      // NEW: Invoice Payment Failed
+      // ----------------------------------------------------------------------
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as Stripe.Invoice;
+        if ((invoice as any).subscription) {
+          console.warn('Subscription payment failed:', (invoice as any).subscription);
+          // Could trigger an email to user warning them
+          const client = (await import('@/lib/supabase-storage')).getSupabaseClient();
+          await client.from('licenses')
+            .update({ subscription_status: 'past_due' })
+            .eq('subscription_id', (invoice as any).subscription);
+        }
+        break;
+      }
+
+      // ----------------------------------------------------------------------
+      // EXISTING: Payment Intent Succeeded (One-time payments & Upgrades legacy)
+      // ----------------------------------------------------------------------
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         console.log('PaymentIntent succeeded:', paymentIntent.id);
 
-        // Get order from database using PaymentIntent ID
-        const order = await getStripeOrderByPaymentIntent(paymentIntent.id);
-
-        if (!order) {
-          console.error('Order not found for PaymentIntent:', paymentIntent.id);
-          // Still return 200 to acknowledge receipt
-          return NextResponse.json({ received: true });
+        // Ignore if this PI belongs to a subscription invoice (handled by checkout/invoice events)
+        if ((paymentIntent as any).invoice) {
+          break;
         }
 
-        // IDEMPOTENCY CHECK: Skip if already processed
+        const order = await getStripeOrderByPaymentIntent(paymentIntent.id);
+        if (!order) {
+          return NextResponse.json({ received: true });
+        }
         if (order.status === 'paid') {
-          console.log(`Order ${order.order_id} already processed, skipping duplicate webhook`);
           return NextResponse.json({ received: true, message: 'Already processed' });
         }
 
@@ -62,20 +401,12 @@ export async function POST(request: NextRequest) {
         let licenseKey = "";
 
         if (isUpgrade) {
-          // UPGRADE FLOW
-          console.log(`Processing UPGRADE for ${order.email} (Target: ${metaUpgradeLicenseKey || "Auto-detect"})`);
-
-          // Find existing active monthly license
+          // ... (Existing Upgrade Logic for One-Time payments) ...
           const licenses = await getLicensesForEmail(order.email);
           let activeMonthly: any = null;
-
           if (metaUpgradeLicenseKey) {
             activeMonthly = licenses.find(l => l.license_key === metaUpgradeLicenseKey);
-            if (!activeMonthly) {
-              console.warn(`Target upgrade license ${metaUpgradeLicenseKey} not found or not owned by user. Falling back to auto-detect.`);
-            }
           }
-
           if (!activeMonthly) {
             activeMonthly = licenses.find(l =>
               l.status === 'active' &&
@@ -87,34 +418,22 @@ export async function POST(request: NextRequest) {
           if (activeMonthly) {
             licenseKey = activeMonthly.license_key;
             const expiresAt = new Date();
-            expiresAt.setFullYear(expiresAt.getFullYear() + 1); // Upgrade to 1 Year from now
+            expiresAt.setFullYear(expiresAt.getFullYear() + 1);
 
-            try {
-              await upgradeLicense({
-                licenseId: activeMonthly.id,
-                newPlan: order.plan,
-                newExpiresAt: expiresAt,
-                paymentId: paymentIntent.id,
-                amount: order.display_price,
-                oldPlan: activeMonthly.plan
-              });
-              console.log(`Upgraded license ${licenseKey} to ${order.plan}`);
-            } catch (err) {
-              console.error("Failed to upgrade license:", err);
-              // If upgrade fails, we might still want to treat it as paid, or retry?
-              // For now, allow it to fall through or just log error.
-            }
-          } else {
-            console.warn("Could not find active monthly license to upgrade. Creating new one as fallback.");
-            // Fallback to creating new license handled by the !licenseKey check below
+            await upgradeLicense({
+              licenseId: activeMonthly.id,
+              newPlan: order.plan,
+              newExpiresAt: expiresAt,
+              paymentId: paymentIntent.id,
+              amount: order.display_price,
+              oldPlan: activeMonthly.plan
+            });
           }
         }
 
         if (!licenseKey) {
-          // STANDARD NEW LICENSE FLOW (or fallback)
+          // New License Logic
           licenseKey = generateLicenseKey();
-
-          // Calculate expiry date based on plan
           const now = new Date();
           const expiresAt = new Date(now);
           const planLower = order.plan.toLowerCase();
@@ -122,165 +441,53 @@ export async function POST(request: NextRequest) {
           if (planLower === "lifetime") {
             expiresAt.setFullYear(expiresAt.getFullYear() + 100);
           } else if (planLower.includes("yearly")) {
-            // Yearly plans: starter_yearly, pro_yearly
             expiresAt.setFullYear(expiresAt.getFullYear() + 1);
           } else {
-            // Monthly plans: starter, pro
             expiresAt.setDate(expiresAt.getDate() + 30);
           }
 
-          // Create license in database
-          try {
-            await createLicense({
-              licenseKey,
-              email: order.email,
-              plan: order.plan,
-              expiresAt,
-              paymentId: paymentIntent.id,
-              amount: order.display_price,
-              currency: "USD",
-            });
-          } catch (dbError) {
-            console.error("Failed to create license in database:", dbError);
-            // Continue to send email even if license creation fails - can be retried
-          }
-        }
+          const metaSubscriptionId = paymentIntent.metadata?.subscriptionId;
 
-        // Update order status in database
-        await updateStripeOrderByPaymentIntent(paymentIntent.id, 'paid', licenseKey);
-
-        // --- NEW: Magic Link Logic ---
-        // 1. Check if customer exists or create new one
-        let customer = await getCustomerByEmail(order.email);
-        if (!customer) {
-          try {
-            // Create new customer with random password (placeholder)
-            // In a real magic-link flow, password might be optional, but our DB requires it.
-            const randomPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
-            customer = await createCustomer({
-              email: order.email,
-              password: randomPassword,
-              name: order.full_name,
-            });
-            console.log("Auto-created customer for email:", order.email);
-          } catch (err: any) {
-            console.error("Failed to auto-create customer:", err);
-
-            // Check if it's a duplicate constraint error
-            if (err.code === '23505') {
-              console.log("Customer already exists (race condition), fetching existing customer...");
-              customer = await getCustomerByEmail(order.email);
-            }
-
-            if (!customer) {
-              console.error("Customer still not found after creation failure. Will proceed without customer record.");
-              // The magic link will still work as it's email-based
-              // Customer record can be created later when they first log in manually
-            }
-          }
-        }
-
-        // 2. Generate Magic Link
-        let magicLinkUrl = "https://www.signaltradingbots.com/login"; // Fallback
-        try {
-          // Detect host from request if possible, or use env var
-          const host = request.headers.get("host") || "www.signaltradingbots.com";
-          const protocol = host.includes("localhost") ? "http" : "https";
-
-          const token = await createMagicLinkToken(order.email);
-          magicLinkUrl = `${protocol}://${host}/api/auth/magic-login?token=${token}`;
-        } catch (err) {
-          console.error("Failed to generate magic link:", err);
-        }
-
-        // 3. Generate Download Link (R2 Signed URL)
-        let downloadUrl = "";
-        try {
-          if (isR2Enabled()) {
-            const ipAddress = request.headers.get("x-forwarded-for") ||
-              request.headers.get("x-real-ip") ||
-              "webhook";
-            const userAgent = request.headers.get("user-agent") || "stripe-webhook";
-
-            const downloadToken = await createDownloadToken({
-              licenseKey,
-              email: order.email,
-              fileName: getExeFileName(),
-              ipAddress,
-              userAgent,
-            });
-
-            // Generate proxy URL instead of direct R2 URL
-            const host = request.headers.get("host") || "www.signaltradingbots.com";
-            const protocol = host.includes("localhost") ? "http" : "https";
-            downloadUrl = `${protocol}://${host}/api/download/${downloadToken.token}`;
-
-            console.log(`✅ Generated download link for order ${order.order_id}`);
-          } else {
-            console.warn("⚠️ R2 not configured, skipping download link generation");
-          }
-        } catch (err) {
-          console.error("Failed to generate download link:", err);
-          // Don't fail the webhook - download can be regenerated later
-        }
-
-        // Send license email
-        try {
-          await sendStripeLicenseEmail({
-            to: order.email,
-            fullName: order.full_name,
+          await createLicense({
             licenseKey,
+            email: order.email,
             plan: order.plan,
-            orderId: order.order_id,
+            expiresAt,
+            paymentId: paymentIntent.id,
             amount: order.display_price,
-            magicLinkUrl,
-            downloadUrl, // Add download URL
+            currency: "USD",
+            payment_type: metaSubscriptionId ? 'subscription' : 'one_time',
+            subscription_id: metaSubscriptionId || undefined,
+            subscription_status: metaSubscriptionId ? 'active' : undefined
           });
-          console.log('License email sent successfully to:', order.email);
-        } catch (emailError) {
-          console.error('Failed to send license email:', emailError);
-          // Don't fail the webhook - we can retry email later
         }
 
-        // Mark order as paid to prevent duplicate processing
-        try {
-          await updateStripeOrderByPaymentIntent(paymentIntent.id, 'paid');
-          console.log(`Order ${order.order_id} marked as paid`);
-        } catch (updateError) {
-          console.error('Failed to update order status:', updateError);
-          // Log but don't fail - order was processed successfully
-        }
-
-        console.log('Order processed successfully:', order.order_id);
+        await updateStripeOrderByPaymentIntent(paymentIntent.id, 'paid', licenseKey);
+        await handlePostPurchase(
+          order.email,
+          order.full_name,
+          licenseKey,
+          order.plan,
+          order.display_price,
+          order.order_id,
+          request
+        );
         break;
       }
 
       case 'payment_intent.payment_failed': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log('PaymentIntent failed:', paymentIntent.id);
-
-        // Get order and update status
         const order = await getStripeOrderByPaymentIntent(paymentIntent.id);
-        if (order) {
-          await updateStripeOrderByPaymentIntent(paymentIntent.id, 'failed');
-        }
+        if (order) await updateStripeOrderByPaymentIntent(paymentIntent.id, 'failed');
         break;
       }
-
-      default:
-        console.log('Unhandled event type:', event.type);
     }
 
-    // Return 200 to acknowledge receipt
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error('Webhook error:', error);
-    return NextResponse.json(
-      { error: 'Webhook handler failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
   }
 }
 
-// Disable body parsing for webhook signature verification
 export const runtime = 'nodejs';

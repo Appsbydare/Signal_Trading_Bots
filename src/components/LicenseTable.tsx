@@ -10,6 +10,10 @@ interface License {
   status: string;
   expires_at: string;
   upgraded_from?: string | null;
+  subscription_id?: string | null;
+  payment_type?: string | null;
+  subscription_status?: string | null;
+  subscription_cancel_at_period_end?: boolean | null;
 }
 
 interface LicenseTableProps {
@@ -82,10 +86,10 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
               Status
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
-              Expires
+              Expires / Renews
             </th>
             <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
-              Days Left
+              Details
             </th>
             <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500">
               Actions
@@ -104,6 +108,7 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
             );
             const isLifetime = lic.plan.toLowerCase() === 'lifetime';
             const isRevealed = revealedKeys.has(lic.id);
+            const isSubscription = lic.payment_type === 'subscription';
 
             return (
               <tr key={lic.id}>
@@ -151,16 +156,33 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
                   </div>
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-xs text-zinc-300">
-                  <span className="inline-flex rounded-full bg-zinc-800 px-2 py-1 text-[0.7rem] capitalize text-zinc-300">
-                    {lic.status}
-                  </span>
+                  <div className="flex flex-col gap-1">
+                    <span className="inline-flex w-fit rounded-full bg-zinc-800 px-2 py-1 text-[0.7rem] capitalize text-zinc-300">
+                      {lic.status}
+                    </span>
+                    {isSubscription && lic.subscription_status && (lic.subscription_status !== 'active' || lic.subscription_cancel_at_period_end) && (
+                      <span className={`inline-flex w-fit rounded-full px-2 py-0.5 text-[0.65rem] capitalize ${lic.subscription_cancel_at_period_end
+                        ? 'bg-amber-500/10 text-amber-500'
+                        : 'bg-red-500/10 text-red-500'
+                        }`}>
+                        {lic.subscription_cancel_at_period_end ? 'Cancels at period end' : lic.subscription_status}
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-xs text-zinc-300">
-                  {isLifetime ? 'Never' : expiresAt.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit'
-                  })}
+                  <div className="flex flex-col">
+                    <span>
+                      {isLifetime ? 'Never' : expiresAt.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                      })}
+                    </span>
+                    {isSubscription && !lic.subscription_cancel_at_period_end && lic.subscription_status === 'active' && (
+                      <span className="text-[0.65rem] text-zinc-500">Auto-renews</span>
+                    )}
+                  </div>
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-xs">
                   <span
@@ -169,18 +191,28 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
                       : getLicenseStatusColor(daysRemaining)
                       }`}
                   >
-                    {isLifetime ? 'Lifetime' : `${daysRemaining} days`}
+                    {isLifetime ? 'Lifetime' : `${daysRemaining} days left`}
                   </span>
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-right text-xs">
                   <div className="flex justify-end gap-2">
-                    <Link
-                      href="/products"
-                      className="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1 text-[0.7rem] font-medium text-white hover:bg-zinc-700"
-                    >
-                      View details
-                    </Link>
-                    {!isLifetime && (
+                    {isSubscription && lic.subscription_id ? (
+                      <Link
+                        href={`/portal/subscription/${lic.subscription_id}`}
+                        className="rounded-md bg-zinc-700 px-2 py-1 text-[0.7rem] font-medium text-white hover:bg-zinc-600 border border-zinc-600"
+                      >
+                        Manage Subscription
+                      </Link>
+                    ) : (
+                      <Link
+                        href="/products"
+                        className="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1 text-[0.7rem] font-medium text-white hover:bg-zinc-700"
+                      >
+                        Details
+                      </Link>
+                    )}
+
+                    {!isSubscription && !isLifetime && (
                       <Link
                         href={(() => {
                           const planName = lic.plan.toLowerCase();
@@ -188,12 +220,9 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
                           const basePlan = planName.replace(' (yearly)', '').trim();
 
                           if (isYearly) {
-                            // Renew existing yearly plan
-                            // Map display name to plan ID if needed (e.g. "Starter (Yearly)" -> "starter_yearly")
                             const planId = `${basePlan}_yearly`;
                             return `/payment?plan=${planId}&license_key=${lic.license_key}`;
                           } else {
-                            // Upgrade monthly to yearly
                             const planId = `${basePlan}_yearly`;
                             return `/payment?plan=${planId}&upgrade=true&license_key=${lic.license_key}`;
                           }

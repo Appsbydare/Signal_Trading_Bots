@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { ConfirmationModal } from "@/components/ConfirmationModal";
 
 interface RevokeLicenseButtonProps {
     licenseKey: string;
@@ -11,21 +13,9 @@ interface RevokeLicenseButtonProps {
 export function RevokeLicenseButton({ licenseKey, email }: RevokeLicenseButtonProps) {
     const router = useRouter();
     const [isRevoking, setIsRevoking] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
 
-    const handleRevoke = async () => {
-        const confirmed = confirm(
-            `⚠️ Are you sure you want to REVOKE this license?\n\n` +
-            `License: ${licenseKey}\n` +
-            `Email: ${email}\n\n` +
-            `This will:\n` +
-            `• Set license status to 'revoked'\n` +
-            `• Deactivate all active sessions\n` +
-            `• Prevent future use of this license\n\n` +
-            `This action cannot be undone!`
-        );
-
-        if (!confirmed) return;
-
+    const handleConfirmRevoke = async () => {
         setIsRevoking(true);
 
         try {
@@ -38,29 +28,44 @@ export function RevokeLicenseButton({ licenseKey, email }: RevokeLicenseButtonPr
             const data = await response.json();
 
             if (response.ok) {
-                alert(`✅ ${data.message}`);
-                router.refresh(); // Refresh the page to show updated status
+                toast.success(data.message);
+                setShowConfirm(false);
+                router.refresh();
             } else {
-                alert(`❌ Error: ${data.error || "Failed to revoke license"}`);
+                toast.error(data.error || "Failed to revoke license");
             }
         } catch (error) {
-            alert("❌ An error occurred. Please try again.");
+            toast.error("An error occurred. Please try again.");
         } finally {
             setIsRevoking(false);
         }
     };
 
     return (
-        <button
-            onClick={handleRevoke}
-            disabled={isRevoking}
-            className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${isRevoking
-                ? "bg-orange-600 text-white cursor-not-allowed"
-                : "bg-red-600 text-white hover:bg-red-700"
-                }`}
-            title="Revoke this license and deactivate all sessions"
-        >
-            {isRevoking ? "Pending Revoke..." : "Revoke"}
-        </button>
+        <>
+            <button
+                onClick={() => setShowConfirm(true)}
+                disabled={isRevoking}
+                className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${isRevoking
+                    ? "bg-orange-600 text-white cursor-not-allowed"
+                    : "bg-red-600 text-white hover:bg-red-700"
+                    }`}
+                title="Revoke this license and deactivate all sessions"
+            >
+                {isRevoking ? "Pending..." : "Revoke"}
+            </button>
+
+            <ConfirmationModal
+                isOpen={showConfirm}
+                onClose={() => setShowConfirm(false)}
+                onConfirm={handleConfirmRevoke}
+                title="Revoke License?"
+                message={`Are you sure you want to REVOKE this license for ${email}? This will deactivate all sessions and prevent future use. This action cannot be undone.`}
+                confirmLabel="Yes, Revoke License"
+                cancelLabel="Cancel"
+                isDestructive={true}
+                isLoading={isRevoking}
+            />
+        </>
     );
 }

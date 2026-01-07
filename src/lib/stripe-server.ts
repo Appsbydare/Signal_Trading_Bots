@@ -57,6 +57,7 @@ export async function createPaymentIntent(
     country: string;
     isUpgrade?: string;
     upgradeLicenseKey?: string;
+    subscriptionId?: string;
   }
 ) {
   if (!stripe) {
@@ -102,3 +103,116 @@ export function verifyWebhookSignature(
   );
 }
 
+/**
+ * Create or retrieve Stripe customer
+ */
+export async function getOrCreateStripeCustomer(args: {
+  email: string;
+  name?: string;
+  metadata?: Record<string, string>;
+}): Promise<string> {
+  if (!stripe) {
+    throw new Error('Stripe is not configured');
+  }
+
+  // Search for existing customer
+  const existingCustomers = await stripe.customers.list({
+    email: args.email,
+    limit: 1,
+  });
+
+  if (existingCustomers.data.length > 0) {
+    return existingCustomers.data[0].id;
+  }
+
+  // Create new customer
+  const customer = await stripe.customers.create({
+    email: args.email,
+    name: args.name,
+    metadata: args.metadata || {},
+  });
+
+  return customer.id;
+}
+
+/**
+ * Create a Stripe Subscription
+ */
+export async function createSubscription(args: {
+  customerId: string;
+  priceId: string;
+  metadata: Record<string, string>;
+  trialPeriodDays?: number;
+}): Promise<Stripe.Subscription> {
+  if (!stripe) {
+    throw new Error('Stripe is not configured');
+  }
+
+  const subscription = await stripe.subscriptions.create({
+    customer: args.customerId,
+    items: [{ price: args.priceId }],
+    metadata: args.metadata,
+    trial_period_days: args.trialPeriodDays,
+    payment_behavior: 'default_incomplete',
+    payment_settings: {
+      save_default_payment_method: 'on_subscription',
+      payment_method_types: ['card'],
+    },
+    expand: ['latest_invoice.payment_intent'],
+  });
+
+  return subscription;
+}
+
+/**
+ * Cancel a subscription at period end
+ */
+export async function cancelSubscriptionAtPeriodEnd(
+  subscriptionId: string
+): Promise<Stripe.Subscription> {
+  if (!stripe) {
+    throw new Error('Stripe is not configured');
+  }
+
+  return await stripe.subscriptions.update(subscriptionId, {
+    cancel_at_period_end: true,
+  });
+}
+
+/**
+ * Reactivate a canceled subscription
+ */
+export async function reactivateSubscription(
+  subscriptionId: string
+): Promise<Stripe.Subscription> {
+  if (!stripe) {
+    throw new Error('Stripe is not configured');
+  }
+
+  return await stripe.subscriptions.update(subscriptionId, {
+    cancel_at_period_end: false,
+  });
+}
+
+/**
+ * Upgrade/downgrade subscription (change plan)
+ */
+export async function changeSubscriptionPlan(
+  subscriptionId: string,
+  newPriceId: string,
+  prorationBehavior: 'create_prorations' | 'none' = 'create_prorations'
+): Promise<Stripe.Subscription> {
+  if (!stripe) {
+    throw new Error('Stripe is not configured');
+  }
+
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+
+  return await stripe.subscriptions.update(subscriptionId, {
+    items: [{
+      id: subscription.items.data[0].id,
+      price: newPriceId,
+    }],
+    proration_behavior: prorationBehavior,
+  });
+}

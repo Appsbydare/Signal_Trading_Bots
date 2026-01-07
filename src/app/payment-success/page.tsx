@@ -30,10 +30,14 @@ function PaymentSuccessContent() {
           const data = await response.json();
           setOrderDetails(data);
         } else {
-          setError("Failed to fetch order details");
+          // For subscriptions, we don't have order details, so just show success
+          console.log("Order not found, assuming subscription payment");
+          setOrderDetails({ orderId, isSubscription: true });
         }
       } catch (err) {
-        setError("Error loading order details");
+        // For subscriptions, we don't have order details, so just show success
+        console.log("Error fetching order, assuming subscription payment");
+        setOrderDetails({ orderId, isSubscription: true });
       } finally {
         setLoading(false);
       }
@@ -222,7 +226,7 @@ function PaymentSuccessContent() {
             </svg>
           </div>
           <h1 className="mb-2 text-3xl font-bold text-white">
-            Payment Successful! 🎉
+            Successfuly Subscribed! 🎉
           </h1>
           <p className="text-zinc-300">
             Your order has been confirmed and <span className="font-semibold text-green-400">your license key has been sent to your email.</span>

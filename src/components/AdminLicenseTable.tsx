@@ -28,13 +28,26 @@ interface EnrichedLicense {
     active_sessions_count: number;
     sessions: LicenseSession[];
     banned_devices: string[];
+    subscription_id?: string | null;
+    payment_type?: string | null;
+    subscription_status?: string | null;
+    subscription_cancel_at_period_end?: boolean | null;
+}
+
+interface PlanInfo {
+    key: string;
+    name: string;
+    priceId: string;
+    amount: number;
+    interval: string | null;
 }
 
 interface AdminLicenseTableProps {
     licenses: EnrichedLicense[];
+    plans: PlanInfo[];
 }
 
-export function AdminLicenseTable({ licenses }: AdminLicenseTableProps) {
+export function AdminLicenseTable({ licenses, plans }: AdminLicenseTableProps) {
     const [filterStatus, setFilterStatus] = useState<string>("all");
     const [searchTerm, setSearchTerm] = useState("");
 
@@ -145,7 +158,7 @@ export function AdminLicenseTable({ licenses }: AdminLicenseTableProps) {
                             </tr>
                         ) : (
                             filteredAndSortedLicenses.map((license) => (
-                                <AdminLicenseRow key={license.id} license={license as any} />
+                                <AdminLicenseRow key={license.id} license={license as any} plans={plans} />
                             ))
                         )}
                     </tbody>

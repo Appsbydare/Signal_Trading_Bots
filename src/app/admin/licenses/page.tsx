@@ -4,6 +4,7 @@ import { getSupabaseClient } from "@/lib/supabase-storage";
 import { SecurityLogsTable } from "@/components/SecurityLogsTable";
 import { RealtimeLicenseTracker } from "@/components/RealtimeLicenseTracker";
 import { AdminLicenseTable } from "@/components/AdminLicenseTable";
+import { STRIPE_PRODUCTS } from "@/lib/stripe-products";
 
 async function getLicensesWithData() {
   const client = getSupabaseClient();
@@ -186,7 +187,16 @@ export default async function AdminLicensesPage() {
       </section>
 
       {/* Licenses Table */}
-      <AdminLicenseTable licenses={licenses as any} />
+      <AdminLicenseTable
+        licenses={licenses as any}
+        plans={Object.entries(STRIPE_PRODUCTS).filter(([key]) => key !== 'lifetime').map(([key, product]) => ({
+          key,
+          name: product.name,
+          priceId: product.priceId,
+          amount: product.amount,
+          interval: product.interval
+        }))}
+      />
 
       {/* Recent Activity Log - Only show if validation log table exists */}
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 shadow-sm">

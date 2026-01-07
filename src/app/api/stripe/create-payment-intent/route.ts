@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createPaymentIntent, isStripeEnabled } from '@/lib/stripe-server';
+import { createPaymentIntent, isStripeEnabled, getOrCreateStripeCustomer, createSubscription, stripe } from '@/lib/stripe-server';
 import { createStripeOrder } from '@/lib/orders-supabase';
+import { getPlanConfig, isSubscriptionPlan } from '@/lib/stripe-products';
+import { generateLicenseKey } from '@/lib/license-keys';
+import Stripe from 'stripe';
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,61 +29,187 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Determine price based on plan
-    const pricingMap: Record<string, { price: number; name: string }> = {
-      lifetime: { price: 999, name: 'Lifetime' },
-      pro: { price: 49, name: 'Pro' },
-      starter: { price: 29, name: 'Starter' },
-      pro_yearly: { price: 529, name: 'Pro (Yearly)' },
-      starter_yearly: { price: 313, name: 'Starter (Yearly)' },
-    };
-
-    const selectedPlan = pricingMap[plan as string] || pricingMap.starter;
-    let displayPrice = selectedPlan.price;
-
-    // Apply upgrade credit if applicable
-    if (isUpgrade && creditAmount) {
-      displayPrice = Math.max(0.5, displayPrice - Number(creditAmount)); // Ensure at least $0.50 for Stripe
+    // Construct valid plan key for API
+    let apiPlanKey = plan;
+    if (plan === "starter" || plan === "pro") {
+      apiPlanKey = `${plan}_monthly`;
     }
 
-    const planName = selectedPlan.name;
+    const planConfig = getPlanConfig(apiPlanKey);
+    if (!planConfig) {
+      return NextResponse.json(
+        { error: 'Invalid plan' },
+        { status: 400 }
+      );
+    }
 
-    // Generate unique order ID
+    // Get or create Stripe customer
+    const customerId = await getOrCreateStripeCustomer({
+      email,
+      name: fullName,
+      metadata: { country },
+    });
+
+    // Generate license key upfront
+    const licenseKey = generateLicenseKey();
     const orderId = `ORD-STRIPE-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-    // Create Stripe PaymentIntent
-    const paymentIntent = await createPaymentIntent(displayPrice, {
-      orderId,
-      plan: planName,
-      email,
-      fullName,
-      country,
-      isUpgrade: isUpgrade ? "true" : "false",
-      upgradeLicenseKey: upgradeLicenseKey || "",
-    });
+    let clientSecret: string | null = null;
+    let subscriptionId: string | undefined;
 
-    // Store order in database
-    await createStripeOrder({
-      orderId,
-      paymentIntentId: paymentIntent.id,
-      plan: planName,
-      email,
-      fullName,
-      country,
-      displayPrice,
-    });
+    if (isSubscriptionPlan(apiPlanKey)) {
+      // Create Subscription for monthly/yearly plans
+      const subscription = await createSubscription({
+        customerId,
+        priceId: planConfig.priceId,
+        metadata: {
+          plan: apiPlanKey,
+          email,
+          fullName,
+          country,
+          licenseKey,
+          isUpgrade: isUpgrade ? "true" : "false",
+          upgradeLicenseKey: upgradeLicenseKey || "",
+          orderId,
+        }
+      });
+
+      subscriptionId = subscription.id;
+
+      let latestInvoice = subscription.latest_invoice;
+
+      // Handle string invoice ID
+      if (typeof latestInvoice === 'string') {
+        latestInvoice = await stripe!.invoices.retrieve(latestInvoice, {
+          expand: ['payment_intent']
+        });
+      }
+
+      if (!latestInvoice || typeof latestInvoice === 'string') {
+        throw new Error('Failed to retrieve invoice from subscription');
+      }
+
+      let paymentIntent = (latestInvoice as any).payment_intent;
+
+      // Handle string PaymentIntent ID
+      if (typeof paymentIntent === 'string') {
+        paymentIntent = await stripe!.paymentIntents.retrieve(paymentIntent);
+      }
+
+      // If we don't have a payment intent, try to force one by updating the invoice
+      if (!paymentIntent) {
+        console.log("PaymentIntent missing on invoice, trying to force creation via update...");
+        try {
+          // Force card payment method on the invoice
+          await stripe!.invoices.update(latestInvoice.id, {
+            payment_settings: { payment_method_types: ['card'] }
+          });
+
+          // Retrieve it again
+          latestInvoice = await stripe!.invoices.retrieve(latestInvoice.id, {
+            expand: ['payment_intent']
+          });
+          paymentIntent = (latestInvoice as any).payment_intent;
+
+          if (typeof paymentIntent === 'string') {
+            paymentIntent = await stripe!.paymentIntents.retrieve(paymentIntent);
+          }
+        } catch (err) {
+          console.error("Failed to force PaymentIntent creation:", err);
+        }
+      }
+
+      if (!paymentIntent || typeof paymentIntent === 'string') {
+        // FALLBACK: If standard flow fails, create a manual PaymentIntent
+        // This causes "double logs" but ensures the user can pay.
+        // We log a warning so we know this happened.
+        console.warn('Standard Subscription PI flow failed. Falling back to Manual PI.');
+
+        console.log("Creating manual PaymentIntent for subscription:", subscriptionId);
+
+        // We use the same metadata structure so it can be linked later if needed
+        paymentIntent = await createPaymentIntent(planConfig.amount, {
+          orderId,
+          plan: apiPlanKey,
+          email,
+          fullName,
+          country,
+          isUpgrade: isUpgrade ? "true" : "false",
+          upgradeLicenseKey: upgradeLicenseKey || "",
+          subscriptionId
+        });
+      }
+
+      // Store order in database using the PaymentIntent (whether from Sub or Manual)
+      await createStripeOrder({
+        orderId,
+        paymentIntentId: paymentIntent.id,
+        plan: planConfig.name,
+        email,
+        fullName,
+        country,
+        displayPrice: planConfig.amount,
+      });
+
+      clientSecret = paymentIntent.client_secret;
+
+    } else {
+      // Lifetime Plan (One-time payment)
+      let displayPrice: number = planConfig.amount;
+
+      // Apply upgrade credit if applicable
+      if (isUpgrade && creditAmount) {
+        displayPrice = Math.max(0.5, displayPrice - Number(creditAmount)); // Ensure at least $0.50 for Stripe
+      }
+
+      const paymentIntent = await createPaymentIntent(displayPrice, {
+        orderId,
+        plan: planConfig.name,
+        email,
+        fullName,
+        country,
+        isUpgrade: isUpgrade ? "true" : "false",
+        upgradeLicenseKey: upgradeLicenseKey || "",
+      });
+
+      clientSecret = paymentIntent.client_secret;
+
+      // Store order in database for lifetime plans
+      await createStripeOrder({
+        orderId,
+        paymentIntentId: paymentIntent.id,
+        plan: planConfig.name,
+        email,
+        fullName,
+        country,
+        displayPrice,
+      });
+    }
+
+    if (!clientSecret) {
+      return NextResponse.json(
+        { error: 'Failed to generate payment intent' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
-      clientSecret: paymentIntent.client_secret,
+      clientSecret,
       orderId,
-      amount: displayPrice,
+      amount: planConfig.amount,
+      subscriptionId,
     });
-  } catch (error) {
-    console.error('PaymentIntent creation error:', error);
+  } catch (error: any) {
+    console.error('Payment creation error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      message: error.message,
+      type: error.type,
+      code: error.code,
+    });
     return NextResponse.json(
-      { error: 'Failed to create payment intent' },
+      { error: error.message || 'Failed to create payment' },
       { status: 500 }
     );
   }
 }
-
