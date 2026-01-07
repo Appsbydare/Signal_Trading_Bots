@@ -13,8 +13,17 @@ export default function Analytics() {
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
         strategy="afterInteractive"
+        onLoad={() => {
+          console.log("Google Analytics initialized");
+        }}
+        onError={(e) => {
+          console.error("[Analytics] Failed to load Google Analytics script:", e);
+        }}
       />
-      <Script id="google-analytics" strategy="afterInteractive">
+      <Script
+        id="google-analytics"
+        strategy="afterInteractive"
+      >
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
@@ -25,4 +34,3 @@ export default function Analytics() {
     </>
   );
 }
-
