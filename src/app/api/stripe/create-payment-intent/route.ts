@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { plan, email, fullName, country, isUpgrade, creditAmount } = body;
+    const { plan, email, fullName, country, isUpgrade, creditAmount, upgradeLicenseKey } = body;
 
     // Validate required fields
     if (!plan || !email || !fullName || !country) {
@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
       fullName,
       country,
       isUpgrade: isUpgrade ? "true" : "false",
+      upgradeLicenseKey: upgradeLicenseKey || "",
     });
 
     // Store order in database

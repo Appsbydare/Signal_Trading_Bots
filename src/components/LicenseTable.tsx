@@ -180,12 +180,29 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
                     >
                       View details
                     </Link>
-                    <Link
-                      href="/products#plans"
-                      className="rounded-md bg-[#5e17eb] px-2 py-1 text-[0.7rem] font-medium text-white hover:bg-[#4512c2]"
-                    >
-                      Renew / Upgrade
-                    </Link>
+                    {!isLifetime && (
+                      <Link
+                        href={(() => {
+                          const planName = lic.plan.toLowerCase();
+                          const isYearly = planName.includes('yearly');
+                          const basePlan = planName.replace(' (yearly)', '').trim();
+
+                          if (isYearly) {
+                            // Renew existing yearly plan
+                            // Map display name to plan ID if needed (e.g. "Starter (Yearly)" -> "starter_yearly")
+                            const planId = `${basePlan}_yearly`;
+                            return `/payment?plan=${planId}&license_key=${lic.license_key}`;
+                          } else {
+                            // Upgrade monthly to yearly
+                            const planId = `${basePlan}_yearly`;
+                            return `/payment?plan=${planId}&upgrade=true&license_key=${lic.license_key}`;
+                          }
+                        })()}
+                        className="rounded-md bg-[#5e17eb] px-2 py-1 text-[0.7rem] font-medium text-white hover:bg-[#4512c2]"
+                      >
+                        {lic.plan.toLowerCase().includes('yearly') ? "Renew" : "Upgrade"}
+                      </Link>
+                    )}
                   </div>
                 </td>
               </tr>

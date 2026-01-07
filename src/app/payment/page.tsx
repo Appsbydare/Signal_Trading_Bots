@@ -32,7 +32,8 @@ function PaymentForm() {
   else basePrice = isYearly ? 313 : 29; // Starter
 
   // Apply credit if upgrading
-  const price = isUpgrade && creditAmount > 0 ? Math.max(0, basePrice - creditAmount) : basePrice;
+  // price is calculated dynamically in render or derived state now
+  // const price = isUpgrade && creditAmount > 0 ? Math.max(0, basePrice - creditAmount) : basePrice;
 
   const planName = isLifetime
     ? "Lifetime"
@@ -55,6 +56,21 @@ function PaymentForm() {
   const [loadingUser, setLoadingUser] = useState(true);
 
   const [creatingOrder, setCreatingOrder] = useState(false);
+  const [licenses, setLicenses] = useState<any[]>([]);
+  const [selectedLicenseToUpgrade, setSelectedLicenseToUpgrade] = useState<string>("");
+  const [isLicenseLocked, setIsLicenseLocked] = useState(false); // New state
+  const initialCredit = parseFloat(searchParams.get("credit") || "0");
+  const [dynamicCredit, setDynamicCredit] = useState(initialCredit);
+
+  // Effect to handle URL parameters on initial load
+  useEffect(() => {
+    // Check for pre-selected license key (Locked mode)
+    const licenseKeyParam = searchParams.get("license_key");
+    if (licenseKeyParam) {
+      setSelectedLicenseToUpgrade(licenseKeyParam);
+      setIsLicenseLocked(true);
+    }
+  }, [searchParams]);
 
   // Check if user is logged in and pre-fill their data
   useEffect(() => {
@@ -69,6 +85,24 @@ function PaymentForm() {
           const autoFilledName = data.customer.name || "";
           const autoFilledCountry = data.customer.country || "";
 
+          setLicenses(data.customer.licenses || []);
+
+          // Pre-select first eligible license if upgrading and no specific license is selected yet
+          if (isUpgrade && data.customer.licenses?.length > 0 && !selectedLicenseToUpgrade) {
+            // Try to find a monthly license that is active
+            const eligible = data.customer.licenses.find((l: any) =>
+              l.status === 'active' &&
+              !l.plan.toLowerCase().includes('yearly') &&
+              l.plan.toLowerCase() !== 'lifetime'
+            );
+            if (eligible) {
+              setSelectedLicenseToUpgrade(eligible.license_key);
+            } else if (data.customer.licenses.length > 0) {
+              // Fallback to first license
+              setSelectedLicenseToUpgrade(data.customer.licenses[0].license_key);
+            }
+          }
+
           setFormData(prev => ({
             ...prev,
             email: data.customer.email,
@@ -80,6 +114,7 @@ function PaymentForm() {
           console.log("Auto-filled customer data:", {
             name: autoFilledName,
             country: autoFilledCountry,
+            licenseCount: data.customer.licenses?.length || 0
           });
         }
         setLoadingUser(false);
@@ -88,6 +123,38 @@ function PaymentForm() {
         setLoadingUser(false);
       });
   }, []);
+
+  const getDaysRemaining = (expiresAt: string) => {
+    if (!expiresAt) return 0;
+    const expiry = new Date(expiresAt);
+    const now = new Date();
+    const msPerDay = 1000 * 60 * 60 * 24;
+    return Math.max(0, Math.ceil((expiry.getTime() - now.getTime()) / msPerDay));
+  };
+
+  // Recalculate credit when selected license changes
+  useEffect(() => {
+    if (!isUpgrade || !selectedLicenseToUpgrade || licenses.length === 0) return;
+
+    const license = licenses.find((l: any) => l.license_key === selectedLicenseToUpgrade);
+    if (license && license.expires_at) {
+      // Check if license is active monthly
+      const isMonthly = !license.plan.toLowerCase().includes('yearly') && license.plan.toLowerCase() !== 'lifetime';
+
+      if (isMonthly) {
+        const daysRemaining = getDaysRemaining(license.expires_at);
+
+        const monthlyPrice = license.plan.toLowerCase().includes('pro') ? 49 : 29;
+        const dailyRate = monthlyPrice / 30;
+
+        const credit = Math.min(Math.ceil(dailyRate * daysRemaining), monthlyPrice);
+
+        setDynamicCredit(credit);
+      }
+    }
+  }, [selectedLicenseToUpgrade, licenses, isUpgrade]);
+
+  const finalPrice = isUpgrade ? Math.max(0, basePrice - dynamicCredit) : basePrice;
 
   // Stripe-specific state
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -136,7 +203,8 @@ function PaymentForm() {
           fullName: formData.fullName,
           country: formData.country,
           isUpgrade,
-          creditAmount,
+          creditAmount: dynamicCredit,
+          upgradeLicenseKey: selectedLicenseToUpgrade,
         }),
       });
 
@@ -224,9 +292,10 @@ function PaymentForm() {
             fullName: formData.fullName,
             country: formData.country,
             coinNetwork: selectedCrypto,
-            finalPrice: price, // Pass the discounted price
+            finalPrice: finalPrice, // Pass the discounted price
             isUpgrade,
-            creditAmount,
+            creditAmount: dynamicCredit,
+            upgradeLicenseKey: selectedLicenseToUpgrade,
           }),
         });
 
@@ -268,7 +337,7 @@ function PaymentForm() {
         ) : (
           <div className="space-y-6">
             {/* Upgrade Banner */}
-            {isUpgrade && creditAmount > 0 && (
+            {isUpgrade && (
               <section className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-6">
                 <div className="flex items-start gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/20">
@@ -278,8 +347,74 @@ function PaymentForm() {
                   </div>
                   <div className="flex-1">
                     <h2 className="text-lg font-semibold text-emerald-300">Upgrading to Yearly Plan</h2>
+
+                    {/* License Selection for Upgrade */}
+                    {isLoggedIn && licenses.length > 0 && (
+                      <div className="mt-3 mb-3">
+                        <label className="block text-xs font-semibold text-emerald-200 mb-1">
+                          Select License to Upgrade:
+                        </label>
+
+                        {isLicenseLocked ? (
+                          <div className="relative rounded-md bg-emerald-900/40 border border-emerald-500/30 p-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {(() => {
+                                const lockedLicense = licenses.find((l: any) => l.license_key === selectedLicenseToUpgrade);
+                                const days = lockedLicense ? getDaysRemaining(lockedLicense.expires_at) : 0;
+                                return (
+                                  <div className="text-sm text-emerald-100">
+                                    <span className="font-semibold text-emerald-300">{lockedLicense?.plan}</span>
+                                    <span className="mx-2 text-emerald-500/50">|</span>
+                                    <span>{days} days left</span>
+                                    <span className="ml-2 text-xs text-emerald-400/60">({lockedLicense?.license_key.substring(0, 12)}...)</span>
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                            <button
+                              onClick={() => setIsLicenseLocked(false)}
+                              className="text-xs text-emerald-400 hover:text-emerald-300 underline font-medium"
+                            >
+                              Change
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="relative">
+                            <select
+                              value={selectedLicenseToUpgrade}
+                              onChange={(e) => setSelectedLicenseToUpgrade(e.target.value)}
+                              className="w-full appearance-none rounded-md bg-emerald-900/60 border border-emerald-500/30 text-emerald-100 text-sm pl-4 pr-10 py-3 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/50 shadow-inner"
+                            >
+                              {licenses
+                                .filter((l: any) =>
+                                  l.status === 'active' &&
+                                  !l.plan.toLowerCase().includes('yearly') &&
+                                  l.plan.toLowerCase() !== 'lifetime'
+                                )
+                                .map((l: any) => {
+                                  const days = getDaysRemaining(l.expires_at);
+                                  return (
+                                    <option key={l.id} value={l.license_key} className="bg-zinc-900 text-zinc-200 py-2">
+                                      {l.plan} — {days} days left (ends {l.license_key.substring(0, 8)}...)
+                                    </option>
+                                  );
+                                })}
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-emerald-300">
+                              <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
+                        <p className="mt-1 text-xs text-emerald-200/60">
+                          This license will be extended and upgraded.
+                        </p>
+                      </div>
+                    )}
+
                     <p className="mt-1 text-sm text-emerald-200/90">
-                      You're upgrading from a monthly plan. We've applied a <strong>${creditAmount.toFixed(2)} credit</strong> for your remaining subscription days.
+                      You're upgrading from a monthly plan. We've applied a <strong>${dynamicCredit} credit</strong> for your remaining subscription days.
                     </p>
                     <div className="mt-3 rounded-md bg-emerald-500/20 p-3">
                       <div className="flex justify-between text-sm">
@@ -288,11 +423,11 @@ function PaymentForm() {
                       </div>
                       <div className="flex justify-between text-sm mt-1">
                         <span className="text-emerald-200">Prorated Credit:</span>
-                        <span className="font-semibold text-emerald-100">-${creditAmount.toFixed(2)}</span>
+                        <span className="font-semibold text-emerald-100">-${dynamicCredit}</span>
                       </div>
                       <div className="border-t border-emerald-500/30 mt-2 pt-2 flex justify-between text-base">
                         <span className="font-semibold text-emerald-100">Total Due Today:</span>
-                        <span className="font-bold text-emerald-50">${price.toFixed(2)}</span>
+                        <span className="font-bold text-emerald-50">${finalPrice}</span>
                       </div>
                     </div>
                   </div>
@@ -786,7 +921,7 @@ function PaymentForm() {
                   >
                     <StripeCardForm
                       orderId={stripeOrderId}
-                      amount={price}
+                      amount={finalPrice}
                       plan={planName}
                       agreedToTerms={agreedToTerms}
                       onSuccess={() => {
@@ -837,7 +972,7 @@ function PaymentForm() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-zinc-400">
                   <span>Subtotal</span>
-                  <span className="text-white">${price} USD</span>
+                  <span className="text-white">${finalPrice} USD</span>
                 </div>
                 <div className="flex justify-between text-zinc-400">
                   <span>Processing Fee</span>
@@ -846,7 +981,7 @@ function PaymentForm() {
                 <div className="border-t border-zinc-700 pt-2">
                   <div className="flex justify-between text-lg font-semibold text-white">
                     <span>Total</span>
-                    <span>${price} USD</span>
+                    <span>${finalPrice} USD</span>
                   </div>
                 </div>
               </div>

@@ -130,13 +130,15 @@ export function DarkProductCard({
 
         {/* Buttons */}
         <div className="mt-auto space-y-2 pt-4">
-          <Link
-            href={viewDetailsHref}
-            onClick={onViewDetailsClick}
-            className="inline-flex w-full items-center justify-center rounded-md bg-[#5e17eb] text-white hover:bg-[#4512c2] px-4 py-2 text-sm font-medium transition"
-          >
-            View details
-          </Link>
+          {!isCurrentPlan && (
+            <Link
+              href={viewDetailsHref}
+              onClick={onViewDetailsClick}
+              className="inline-flex w-full items-center justify-center rounded-md bg-[#5e17eb] text-white hover:bg-[#4512c2] px-4 py-2 text-sm font-medium transition"
+            >
+              View details
+            </Link>
+          )}
           {canUpgradeToYearly && upgradeYearlyLink ? (
             <>
               <Link
@@ -147,24 +149,37 @@ export function DarkProductCard({
               </Link>
               {proratedCredit && proratedCredit > 0 && (
                 <p className="text-xs text-center text-emerald-400/80 font-medium">
-                  ${proratedCredit.toFixed(2)} credit for remaining days
+                  ${proratedCredit} credit for remaining days
                 </p>
               )}
+              <Link
+                href={paymentLink}
+                className="inline-flex w-full items-center justify-center rounded-md bg-[#5e17eb] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#4512c2] hover:shadow-md"
+              >
+                + Buy New Yearly License
+              </Link>
             </>
           ) : isCurrentPlan && daysRemaining !== undefined && daysRemaining > 0 ? (
-            <button
-              disabled
-              className="inline-flex w-full items-center justify-center rounded-md bg-zinc-700 px-4 py-2 text-sm font-medium text-zinc-400 cursor-not-allowed"
-              title={`Your current plan is active for ${daysRemaining} more days`}
-            >
-              Active Until {expiresAt ? new Date(expiresAt).toLocaleDateString() : ''}
-            </button>
+            <div className="space-y-2">
+              <button
+                disabled
+                className="inline-flex w-full items-center justify-center rounded-md bg-zinc-700/50 border border-zinc-600 px-4 py-2 text-sm font-medium text-zinc-300 cursor-not-allowed"
+              >
+                Active Until {expiresAt ? new Date(expiresAt).toLocaleDateString() : ''}
+              </button>
+              <Link
+                href={paymentLink}
+                className="inline-flex w-full items-center justify-center rounded-md bg-[#5e17eb] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#4512c2] hover:shadow-md"
+              >
+                + Buy Another License
+              </Link>
+            </div>
           ) : (
             <Link
               href={paymentLink}
               className="inline-flex w-full items-center justify-center rounded-md bg-[#5e17eb] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4512c2]"
             >
-              {isCurrentPlan ? 'Renew Now →' : 'Start Automation →'}
+              Start Automation →
             </Link>
           )}
         </div>

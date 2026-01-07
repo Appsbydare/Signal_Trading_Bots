@@ -56,6 +56,7 @@ export async function createPaymentIntent(
     fullName: string;
     country: string;
     isUpgrade?: string;
+    upgradeLicenseKey?: string;
   }
 ) {
   if (!stripe) {

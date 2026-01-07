@@ -58,19 +58,31 @@ export async function POST(request: NextRequest) {
         }
 
         const isUpgrade = paymentIntent.metadata?.isUpgrade === "true";
+        const metaUpgradeLicenseKey = paymentIntent.metadata?.upgradeLicenseKey || "";
         let licenseKey = "";
 
         if (isUpgrade) {
           // UPGRADE FLOW
-          console.log(`Processing UPGRADE for ${order.email}`);
+          console.log(`Processing UPGRADE for ${order.email} (Target: ${metaUpgradeLicenseKey || "Auto-detect"})`);
 
           // Find existing active monthly license
           const licenses = await getLicensesForEmail(order.email);
-          const activeMonthly = licenses.find(l =>
-            l.status === 'active' &&
-            !l.plan.toLowerCase().includes('yearly') &&
-            l.plan.toLowerCase() !== 'lifetime'
-          );
+          let activeMonthly: any = null;
+
+          if (metaUpgradeLicenseKey) {
+            activeMonthly = licenses.find(l => l.license_key === metaUpgradeLicenseKey);
+            if (!activeMonthly) {
+              console.warn(`Target upgrade license ${metaUpgradeLicenseKey} not found or not owned by user. Falling back to auto-detect.`);
+            }
+          }
+
+          if (!activeMonthly) {
+            activeMonthly = licenses.find(l =>
+              l.status === 'active' &&
+              !l.plan.toLowerCase().includes('yearly') &&
+              l.plan.toLowerCase() !== 'lifetime'
+            );
+          }
 
           if (activeMonthly) {
             licenseKey = activeMonthly.license_key;

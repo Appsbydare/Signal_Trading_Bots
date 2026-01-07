@@ -22,6 +22,14 @@ export async function GET() {
       .eq("id", customer.id)
       .single();
 
+    // Fetch customer licenses
+    const { data: licenses } = await supabase
+      .from("licenses")
+      .select("*")
+      .eq("email", customer.email)
+      .neq("status", "revoked")
+      .order("created_at", { ascending: false });
+
     return NextResponse.json({
       customer: {
         id: customer.id,
@@ -29,6 +37,7 @@ export async function GET() {
         password_set_by_user: customer.password_set_by_user,
         name: customerData?.name || null,
         country: customerData?.country || null,
+        licenses: licenses || [],
       },
     });
   } catch (error) {

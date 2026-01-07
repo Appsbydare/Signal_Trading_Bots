@@ -388,7 +388,7 @@ export function ProductsPageClient() {
                   if (canUpgradeToYearly && daysRemaining) {
                     const monthlyPrice = plan.name === "Pro" ? 49 : 29;
                     const dailyRate = monthlyPrice / 30;
-                    proratedCredit = Math.min(dailyRate * Math.max(0, daysRemaining - 1), monthlyPrice);  
+                    proratedCredit = Math.min(Math.ceil(dailyRate * daysRemaining), monthlyPrice);
                   }
 
                   return (
