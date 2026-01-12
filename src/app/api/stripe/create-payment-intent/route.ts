@@ -58,7 +58,27 @@ export async function POST(request: NextRequest) {
     let subscriptionId: string | undefined;
 
     if (isSubscriptionPlan(apiPlanKey)) {
-      // Create Subscription for monthly/yearly plans
+      // Check for existing incomplete subscription for this customer and plan
+      // If one exists, we cancel it and create a new one to ensure we get a fresh 
+      // confirmation_secret/payment_intent which are only available on creation/update.
+      const existingSubscriptions = await stripe!.subscriptions.list({
+        customer: customerId,
+        price: planConfig.priceId,
+        status: 'incomplete',
+        limit: 1,
+      });
+
+      if (existingSubscriptions.data.length > 0) {
+        const oldSub = existingSubscriptions.data[0];
+        console.log('Canceling old incomplete subscription to create a fresh one:', oldSub.id);
+        try {
+          await stripe!.subscriptions.cancel(oldSub.id);
+        } catch (err) {
+          console.error('Error canceling old subscription:', err);
+        }
+      }
+
+      // Create NEW Subscription (always fresh)
       const subscription = await createSubscription({
         customerId,
         priceId: planConfig.priceId,
@@ -86,61 +106,68 @@ export async function POST(request: NextRequest) {
       }
 
       if (!latestInvoice || typeof latestInvoice === 'string') {
+        console.error('Failed to retrieve invoice from subscription. Value:', latestInvoice);
         throw new Error('Failed to retrieve invoice from subscription');
       }
 
+      console.log('Invoice retrieved:', latestInvoice.id, 'Status:', latestInvoice.status);
+      console.log('Invoice collection_method:', latestInvoice.collection_method);
+      console.log('Invoice PaymentIntent field:', (latestInvoice as any).payment_intent);
+      console.log('Invoice confirmation_secret:', (latestInvoice as any).confirmation_secret);
+
       let paymentIntent = (latestInvoice as any).payment_intent;
+      let confirmationSecret = (latestInvoice as any).confirmation_secret;
 
       // Handle string PaymentIntent ID
       if (typeof paymentIntent === 'string') {
         paymentIntent = await stripe!.paymentIntents.retrieve(paymentIntent);
       }
 
-      // If we don't have a payment intent, try to force one by updating the invoice
-      if (!paymentIntent) {
-        console.log("PaymentIntent missing on invoice, trying to force creation via update...");
-        try {
-          // Force card payment method on the invoice
-          await stripe!.invoices.update(latestInvoice.id, {
-            payment_settings: { payment_method_types: ['card'] }
-          });
+      // If we have a confirmation_secret, use it to get the client_secret
+      if (confirmationSecret && confirmationSecret.client_secret) {
+        console.log("Using confirmation_secret for client_secret");
+        clientSecret = confirmationSecret.client_secret;
 
-          // Retrieve it again
-          latestInvoice = await stripe!.invoices.retrieve(latestInvoice.id, {
-            expand: ['payment_intent']
-          });
-          paymentIntent = (latestInvoice as any).payment_intent;
-
-          if (typeof paymentIntent === 'string') {
-            paymentIntent = await stripe!.paymentIntents.retrieve(paymentIntent);
+        // We still need the PaymentIntent for order tracking
+        if (!paymentIntent) {
+          if (confirmationSecret.payment_intent) {
+            // If confirmation_secret has payment_intent field
+            if (typeof confirmationSecret.payment_intent === 'string') {
+              paymentIntent = await stripe!.paymentIntents.retrieve(confirmationSecret.payment_intent);
+            } else {
+              paymentIntent = confirmationSecret.payment_intent;
+            }
+          } else {
+            // Extract PaymentIntent ID from client_secret (format: pi_xxx_secret_yyy)
+            const piMatch = confirmationSecret.client_secret.match(/^(pi_[^_]+)/);
+            if (piMatch) {
+              const piId = piMatch[1];
+              console.log("Extracting PaymentIntent ID from client_secret:", piId);
+              try {
+                paymentIntent = await stripe!.paymentIntents.retrieve(piId);
+              } catch (err) {
+                console.error("Failed to retrieve PI from client_secret:", err);
+              }
+            }
           }
-        } catch (err) {
-          console.error("Failed to force PaymentIntent creation:", err);
         }
+      } else if (paymentIntent) {
+        // Use traditional payment_intent.client_secret
+        clientSecret = paymentIntent.client_secret;
       }
 
-      if (!paymentIntent || typeof paymentIntent === 'string') {
-        // FALLBACK: If standard flow fails, create a manual PaymentIntent
-        // This causes "double logs" but ensures the user can pay.
-        // We log a warning so we know this happened.
-        console.warn('Standard Subscription PI flow failed. Falling back to Manual PI.');
-
-        console.log("Creating manual PaymentIntent for subscription:", subscriptionId);
-
-        // We use the same metadata structure so it can be linked later if needed
-        paymentIntent = await createPaymentIntent(planConfig.amount, {
-          orderId,
-          plan: apiPlanKey,
-          email,
-          fullName,
-          country,
-          isUpgrade: isUpgrade ? "true" : "false",
-          upgradeLicenseKey: upgradeLicenseKey || "",
-          subscriptionId
-        });
+      // If still missing both, we must error out.
+      // Do NOT fall back to manual PI creation as it decouples payment from the subscription
+      // and leads to "incomplete" subscriptions with "succeeded" orphaned payments.
+      if (!clientSecret || !paymentIntent) {
+        console.error('Standard Subscription PI flow failed. Missing client_secret and payment_intent.');
+        return NextResponse.json(
+          { error: "Failed to initialize subscription payment. Please try again." },
+          { status: 500 }
+        );
       }
 
-      // Store order in database using the PaymentIntent (whether from Sub or Manual)
+      // Store order in database using the PaymentIntent
       await createStripeOrder({
         orderId,
         paymentIntentId: paymentIntent.id,
@@ -150,8 +177,6 @@ export async function POST(request: NextRequest) {
         country,
         displayPrice: planConfig.amount,
       });
-
-      clientSecret = paymentIntent.client_secret;
 
     } else {
       // Lifetime Plan (One-time payment)

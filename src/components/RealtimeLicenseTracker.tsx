@@ -12,6 +12,9 @@ export function RealtimeLicenseTracker() {
     const router = useRouter();
 
     useEffect(() => {
+        // Trigger self-healing sync on mount to ensure data is fresh
+        fetch('/api/auth/customer/me').catch(err => console.error("Failed to sync customer data:", err));
+
         if (!supabaseUrl || !supabaseAnonKey) {
             console.warn("Supabase credentials missing for RealtimeLicenseTracker");
             return;

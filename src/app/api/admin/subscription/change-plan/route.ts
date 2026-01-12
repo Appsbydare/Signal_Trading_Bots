@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { changeSubscriptionPlan } from "@/lib/stripe-server";
-import { createSupabaseServerClient } from "@/lib/dtbot-supabase-server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
     try {
-        const supabase = await createSupabaseServerClient();
+        const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
             message: "Subscription plan updated successfully",
             subscriptionId: subscription.id,
             newStatus: subscription.status,
-            currentPeriodEnd: subscription.current_period_end
+            currentPeriodEnd: (subscription as any).current_period_end
         });
 
     } catch (error: any) {

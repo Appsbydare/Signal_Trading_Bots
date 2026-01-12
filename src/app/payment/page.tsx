@@ -58,7 +58,7 @@ function PaymentForm() {
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [licenses, setLicenses] = useState<any[]>([]);
   const [selectedLicenseToUpgrade, setSelectedLicenseToUpgrade] = useState<string>("");
-  const [isLicenseLocked, setIsLicenseLocked] = useState(false); // New state
+  const [isLicenseLocked, setIsLicenseLocked] = useState(searchParams.get("lock") === "true");
   const initialCredit = parseFloat(searchParams.get("credit") || "0");
   const [dynamicCredit, setDynamicCredit] = useState(initialCredit);
 
@@ -87,19 +87,17 @@ function PaymentForm() {
 
           setLicenses(data.customer.licenses || []);
 
-          // Pre-select first eligible license if upgrading and no specific license is selected yet
-          if (isUpgrade && data.customer.licenses?.length > 0 && !selectedLicenseToUpgrade) {
-            // Try to find a monthly license that is active
+          // Pre-select first eligible license if upgrading
+          // Only if NOT provided in URL (searchParams)
+          const urlKey = searchParams.get("license_key");
+          if (isUpgrade && data.customer.licenses?.length > 0 && !selectedLicenseToUpgrade && !urlKey) {
+            // Only select active, non-lifetime licenses (allow subscriptions)
             const eligible = data.customer.licenses.find((l: any) =>
               l.status === 'active' &&
-              !l.plan.toLowerCase().includes('yearly') &&
               l.plan.toLowerCase() !== 'lifetime'
             );
             if (eligible) {
               setSelectedLicenseToUpgrade(eligible.license_key);
-            } else if (data.customer.licenses.length > 0) {
-              // Fallback to first license
-              setSelectedLicenseToUpgrade(data.customer.licenses[0].license_key);
             }
           }
 
@@ -183,11 +181,11 @@ function PaymentForm() {
       isLoggedIn,
     });
 
-    if (selectedPayment === "card" && !clientSecret && formData.email && formData.fullName && formData.country) {
-      console.log("Creating PaymentIntent...");
+    if (selectedPayment === "card" && !clientSecret && formData.email && formData.fullName && formData.country && isLifetime) {
+      console.log("Creating PaymentIntent for Lifetime plan...");
       createStripePaymentIntent();
     }
-  }, [selectedPayment, formData.email, formData.fullName, formData.country, clientSecret, isLoggedIn]);
+  }, [selectedPayment, formData.email, formData.fullName, formData.country, clientSecret, isLoggedIn, isLifetime]);
 
   const createStripePaymentIntent = async () => {
     if (loadingStripe || clientSecret) return;
@@ -266,6 +264,37 @@ function PaymentForm() {
     { value: "BNB", label: "BNB (BSC)", coin: "BNB", network: "BSC", description: "Binance Smart Chain" },
   ];
 
+  const handleSubscriptionCheckout = async () => {
+    if (!formData.email || !formData.fullName || !formData.country || !agreedToTerms) return;
+
+    setLoadingStripe(true);
+    try {
+      const response = await fetch("/api/stripe/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan,
+          email: formData.email,
+          fullName: formData.fullName,
+          country: formData.country,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "Failed to start checkout. Please try again.");
+        setLoadingStripe(false);
+      }
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      alert("Error initializing checkout. Please try again.");
+      setLoadingStripe(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -315,6 +344,17 @@ function PaymentForm() {
     }
   };
 
+  // NEW Filter: Allow active licenses (including subscriptions), only exclude lifetime
+  const eligibleUpgradeLicenses = licenses.filter((l: any) =>
+    l.status === 'active' &&
+    l.plan.toLowerCase() !== 'lifetime'
+  );
+
+  const selectedLicenseObj = licenses.find((l: any) => l.license_key === selectedLicenseToUpgrade);
+  const isSubscriptionDetailsUpgrade = isUpgrade && isLoggedIn && (selectedLicenseObj?.subscription_id || selectedLicenseObj?.payment_type === 'subscription');
+
+  const showPortalRedirect = isUpgrade && isLoggedIn && licenses.length > 0 && eligibleUpgradeLicenses.length === 0;
+
   return (
     <div className="min-h-screen bg-zinc-950 py-12">
       <div className="mx-auto max-w-2xl px-6">
@@ -346,9 +386,11 @@ function PaymentForm() {
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-lg font-semibold text-emerald-300">Upgrading to Yearly Plan</h2>
+                    <h2 className="text-lg font-semibold text-emerald-300">
+                      {isSubscriptionDetailsUpgrade ? "Update Subscription Plan" : "Upgrading to Yearly Plan"}
+                    </h2>
 
-                    {/* License Selection for Upgrade */}
+                    {/* License Selection for Upgrade (Always Eligible) */}
                     {isLoggedIn && licenses.length > 0 && (
                       <div className="mt-3 mb-3">
                         <label className="block text-xs font-semibold text-emerald-200 mb-1">
@@ -385,20 +427,14 @@ function PaymentForm() {
                               onChange={(e) => setSelectedLicenseToUpgrade(e.target.value)}
                               className="w-full appearance-none rounded-md bg-emerald-900/60 border border-emerald-500/30 text-emerald-100 text-sm pl-4 pr-10 py-3 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/50 shadow-inner"
                             >
-                              {licenses
-                                .filter((l: any) =>
-                                  l.status === 'active' &&
-                                  !l.plan.toLowerCase().includes('yearly') &&
-                                  l.plan.toLowerCase() !== 'lifetime'
-                                )
-                                .map((l: any) => {
-                                  const days = getDaysRemaining(l.expires_at);
-                                  return (
-                                    <option key={l.id} value={l.license_key} className="bg-zinc-900 text-zinc-200 py-2">
-                                      {l.plan} — {days} days left (ends {l.license_key.substring(0, 8)}...)
-                                    </option>
-                                  );
-                                })}
+                              {eligibleUpgradeLicenses.map((l: any) => {
+                                const days = getDaysRemaining(l.expires_at);
+                                return (
+                                  <option key={l.id} value={l.license_key} className="bg-zinc-900 text-zinc-200 py-2">
+                                    {l.plan} — {days} days left (ends {l.license_key.substring(0, 8)}...)
+                                  </option>
+                                );
+                              })}
                             </select>
                             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-emerald-300">
                               <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
@@ -413,23 +449,47 @@ function PaymentForm() {
                       </div>
                     )}
 
-                    <p className="mt-1 text-sm text-emerald-200/90">
-                      You're upgrading from a monthly plan. We've applied a <strong>${dynamicCredit} credit</strong> for your remaining subscription days.
-                    </p>
-                    <div className="mt-3 rounded-md bg-emerald-500/20 p-3">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-emerald-200">Yearly Plan Price:</span>
-                        <span className="font-semibold text-emerald-100">${basePrice}</span>
-                      </div>
-                      <div className="flex justify-between text-sm mt-1">
-                        <span className="text-emerald-200">Prorated Credit:</span>
-                        <span className="font-semibold text-emerald-100">-${dynamicCredit}</span>
-                      </div>
-                      <div className="border-t border-emerald-500/30 mt-2 pt-2 flex justify-between text-base">
-                        <span className="font-semibold text-emerald-100">Total Due Today:</span>
-                        <span className="font-bold text-emerald-50">${finalPrice}</span>
-                      </div>
-                    </div>
+                    {isSubscriptionDetailsUpgrade ? (
+                      <>
+                        <p className="mt-1 text-sm text-emerald-200/90">
+                          You're upgrading from a monthly plan.
+                        </p>
+                        <div className="mt-3 rounded-md bg-emerald-500/20 p-3">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-emerald-200">Yearly Plan Price:</span>
+                            <span className="font-semibold text-emerald-100">${basePrice}</span>
+                          </div>
+                          <div className="flex justify-between text-sm mt-1">
+                            <span className="text-emerald-200">Prorated Credit:</span>
+                            <span className="font-semibold text-emerald-100 italic">Calculated by Stripe</span>
+                          </div>
+                          <div className="border-t border-emerald-500/30 mt-2 pt-2 flex justify-between text-base">
+                            <span className="font-semibold text-emerald-100">Total Due Today:</span>
+                            <span className="font-bold text-emerald-50 italic text-sm">See Final Price in Portal</span>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <p className="mt-1 text-sm text-emerald-200/90">
+                          You're upgrading from a monthly plan. We've applied a <strong>${dynamicCredit} credit</strong> for your remaining subscription days.
+                        </p>
+                        <div className="mt-3 rounded-md bg-emerald-500/20 p-3">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-emerald-200">Yearly Plan Price:</span>
+                            <span className="font-semibold text-emerald-100">${basePrice}</span>
+                          </div>
+                          <div className="flex justify-between text-sm mt-1">
+                            <span className="text-emerald-200">Prorated Credit:</span>
+                            <span className="font-semibold text-emerald-100">-${dynamicCredit}</span>
+                          </div>
+                          <div className="border-t border-emerald-500/30 mt-2 pt-2 flex justify-between text-base">
+                            <span className="font-semibold text-emerald-100">Total Due Today:</span>
+                            <span className="font-bold text-emerald-50">${finalPrice}</span>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </section>
@@ -674,98 +734,133 @@ function PaymentForm() {
               </div>
             </section>
 
-            {/* Payment Methods */}
-            <section className={`rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 ${!emailVerified ? 'opacity-50 pointer-events-none' : ''}`}>
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-white">Select Payment Method</h2>
-                {!emailVerified && (
-                  <span className="flex items-center gap-2 text-sm text-amber-400">
-                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                    </svg>
-                    Verify email first
-                  </span>
-                )}
-              </div>
-              <div className="space-y-3">
+            {/* Subscription Upgrade Action Section */}
+            {isSubscriptionDetailsUpgrade && (
+              <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
+                <h2 className="mb-4 text-lg font-semibold text-white">Complete Upgrade</h2>
+                <p className="mb-6 text-sm text-zinc-400">
+                  You will be redirected to the Stripe Customer Portal to safely review and confirm your plan change.
+                </p>
                 <button
-                  type="button"
-                  onClick={() => emailVerified && setSelectedPayment("card")}
-                  disabled={!emailVerified}
-                  className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedPayment === "card"
-                    ? "border-blue-500 bg-blue-500/10"
-                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                    } disabled:cursor-not-allowed`}
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/stripe/portal', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          stripeCustomerId: selectedLicenseObj.stripe_customer_id,
+                          flow: 'update_subscription',
+                          subscriptionId: selectedLicenseObj.subscription_id,
+                        }),
+                      });
+                      const data = await response.json();
+                      if (data.url) window.location.href = data.url;
+                      else alert('Could not open portal.');
+                    } catch (e) {
+                      alert('Error opening portal.');
+                    }
+                  }}
+                  className="w-full rounded-lg bg-[#5e17eb] p-4 text-center font-semibold text-white transition-all hover:bg-[#4a11c0] shadow-lg shadow-purple-500/20"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded bg-blue-500/20">
-                        <svg className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="font-semibold text-white">Credit / Debit Card</p>
-                        <p className="text-sm text-zinc-400">Visa, Mastercard, Amex, etc.</p>
-                      </div>
-                    </div>
-                    <span className="rounded-md bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">Available</span>
-                  </div>
+                  Proceed to Stripe Portal
                 </button>
+              </section>
+            )}
 
-                <button
-                  type="button"
-                  onClick={() => emailVerified && setSelectedPayment("crypto")}
-                  disabled={!emailVerified}
-                  className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedPayment === "crypto"
-                    ? "border-green-500 bg-green-500/10"
-                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                    } disabled:cursor-not-allowed`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded bg-green-500/20">
-                        <span className="text-xl font-bold text-green-400">₿</span>
+            {/* Payment Methods */}
+            {!isSubscriptionDetailsUpgrade && (
+              <section className={`rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 ${!emailVerified ? 'opacity-50 pointer-events-none' : ''}`}>
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-white">Select Payment Method</h2>
+                  {!emailVerified && (
+                    <span className="flex items-center gap-2 text-sm text-amber-400">
+                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                      </svg>
+                      Verify email first
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => emailVerified && setSelectedPayment("card")}
+                    disabled={!emailVerified}
+                    className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedPayment === "card"
+                      ? "border-blue-500 bg-blue-500/10"
+                      : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                      } disabled:cursor-not-allowed`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded bg-blue-500/20">
+                          <svg className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-white">Credit / Debit Card</p>
+                          <p className="text-sm text-zinc-400">Visa, Mastercard, Amex, etc.</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold text-white">Cryptocurrency</p>
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm text-zinc-400">USDT, Bitcoin, BNB & more</p>
-                          <div className="flex gap-1">
-                            <span className="rounded border border-orange-500/30 bg-orange-500/10 px-1.5 py-0.5 text-[10px] font-medium text-orange-400">TRC20</span>
-                            <span className="rounded border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-medium text-blue-400">ERC20</span>
-                            <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 text-[10px] font-medium text-yellow-400">BSC</span>
+                      <span className="rounded-md bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">Available</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => emailVerified && setSelectedPayment("crypto")}
+                    disabled={!emailVerified}
+                    className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedPayment === "crypto"
+                      ? "border-green-500 bg-green-500/10"
+                      : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                      } disabled:cursor-not-allowed`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded bg-green-500/20">
+                          <span className="text-xl font-bold text-green-400">₿</span>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-white">Cryptocurrency</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm text-zinc-400">USDT, Bitcoin, BNB & more</p>
+                            <div className="flex gap-1">
+                              <span className="rounded border border-orange-500/30 bg-orange-500/10 px-1.5 py-0.5 text-[10px] font-medium text-orange-400">TRC20</span>
+                              <span className="rounded border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-medium text-blue-400">ERC20</span>
+                              <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 text-[10px] font-medium text-yellow-400">BSC</span>
+                            </div>
                           </div>
                         </div>
                       </div>
+                      <span className="rounded-md bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">Available</span>
                     </div>
-                    <span className="rounded-md bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">Available</span>
-                  </div>
-                </button>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => setSelectedPayment("binance")}
-                  className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedPayment === "binance"
-                    ? "border-yellow-500 bg-yellow-500/10"
-                    : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                    }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500/20">
-                        <span className="text-lg font-bold text-yellow-400">BNB</span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPayment("binance")}
+                    className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedPayment === "binance"
+                      ? "border-yellow-500 bg-yellow-500/10"
+                      : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                      }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500/20">
+                          <span className="text-lg font-bold text-yellow-400">BNB</span>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-white">Binance Pay</p>
+                          <p className="text-sm text-zinc-400">Quick crypto payment via Binance</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold text-white">Binance Pay</p>
-                        <p className="text-sm text-zinc-400">Quick crypto payment via Binance</p>
-                      </div>
+                      <span className="rounded-md bg-orange-500/20 px-3 py-1 text-xs font-medium text-orange-400">Coming Soon</span>
                     </div>
-                    <span className="rounded-md bg-orange-500/20 px-3 py-1 text-xs font-medium text-orange-400">Coming Soon</span>
-                  </div>
-                </button>
-              </div>
-            </section>
+                  </button>
+                </div>
+              </section>
+            )}
 
             {/* Crypto Selection - Show when crypto payment is selected */}
             {selectedPayment === "crypto" && (
@@ -876,6 +971,35 @@ function PaymentForm() {
                       </div>
                     </div>
                   </div>
+                ) : !isLifetime ? (
+                  // Subscription Flow: Redirect to Stripe Checkout
+                  <div className="text-center py-6">
+                    <p className="mb-6 text-sm text-zinc-400">
+                      You will be redirected to Stripe's secure checkout page to complete your subscription.
+                    </p>
+                    <button
+                      onClick={handleSubscriptionCheckout}
+                      disabled={loadingStripe || !agreedToTerms}
+                      className="inline-flex w-full items-center justify-center rounded-md bg-[#5e17eb] px-6 py-3 font-medium text-white hover:bg-[#4a12b8] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                    >
+                      {loadingStripe ? (
+                        <>
+                          <svg className="mr-2 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          Redirecting...
+                        </>
+                      ) : (
+                        "Proceed to Secure Checkout"
+                      )}
+                    </button>
+                    {!agreedToTerms && (
+                      <p className="mt-2 text-xs text-red-400">
+                        Please agree to the terms and conditions above.
+                      </p>
+                    )}
+                  </div>
                 ) : loadingStripe && !clientSecret ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="text-center">
@@ -968,24 +1092,26 @@ function PaymentForm() {
             )}
 
             {/* Payment Summary */}
-            <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between text-zinc-400">
-                  <span>Subtotal</span>
-                  <span className="text-white">${finalPrice} USD</span>
-                </div>
-                <div className="flex justify-between text-zinc-400">
-                  <span>Processing Fee</span>
-                  <span className="text-white">$0 USD</span>
-                </div>
-                <div className="border-t border-zinc-700 pt-2">
-                  <div className="flex justify-between text-lg font-semibold text-white">
-                    <span>Total</span>
-                    <span>${finalPrice} USD</span>
+            {!isSubscriptionDetailsUpgrade && (
+              <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Subtotal</span>
+                    <span className="text-white">${finalPrice} USD</span>
+                  </div>
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Processing Fee</span>
+                    <span className="text-white">$0 USD</span>
+                  </div>
+                  <div className="border-t border-zinc-700 pt-2">
+                    <div className="flex justify-between text-lg font-semibold text-white">
+                      <span>Total</span>
+                      <span>${finalPrice} USD</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </section>
+              </section>
+            )}
 
             {/* Action Buttons - Only show for crypto payments */}
             {selectedPayment === "crypto" && (

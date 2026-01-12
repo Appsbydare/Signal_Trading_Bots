@@ -149,7 +149,7 @@ export function DarkProductCard({
               </Link>
               {proratedCredit && proratedCredit > 0 && (
                 <p className="text-xs text-center text-emerald-400/80 font-medium">
-                  ${proratedCredit} credit for remaining days
+                  Credits will propagate automatically
                 </p>
               )}
               <Link

@@ -25,6 +25,11 @@ export async function GET() {
         expires_at: license.expires_at,
         status: license.status,
         created_at: license.created_at,
+        subscription_id: license.subscription_id,
+        stripe_customer_id: license.stripe_customer_id,
+        payment_type: license.payment_type,
+        subscription_status: license.subscription_status,
+        subscription_cancel_at_period_end: license.subscription_cancel_at_period_end,
       })),
     });
   } catch (error) {

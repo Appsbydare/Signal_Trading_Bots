@@ -14,12 +14,14 @@ interface PageProps {
 }
 
 export default async function SubscriptionPage({ params }: PageProps) {
+    const { subscriptionId } = await params;
+
     const customer = await getCurrentCustomer();
     if (!customer) {
         redirect("/login");
     }
 
-    const subscription = await getSubscriptionByStripeId(params.subscriptionId);
+    const subscription = await getSubscriptionByStripeId(subscriptionId);
 
     if (!subscription || subscription.email !== customer.email) {
         return (

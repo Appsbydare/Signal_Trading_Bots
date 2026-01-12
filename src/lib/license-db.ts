@@ -69,6 +69,7 @@ export interface LicenseRow {
   currency: string | null;
   upgraded_from?: string | null;
   subscription_id?: string | null;
+  stripe_customer_id?: string | null;
   payment_type?: string | null;
   subscription_status?: string | null;
   subscription_cancel_at_period_end?: boolean | null;
@@ -323,6 +324,7 @@ export interface CreateLicenseArgs {
   amount?: number;
   currency?: string;
   subscription_id?: string;
+  stripe_customer_id?: string;
   payment_type?: string;
   subscription_status?: string;
 }
@@ -341,6 +343,7 @@ export async function createLicense(args: CreateLicenseArgs): Promise<LicenseRow
       amount: args.amount ?? null,
       currency: args.currency ?? "USD",
       subscription_id: args.subscription_id ?? null,
+      stripe_customer_id: args.stripe_customer_id ?? null,
       payment_type: args.payment_type ?? 'one_time',
       subscription_status: args.subscription_status ?? null
     })

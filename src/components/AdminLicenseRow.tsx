@@ -258,7 +258,15 @@ export function AdminLicenseRow({ license, plans }: AdminLicenseRowProps) {
                             }`}>
                             {license.status}
                         </span>
-                        {isSubscription && license.subscription_status && (
+
+                        {/* Trial Badge */}
+                        {isSubscription && license.subscription_status === 'trialing' && (
+                            <span className="inline-flex w-fit rounded-full px-2 py-0.5 text-[10px] font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                Trial Active
+                            </span>
+                        )}
+
+                        {isSubscription && license.subscription_status && license.subscription_status !== 'trialing' && (
                             <span className={`text-[10px] flex items-center gap-1 ${license.subscription_cancel_at_period_end ? 'text-amber-500' : 'text-zinc-500'}`}>
                                 {license.subscription_cancel_at_period_end ? 'Activates Cancel' : 'Auto-renewing'}
                             </span>

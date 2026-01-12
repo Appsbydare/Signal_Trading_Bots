@@ -11,7 +11,6 @@ interface License {
   expires_at: string;
   upgraded_from?: string | null;
   subscription_id?: string | null;
-  stripe_customer_id?: string | null;
   payment_type?: string | null;
   subscription_status?: string | null;
   subscription_cancel_at_period_end?: boolean | null;
@@ -116,34 +115,17 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
                 <td className="whitespace-nowrap px-3 py-3 text-xs text-zinc-300">
                   <div className="flex flex-col gap-1">
                     <div className="font-medium capitalize">{lic.plan}</div>
-                    {lic.upgraded_from && (() => {
-                      const PLAN_RANK: Record<string, number> = {
-                        'starter': 1, 'starter_monthly': 1, 'starter_yearly': 2,
-                        'pro': 3, 'pro_monthly': 3, 'pro_yearly': 4, 'lifetime': 5
-                      };
-                      const rankCurrent = PLAN_RANK[lic.plan] || 0;
-                      const rankPrev = PLAN_RANK[lic.upgraded_from] || 0;
-                      const isDowngrade = rankCurrent < rankPrev;
-
-                      return (
-                        <div className="flex flex-col items-start gap-0.5">
-                          <span className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[0.6rem] font-medium border ${isDowngrade
-                            ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                            : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/20'
-                            }`}>
-                            {isDowngrade ? (
-                              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" /></svg>
-                            ) : (
-                              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-                            )}
-                            {isDowngrade ? 'Downgraded' : 'Upgraded'}
-                          </span>
-                          <span className="text-[0.65rem] text-zinc-500">
-                            From {lic.upgraded_from}
-                          </span>
-                        </div>
-                      );
-                    })()}
+                    {lic.upgraded_from && (
+                      <div className="flex flex-col items-start gap-0.5">
+                        <span className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[0.6rem] font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-500/20">
+                          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                          Upgraded
+                        </span>
+                        <span className="text-[0.65rem] text-zinc-500">
+                          From {lic.upgraded_from}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-xs text-zinc-300">
@@ -178,12 +160,7 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
                     <span className="inline-flex w-fit rounded-full bg-zinc-800 px-2 py-1 text-[0.7rem] capitalize text-zinc-300">
                       {lic.status}
                     </span>
-                    {lic.subscription_status === 'trialing' && (
-                      <span className="inline-flex w-fit rounded-full px-2 py-0.5 text-[0.65rem] font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                        Trial Active
-                      </span>
-                    )}
-                    {isSubscription && lic.subscription_status && lic.subscription_status !== 'trialing' && (lic.subscription_status !== 'active' || lic.subscription_cancel_at_period_end) && (
+                    {isSubscription && lic.subscription_status && (lic.subscription_status !== 'active' || lic.subscription_cancel_at_period_end) && (
                       <span className={`inline-flex w-fit rounded-full px-2 py-0.5 text-[0.65rem] capitalize ${lic.subscription_cancel_at_period_end
                         ? 'bg-amber-500/10 text-amber-500'
                         : 'bg-red-500/10 text-red-500'
@@ -219,46 +196,14 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-right text-xs">
                   <div className="flex justify-end gap-2">
-                    {/* Subscription: Manage Button (Always) */}
-                    {isSubscription && lic.subscription_id && (
-                      <button
-                        onClick={async () => {
-                          try {
-                            const response = await fetch('/api/stripe/portal', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ stripeCustomerId: lic.stripe_customer_id }),
-                            });
-                            const data = await response.json();
-                            if (response.ok && data.url) window.open(data.url, '_blank');
-                            else alert(`Failed to open portal: ${data.error || 'Unknown error'}`);
-                          } catch (err) {
-                            alert('Error opening subscription portal.');
-                          }
-                        }}
+                    {isSubscription && lic.subscription_id ? (
+                      <Link
+                        href={`/portal/subscription/${lic.subscription_id}`}
                         className="rounded-md bg-zinc-700 px-2 py-1 text-[0.7rem] font-medium text-white hover:bg-zinc-600 border border-zinc-600"
                       >
                         Manage Subscription
-                      </button>
-                    )}
-
-                    {/* Subscription: Upgrade Button (Only Monthly) */}
-                    {isSubscription && lic.subscription_id && !lic.plan.toLowerCase().includes('yearly') && (
-                      <Link
-                        href={(() => {
-                          const planName = lic.plan.toLowerCase();
-                          // Determine base plan (starter or pro) to target the Yearly version
-                          const targetPlan = planName.includes('pro') ? 'pro_yearly' : 'starter_yearly';
-                          return `/payment?plan=${targetPlan}&upgrade=true&license_key=${lic.license_key}&lock=true`;
-                        })()}
-                        className="rounded-md bg-[#5e17eb] px-2 py-1 text-[0.7rem] font-medium text-white hover:bg-[#4512c2]"
-                      >
-                        Upgrade
                       </Link>
-                    )}
-
-                    {/* Non-Subscription: Details Button */}
-                    {!isSubscription && (
+                    ) : (
                       <Link
                         href="/products"
                         className="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1 text-[0.7rem] font-medium text-white hover:bg-zinc-700"
@@ -267,20 +212,85 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
                       </Link>
                     )}
 
-                    {/* Non-Subscription: Upgrade/Renew Button */}
-                    {!isSubscription && !isLifetime && (
-                      <Link
-                        href={(() => {
-                          const planName = lic.plan.toLowerCase();
-                          const isYearly = planName.includes('yearly');
-                          const basePlan = planName.replace(' (yearly)', '').trim();
-                          if (isYearly) return `/payment?plan=${basePlan}_yearly&license_key=${lic.license_key}`;
-                          return `/payment?plan=${basePlan}_yearly&upgrade=true&license_key=${lic.license_key}`;
-                        })()}
-                        className="rounded-md bg-[#5e17eb] px-2 py-1 text-[0.7rem] font-medium text-white hover:bg-[#4512c2]"
-                      >
-                        {lic.plan.toLowerCase().includes('yearly') ? "Renew" : "Upgrade"}
-                      </Link>
+                    {/* Show Upgrade/Renew button for all non-lifetime plans */}
+                    {!isLifetime && (
+                      <>
+                        {/* For subscriptions: Use API upgrade */}
+                        {isSubscription && !lic.plan.toLowerCase().includes('yearly') && lic.subscription_status === 'active' ? (
+                          <button
+                            onClick={async () => {
+                              if (!confirm('Upgrade to yearly plan?\n\nYou will be charged the prorated difference immediately and your subscription will be updated to the yearly plan.')) {
+                                return;
+                              }
+
+                              try {
+                                // Extract base plan name correctly
+                                // Handle both formats:
+                                // "starter_monthly" -> "starter_yearly" (database format)
+                                // "Starter (Monthly)" -> "starter_yearly" (display format)
+                                const planName = lic.plan.toLowerCase();
+                                let yearlyPlanId;
+
+                                if (planName.includes('_monthly')) {
+                                  yearlyPlanId = planName.replace('_monthly', '_yearly');
+                                } else {
+                                  const basePlan = planName
+                                    .replace(/\s*\(monthly\)/i, '')
+                                    .replace(/\s*\(yearly\)/i, '')
+                                    .trim();
+                                  yearlyPlanId = `${basePlan}_yearly`;
+                                }
+
+                                console.log('Upgrading:', { planName, yearlyPlanId, subscriptionId: lic.subscription_id });
+
+                                const response = await fetch('/api/subscription/upgrade', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    subscriptionId: lic.subscription_id,
+                                    newPlan: yearlyPlanId,
+                                  }),
+                                });
+
+                                const data = await response.json();
+
+                                if (response.ok) {
+                                  alert('✅ Subscription upgraded successfully!\n\nYour plan has been updated to yearly. Refreshing page...');
+                                  window.location.reload();
+                                } else {
+                                  alert(`❌ Failed to upgrade subscription:\n\n${data.error || 'Unknown error'}\n\nPlease try again or contact support.`);
+                                }
+                              } catch (err) {
+                                alert('❌ Error upgrading subscription.\n\nPlease check your internet connection and try again.');
+                                console.error(err);
+                              }
+                            }}
+                            className="rounded-md bg-[#5e17eb] px-2 py-1 text-[0.7rem] font-medium text-white hover:bg-[#4512c2] transition-colors"
+                          >
+                            Upgrade to Yearly
+                          </button>
+                        ) : !isSubscription ? (
+                          /* For one-time purchases: Redirect to payment page */
+                          <Link
+                            href={(() => {
+                              const planName = lic.plan.toLowerCase();
+                              const isYearly = planName.includes('yearly');
+                              const basePlan = planName.replace(' (yearly)', '').trim();
+
+                              if (isYearly) {
+                                const planId = `${basePlan}_yearly`;
+                                return `/payment?plan=${planId}&license_key=${lic.license_key}`;
+                              } else {
+                                const planId = `${basePlan}_yearly`;
+                                return `/payment?plan=${planId}&upgrade=true&license_key=${lic.license_key}`;
+                              }
+                            })()}
+                            className="rounded-md bg-[#5e17eb] px-2 py-1 text-[0.7rem] font-medium text-white hover:bg-[#4512c2]"
+                          >
+                            {lic.plan.toLowerCase().includes('yearly') ? "Renew" : "Upgrade"}
+                          </Link>
+                        ) : null}
+                      </>
                     )}
                   </div>
                 </td>

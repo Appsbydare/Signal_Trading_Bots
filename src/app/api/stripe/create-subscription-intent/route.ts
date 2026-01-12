@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
             // Get client secret from latest invoice
             const latestInvoice = subscription.latest_invoice as Stripe.Invoice;
-            const paymentIntent = latestInvoice?.payment_intent as Stripe.PaymentIntent;
+            const paymentIntent = (latestInvoice as any)?.payment_intent as Stripe.PaymentIntent;
             clientSecret = paymentIntent?.client_secret;
 
         } else {
@@ -76,7 +76,6 @@ export async function POST(request: NextRequest) {
                     email,
                     fullName,
                     country,
-                    licenseKey,
                     isUpgrade: isUpgrade ? "true" : "false",
                     upgradeLicenseKey: upgradeLicenseKey || "",
                     orderId: `LIFETIME-${Date.now()}` // Simple order ID

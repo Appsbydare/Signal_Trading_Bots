@@ -1,98 +1,104 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { stripe, getOrCreateStripeCustomer } from '@/lib/stripe-server';
-import { getPlanConfig, isSubscriptionPlan } from '@/lib/stripe-products';
-import { generateLicenseKey } from '@/lib/license-keys';
+import { NextRequest, NextResponse } from "next/server";
+import { stripe } from "@/lib/stripe-server";
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
-        if (!stripe) {
-            return NextResponse.json(
-                { error: 'Stripe not configured' },
-                { status: 503 }
-            );
-        }
-
-        const body = await request.json();
-        const { plan, email, fullName, country, isUpgrade, upgradeLicenseKey } = body;
+        const { plan, email, fullName, country } = await req.json();
 
         if (!plan || !email || !fullName || !country) {
             return NextResponse.json(
-                { error: 'Missing required fields' },
+                { error: "Missing required fields" },
                 { status: 400 }
             );
         }
 
-        if (!isSubscriptionPlan(plan)) {
+        // Determine if this is a subscription plan
+        const isLifetime = plan === "lifetime";
+        if (isLifetime) {
             return NextResponse.json(
-                { error: 'Plan is not a subscription' },
+                { error: "Lifetime plans should use embedded form" },
                 { status: 400 }
             );
         }
 
-        const planConfig = getPlanConfig(plan);
-        if (!planConfig) {
-            return NextResponse.json(
-                { error: 'Invalid plan' },
-                { status: 400 }
-            );
+        // Parse plan details
+        const isYearly = plan.endsWith("_yearly");
+        const basePlan = isYearly ? plan.replace("_yearly", "") : plan;
+        const isPro = basePlan === "pro";
+
+        // Calculate price
+        let price = 29;
+        if (isPro) {
+            price = isYearly ? 529 : 49;
+        } else {
+            price = isYearly ? 313 : 29;
         }
 
-        // Get or create Stripe customer
-        const customerId = await getOrCreateStripeCustomer({
-            email,
-            name: fullName,
-            metadata: { country },
-        });
+        const priceInCents = price * 100;
 
-        // Generate license key upfront
+        // Generate license key
+        const generateLicenseKey = () => {
+            const segments = [];
+            for (let i = 0; i < 5; i++) {
+                const segment = Math.random().toString(36).substring(2, 6).toUpperCase();
+                segments.push(segment);
+            }
+            return `STB${segments.join("-")}`;
+        };
+
         const licenseKey = generateLicenseKey();
 
-        // Determine success/cancel URLs
-        const host = request.headers.get("host") || "www.signaltradingbots.com";
-        const protocol = host.includes("localhost") ? "http" : "https";
-        const successUrl = `${protocol}://${host}/payment/success?session_id={CHECKOUT_SESSION_ID}`;
-        const cancelUrl = `${protocol}://${host}/payment?plan=${plan}`;
+        if (!stripe) {
+            throw new Error("Stripe is not configured");
+        }
 
-        // Create Checkout Session
+        // Create Stripe Checkout Session
         const session = await stripe.checkout.sessions.create({
-            customer: customerId,
-            mode: 'subscription',
+            mode: "subscription",
+            payment_method_types: ["card"],
             line_items: [
                 {
-                    price: planConfig.priceId,
+                    price_data: {
+                        currency: "usd",
+                        product_data: {
+                            name: `Signal Trading Bot - ${isPro ? "Pro" : "Starter"} ${isYearly ? "Yearly" : "Monthly"}`,
+                            description: "Telegram Trading Bot License",
+                        },
+                        recurring: {
+                            interval: isYearly ? "year" : "month",
+                        },
+                        unit_amount: priceInCents,
+                    },
                     quantity: 1,
                 },
             ],
-            success_url: successUrl,
-            cancel_url: cancelUrl,
-            metadata: {
-                plan,
-                email,
-                fullName,
-                country,
-                licenseKey,
-                isUpgrade: isUpgrade ? "true" : "false",
-                upgradeLicenseKey: upgradeLicenseKey || "",
-            },
+            customer_email: email,
             subscription_data: {
                 metadata: {
-                    plan,
-                    email,
                     licenseKey,
+                    email,
+                    plan,
+                    fullName,
+                    country,
                 },
+                trial_period_days: (isPro || !isYearly) ? 30 : undefined,
             },
-            allow_promotion_codes: true,
-            billing_address_collection: 'auto',
+            metadata: {
+                licenseKey,
+                email,
+                plan,
+                fullName,
+                country,
+            },
+            success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment?plan=${plan}`,
         });
 
-        return NextResponse.json({
-            sessionId: session.id,
-            licenseKey,
-        });
-    } catch (error) {
-        console.error('Checkout session creation error:', error);
+        return NextResponse.json({ url: session.url });
+    } catch (error: any) {
+        console.error("Error creating checkout session:", error);
         return NextResponse.json(
-            { error: 'Failed to create checkout session' },
+            { error: error.message || "Failed to create checkout session" },
             { status: 500 }
         );
     }

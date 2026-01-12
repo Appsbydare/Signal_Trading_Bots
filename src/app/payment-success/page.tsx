@@ -15,36 +15,71 @@ function PaymentSuccessContent() {
   const [downloading, setDownloading] = useState(false);
   const [downloadStarted, setDownloadStarted] = useState(false);
 
+  const sessionId = searchParams.get("session_id");
+
   useEffect(() => {
-    if (!orderId) {
-      setError("No order ID provided");
+    if (!orderId && !sessionId) {
+      setError("No order ID or Session ID provided");
       setLoading(false);
       return;
     }
 
-    // Fetch order details
+    let pollCount = 0;
+    const maxPolls = 15; // Poll for up to 30 seconds
+
+    // Fetch order details with polling
     const fetchOrderDetails = async () => {
       try {
-        const response = await fetch(`/api/orders/${orderId}/status`);
+        let response;
+        if (sessionId) {
+          response = await fetch(`/api/stripe/session-status?session_id=${sessionId}`);
+        } else {
+          response = await fetch(`/api/orders/${orderId}/status`);
+        }
+
         if (response.ok) {
           const data = await response.json();
-          setOrderDetails(data);
+
+          if (data.status === 'paid' || data.status === 'complete') {
+            setOrderDetails(data);
+            setLoading(false);
+            return true; // Stop polling
+          }
+
+          if (data.downloadExpired && data.licenseKey) {
+            setOrderDetails(data);
+            setLoading(false);
+            return true;
+          }
+
+          // If session is still processing, keep polling
+          if (pollCount < maxPolls) {
+            pollCount++;
+            console.log(`Polling for status... (${pollCount}/${maxPolls})`);
+            setTimeout(fetchOrderDetails, 2000);
+            return false;
+          }
+
+          setOrderDetails(data); // Show whatever we have
+          setLoading(false);
+          return true;
         } else {
-          // For subscriptions, we don't have order details, so just show success
-          console.log("Order not found, assuming subscription payment");
-          setOrderDetails({ orderId, isSubscription: true });
+          // Fallback
+          console.log("Status check failed");
+          setOrderDetails({ orderId: orderId || sessionId, isSubscription: true });
+          setLoading(false);
+          return true;
         }
       } catch (err) {
-        // For subscriptions, we don't have order details, so just show success
-        console.log("Error fetching order, assuming subscription payment");
-        setOrderDetails({ orderId, isSubscription: true });
-      } finally {
+        console.error("Error fetching status:", err);
+        setOrderDetails({ orderId: orderId || sessionId, isSubscription: true });
         setLoading(false);
+        return true;
       }
     };
 
     fetchOrderDetails();
-  }, [orderId]);
+  }, [orderId, sessionId]);
 
   const handleResendEmail = async () => {
     if (!orderId) return;
@@ -169,6 +204,11 @@ function PaymentSuccessContent() {
 
             <p className="mb-8 text-lg text-zinc-300">
               Your license has been successfully upgraded to <span className="font-semibold text-white">{orderDetails.plan}</span>.
+              {orderDetails.upgradedFrom && (
+                <>
+                  {' '}from <span className="font-semibold text-zinc-400">{orderDetails.upgradedFrom}</span>
+                </>
+              )}
               <br />
               All existing settings regarding your license key remain unchanged.
             </p>
@@ -179,6 +219,12 @@ function PaymentSuccessContent() {
                   <span className="text-zinc-400">Order ID</span>
                   <span className="font-mono text-white">{orderId}</span>
                 </div>
+                {orderDetails.upgradedFrom && (
+                  <div className="flex justify-between border-b border-zinc-700 pb-2">
+                    <span className="text-zinc-400">Previous Plan</span>
+                    <span className="font-semibold text-zinc-400">{orderDetails.upgradedFrom}</span>
+                  </div>
+                )}
                 <div className="flex justify-between border-b border-zinc-700 pb-2">
                   <span className="text-zinc-400">New Plan</span>
                   <span className="font-semibold text-emerald-400">{orderDetails.plan}</span>

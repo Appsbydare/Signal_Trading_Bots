@@ -1,5 +1,50 @@
 import Stripe from 'stripe';
 
+// Plan Ranking and Normalization
+export const PLAN_RANK: Record<string, number> = {
+  'starter_monthly': 1,
+  'starter_yearly': 2,
+  'pro_monthly': 3,
+  'pro_yearly': 4,
+  'lifetime': 5
+};
+
+export const normalizePlanName = (p: string | undefined | null): string => {
+  if (!p) return '';
+
+  const lower = p.toLowerCase();
+
+  if (lower.includes('pro') && lower.includes('monthly')) return 'pro_monthly';
+  if (lower.includes('pro') && lower.includes('yearly')) return 'pro_yearly';
+  if (lower.includes('starter') && lower.includes('monthly')) return 'starter_monthly';
+  if (lower.includes('starter') && lower.includes('yearly')) return 'starter_yearly';
+  if (lower.includes('lifetime')) return 'lifetime';
+
+  if (p === 'pro') return 'pro_monthly';
+  if (p === 'starter') return 'starter_monthly';
+
+  return p;
+};
+
+// Helper to map Stripe price to plan name
+export function getPlanFromPrice(price: Stripe.Price | null | undefined, fallbackPlan?: string): string | undefined {
+  if (!price) return fallbackPlan;
+
+  const amount = price.unit_amount || 0;
+  const interval = price.recurring?.interval;
+
+  // Map price amounts to plan names
+  if (interval === 'year') {
+    if (amount === 52900) return 'pro_yearly';
+    if (amount === 31300) return 'starter_yearly';
+  } else if (interval === 'month') {
+    if (amount === 4900) return 'pro_monthly';
+    if (amount === 2900) return 'starter_monthly';
+  }
+
+  return fallbackPlan;
+}
+
 // Check if Stripe is configured
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const isStripeConfigured = !!STRIPE_SECRET_KEY;
@@ -158,7 +203,7 @@ export async function createSubscription(args: {
       save_default_payment_method: 'on_subscription',
       payment_method_types: ['card'],
     },
-    expand: ['latest_invoice.payment_intent'],
+    expand: ['latest_invoice.payment_intent', 'latest_invoice.confirmation_secret'],
   });
 
   return subscription;

@@ -1,0 +1,110 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { stripe } from '@/lib/stripe-server';
+import { getCurrentCustomer } from '@/lib/auth-server';
+import { getSubscriptionByStripeId, updateSubscriptionStatus } from '@/lib/subscription-db';
+import { getPlanConfig } from '@/lib/stripe-products';
+
+export async function POST(request: NextRequest) {
+    try {
+        const customer = await getCurrentCustomer();
+        if (!customer) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const body = await request.json();
+        const { subscriptionId, newPlan } = body;
+
+        if (!subscriptionId || !newPlan) {
+            return NextResponse.json(
+                { error: 'Missing subscriptionId or newPlan' },
+                { status: 400 }
+            );
+        }
+
+        // Verify subscription belongs to this customer
+        const subscription = await getSubscriptionByStripeId(subscriptionId);
+        if (!subscription || subscription.email !== customer.email) {
+            return NextResponse.json(
+                { error: 'Subscription not found or unauthorized' },
+                { status: 404 }
+            );
+        }
+
+        // Get the new plan configuration
+        const planConfig = getPlanConfig(newPlan);
+        if (!planConfig) {
+            return NextResponse.json(
+                { error: 'Invalid plan' },
+                { status: 400 }
+            );
+        }
+
+
+        if (!stripe) {
+            return NextResponse.json(
+                { error: 'Stripe not configured' },
+                { status: 500 }
+            );
+        }
+
+        // Fetch the current Stripe subscription
+        const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId);
+
+        // Update the subscription to the new plan
+        const updatedSubscription = await stripe.subscriptions.update(subscriptionId, {
+            items: [
+                {
+                    id: stripeSubscription.items.data[0].id,
+                    price: planConfig.priceId,
+                },
+            ],
+            proration_behavior: 'create_prorations', // Automatically prorate the difference
+            metadata: {
+                ...stripeSubscription.metadata,
+                plan: newPlan, // Update plan in metadata
+            },
+        });
+
+        // Update our database
+        await updateSubscriptionStatus(subscriptionId, {
+            status: updatedSubscription.status,
+            currentPeriodEnd: new Date((updatedSubscription as any).current_period_end * 1000),
+            cancelAtPeriodEnd: (updatedSubscription as any).cancel_at_period_end,
+            canceledAt: (updatedSubscription as any).canceled_at
+                ? new Date((updatedSubscription as any).canceled_at * 1000)
+                : null,
+            endedAt: (updatedSubscription as any).ended_at
+                ? new Date((updatedSubscription as any).ended_at * 1000)
+                : null,
+        });
+
+        // Also update the license record to reflect the new plan
+        const { getSupabaseClient } = await import('@/lib/supabase-storage');
+        const client = getSupabaseClient();
+
+        await client
+            .from('licenses')
+            .update({
+                plan: planConfig.name, // Update to new plan name (e.g., "Pro (Yearly)")
+                expires_at: new Date((updatedSubscription as any).current_period_end * 1000).toISOString(),
+            })
+            .eq('subscription_id', subscriptionId);
+
+        return NextResponse.json({
+            success: true,
+            message: 'Subscription upgraded successfully',
+            subscription: {
+                id: updatedSubscription.id,
+                status: updatedSubscription.status,
+                plan: planConfig.name,
+                currentPeriodEnd: new Date((updatedSubscription as any).current_period_end * 1000),
+            },
+        });
+    } catch (error: any) {
+        console.error('Subscription upgrade error:', error);
+        return NextResponse.json(
+            { error: error.message || 'Failed to upgrade subscription' },
+            { status: 500 }
+        );
+    }
+}

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyWebhookSignature } from '@/lib/stripe-server';
+import { verifyWebhookSignature, stripe, getPlanFromPrice, normalizePlanName, PLAN_RANK } from '@/lib/stripe-server';
 import { generateLicenseKey } from '@/lib/license-keys';
 import { sendStripeLicenseEmail } from '@/lib/email-stripe';
 import { getStripeOrderByPaymentIntent, updateStripeOrderByPaymentIntent } from '@/lib/orders-supabase';
@@ -158,6 +158,7 @@ export async function POST(request: NextRequest) {
             amount: session.amount_total ? session.amount_total / 100 : 0,
             currency: session.currency || 'usd',
             subscription_id: subscriptionId,
+            stripe_customer_id: customerId,
             payment_type: 'subscription',
             subscription_status: 'active'
           });
@@ -194,37 +195,308 @@ export async function POST(request: NextRequest) {
         const subscriptionId = subscription.id;
         const status = subscription.status;
 
-        // Validate and convert Unix timestamps to Date objects
+        // Extract metadata early so we can use it for fallback calculations
+        const metadata = subscription.metadata || {};
+        console.log("Subscription Metadata:", JSON.stringify(metadata, null, 2));
+
+        const licenseKey = metadata.licenseKey;
+        const email = metadata.email;
+        const plan = metadata.plan;
+
+        // ---------------------------------------------------------
+        // 1. Determine the REAL Plan from Subscription Items (Hoisted)
+        // ---------------------------------------------------------
+        let derivedPlan: string | undefined;
+        let priceItem: Stripe.Price | undefined;
+
+        if (subscription.items && subscription.items.data.length > 0) {
+          priceItem = subscription.items.data[0].price;
+          derivedPlan = getPlanFromPrice(priceItem);
+        }
+
+        // Fallback to metadata if we couldn't derive from price
+        // Note: metadata.plan might be stale on upgrades, so derivedPlan takes precedence
+        const finalPlan = derivedPlan || plan;
+
+        console.log(`Plan Detection: Derived='${derivedPlan}', Metadata='${plan}', Final='${finalPlan}'`);
+
+        // ---------------------------------------------------------
+        // 2. Validate and convert Unix timestamps to Date objects
+        // ---------------------------------------------------------
+        // Use strong typing from Stripe definition -- Casting to any because TS definition seems to miss these common fields in this version?
         const currentPeriodStartTimestamp = (subscription as any).current_period_start;
         const currentPeriodEndTimestamp = (subscription as any).current_period_end;
 
-        if (!currentPeriodStartTimestamp || !currentPeriodEndTimestamp) {
-          console.error('Missing period timestamps in subscription:', subscriptionId);
-          return NextResponse.json({ received: true, skipped: 'missing_timestamps' });
+        let currentPeriodStart: Date;
+        let currentPeriodEnd: Date;
+
+        // Start Date Logic
+        if (currentPeriodStartTimestamp) {
+          currentPeriodStart = new Date(currentPeriodStartTimestamp * 1000);
+        } else {
+          const d = (subscription as any).start_date;
+          if (d) currentPeriodStart = new Date(d * 1000);
+          else currentPeriodStart = new Date();
         }
+        if (isNaN(currentPeriodStart.getTime())) currentPeriodStart = new Date();
 
-        const currentPeriodStart = new Date(currentPeriodStartTimestamp * 1000);
-        const currentPeriodEnd = new Date(currentPeriodEndTimestamp * 1000);
+        // End Date Logic with Interval Fallback (Respecting Status)
+        if (currentPeriodEndTimestamp) {
+          currentPeriodEnd = new Date(currentPeriodEndTimestamp * 1000);
+        } else {
+          console.warn('Missing period end timestamp, deriving from interval...');
+          // Only extend if Active or Trialing
+          if (['active', 'trialing'].includes(status)) {
+            const interval = subscription.items?.data[0]?.price?.recurring?.interval;
+            currentPeriodEnd = new Date();
 
-        // Validate that dates are valid
-        if (isNaN(currentPeriodStart.getTime()) || isNaN(currentPeriodEnd.getTime())) {
-          console.error('Invalid period dates in subscription:', subscriptionId);
-          return NextResponse.json({ received: true, skipped: 'invalid_dates' });
+            if (interval === 'year') {
+              currentPeriodEnd.setFullYear(currentPeriodEnd.getFullYear() + 1);
+            } else if (subscription.trial_end) {
+              currentPeriodEnd = new Date(subscription.trial_end * 1000);
+            } else {
+              currentPeriodEnd.setDate(currentPeriodEnd.getDate() + 30);
+            }
+          } else {
+            // If canceled/unpaid, assume ended
+            if (subscription.ended_at) currentPeriodEnd = new Date(subscription.ended_at * 1000);
+            else currentPeriodEnd = new Date(); // Now
+          }
+        }
+        if (isNaN(currentPeriodEnd.getTime())) {
+          currentPeriodEnd = new Date();
+          currentPeriodEnd.setDate(currentPeriodEnd.getDate() + 30); // Default safety? Or dangerous?
+          // If we fell through to here, something is wrong.
+          // If status was canceled, we don't want +30.
+          if (!['active', 'trialing'].includes(status)) currentPeriodEnd = new Date();
         }
 
         const cancelAtPeriodEnd = subscription.cancel_at_period_end;
         const canceledAt = subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null;
         const endedAt = subscription.ended_at ? new Date(subscription.ended_at * 1000) : null;
 
-        const metadata = subscription.metadata || {};
-        const licenseKey = metadata.licenseKey;
-        const email = metadata.email;
-        const plan = metadata.plan;
-
         // Note: usage of 'metadata' relies on it being copied from Checkout Session to Subscription
         // Ensure 'subscription_data.metadata' was set in Checkout Session creation.
 
-        // Upsert Subscription Record
+        const client = (await import('@/lib/supabase-storage')).getSupabaseClient();
+
+        // 1. Update License Logic (Robust)
+        // First, try to find and update by subscription_id (Most reliable for existing subs)
+        const { data: licenseBySub } = await client
+          .from('licenses')
+          .select('id, license_key, plan')
+          .eq('subscription_id', subscriptionId)
+          .maybeSingle();
+
+        if (licenseBySub) {
+          console.log(`Updating license ${licenseBySub.license_key} for subscription ${subscriptionId} (Status: ${status})`);
+
+          const normalizePlanName = (p: string | undefined | null) => {
+            if (!p) return '';
+            if (p === 'pro') return 'pro_monthly';
+            if (p === 'starter') return 'starter_monthly';
+            return p;
+          };
+
+          const PLAN_RANK: Record<string, number> = {
+            'starter_monthly': 1,
+            'starter_yearly': 2,
+            'pro_monthly': 3,
+            'pro_yearly': 4,
+            'lifetime': 5
+          };
+
+          const updatedPlan = finalPlan;
+          const oldPlan = licenseBySub.plan;
+
+          const normalizedOld = normalizePlanName(oldPlan);
+          const normalizedNew = normalizePlanName(updatedPlan);
+
+          const updateData: any = {
+            subscription_status: status,
+            subscription_current_period_end: currentPeriodEnd.toISOString(),
+            subscription_cancel_at_period_end: cancelAtPeriodEnd,
+            expires_at: currentPeriodEnd.toISOString(),
+            // Ensure we set the normalized plan name if it changed
+            plan: normalizedNew || updatedPlan
+          };
+
+          // Logic for Plan Change badge
+          if (normalizedNew !== normalizedOld) {
+            console.log(`Plan change detected: ${normalizedOld} -> ${normalizedNew}`);
+            updateData.upgraded_from = normalizedOld;
+          } else {
+            // Same plan (normalized). E.g. pro -> pro_monthly
+            // Ensure existing upgraded_from is NOT touched?
+            // Actually, if we are normalizing, we might want to clear it if it was erroneously set?
+            // If a user refreshes "pro_monthly", it shouldn't say "Upgraded from pro".
+            if (oldPlan === 'pro' && updatedPlan === 'pro_monthly') {
+              updateData.upgraded_from = null;
+            }
+          }
+
+
+          if (updatedPlan) {
+            // Also update Stripe subscription metadata for future webhooks
+            if (stripe && updatedPlan !== subscription.metadata?.plan) {
+              try {
+                // Sync metadata to NEW plan name
+                await stripe.subscriptions.update(subscriptionId, {
+                  metadata: {
+                    ...subscription.metadata,
+                    plan: normalizedNew || updatedPlan
+                  }
+                });
+                console.log(`Updated Stripe subscription metadata with plan: ${normalizedNew || updatedPlan}`);
+              } catch (err) {
+                console.error('Failed to update Stripe subscription metadata:', err);
+              }
+            }
+          }
+
+          await client.from('licenses').update(updateData).eq('id', licenseBySub.id);
+        }
+
+        // If not found by sub ID, check if we need to CREATE it using metadata (Fallback/New Logic)
+        else if (licenseKey) {
+          const { data: existingLicense } = await client
+            .from('licenses')
+            .select('id, plan')
+            .eq('license_key', licenseKey)
+            .maybeSingle();
+
+          let targetLicenseForUpdate = existingLicense;
+
+          if (!targetLicenseForUpdate && (status === 'active' || status === 'trialing')) {
+            // License missing - CREATE IT
+            console.log(`License missing for subscription ${subscriptionId}, creating...`);
+
+            const priceItem = subscription.items.data[0]?.price;
+            const amountCents = priceItem?.unit_amount || 0;
+            const amountDollars = amountCents / 100;
+
+            try {
+              await createLicense({
+                licenseKey,
+                email: email || '',
+                plan: finalPlan || 'pro_monthly',
+                expiresAt: currentPeriodEnd,
+                paymentId: typeof subscription.latest_invoice === 'string' ? subscription.latest_invoice : subscription.latest_invoice?.id || 'SUB-INV',
+                amount: amountDollars,
+                currency: priceItem?.currency || 'usd',
+                payment_type: 'subscription',
+                subscription_id: subscriptionId,
+                subscription_status: status
+              });
+
+              // Send Emails only if we successfully CREATED (avoid double sending)
+              if (email) {
+                try {
+                  const magicLinkToken = await createMagicLinkToken(email);
+                  const magicLinkUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/verify-magic-link?token=${magicLinkToken}`;
+                  const fullName = metadata.fullName || 'Valued Customer';
+
+                  let downloadUrl = "";
+                  if (isR2Enabled()) {
+                    try {
+                      const downloadToken = await createDownloadToken({
+                        licenseKey,
+                        email: email,
+                        fileName: getExeFileName(),
+                        ipAddress: request.headers.get("x-forwarded-for") || "webhook",
+                        userAgent: "stripe-webhook-sub",
+                      });
+                      downloadUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/download/${downloadToken.token}`;
+                    } catch (dtErr) {
+                      console.error("Failed to generate download token:", dtErr);
+                    }
+                  }
+
+                  await sendStripeLicenseEmail({
+                    to: email,
+                    fullName: fullName,
+                    licenseKey: licenseKey,
+                    plan: plan || 'Subscription',
+                    orderId: typeof subscription.latest_invoice === 'string' ? subscription.latest_invoice : subscription.latest_invoice?.id || 'SUB-INV',
+                    amount: amountDollars,
+                    magicLinkUrl: magicLinkUrl,
+                    downloadUrl: downloadUrl
+                  });
+                } catch (e) {
+                  console.error("Error sending email:", e);
+                }
+              }
+            } catch (err: any) {
+              // HANDLE RACE CONDITION: 23505 = Unique Violation (Already exists)
+              if (err.code === '23505' || err.message?.includes('duplicate key')) {
+                console.log(`Race condition detected: License ${licenseKey} already created. Switching to Update/Link.`);
+                // Fetch the license that won the race
+                const { data: raceWinner } = await client
+                  .from('licenses')
+                  .select('id, plan')
+                  .eq('license_key', licenseKey)
+                  .maybeSingle(); // Use maybeSingle to be safe
+
+                targetLicenseForUpdate = raceWinner;
+              } else {
+                console.error('Failed to create license:', err);
+              }
+            }
+          }
+
+          // If we found an existing license OR fell back to it from race condition
+          if (targetLicenseForUpdate) {
+            // This case implies we need to LINK the license to the Subscription
+            console.log(`Linking license ${licenseKey} to subscription ${subscriptionId}`);
+
+            const updatedPlan = finalPlan;
+
+            const updateData: any = {
+              subscription_id: subscriptionId,
+              subscription_status: status,
+              subscription_current_period_end: currentPeriodEnd.toISOString(),
+              subscription_cancel_at_period_end: cancelAtPeriodEnd,
+              expires_at: currentPeriodEnd.toISOString(),
+              plan: normalizePlanName(updatedPlan) || updatedPlan
+            };
+
+            // Update plan if we have it (important for upgrades/downgrades via Stripe Portal)
+            if (updatedPlan) {
+              const oldPlan = targetLicenseForUpdate.plan;
+              const normalizedOld = normalizePlanName(oldPlan);
+              const normalizedNew = normalizePlanName(updatedPlan);
+
+              // Check if plan actually changed (upgrade/downgrade)
+              if (normalizedOld !== normalizedNew) {
+                // Always store the previous plan so we can show "Upgraded From" or "Downgraded From"
+                console.log(`Plan change detected (Linking): ${normalizedOld} -> ${normalizedNew}`);
+                updateData.upgraded_from = normalizedOld;
+
+                console.log(`Plan changed from ${oldPlan} to ${updatedPlan} (Normalized: ${normalizedOld} -> ${normalizedNew})`);
+              } else if (!oldPlan) {
+                updateData.plan = updatedPlan;
+              }
+
+              // Also update Stripe subscription metadata for future webhooks
+              if (stripe && updatedPlan !== subscription.metadata?.plan) {
+                try {
+                  await stripe.subscriptions.update(subscriptionId, {
+                    metadata: {
+                      ...subscription.metadata,
+                      plan: updatedPlan
+                    }
+                  });
+                } catch (err) {
+                  console.error('Failed to update Stripe subscription metadata:', err);
+                }
+              }
+            }
+
+            await client.from('licenses').update(updateData).eq('license_key', licenseKey);
+          }
+        }
+
+        // 2. Upsert Subscription Record
         // We first check if it exists
         const existingSub = await getSubscriptionByStripeId(subscriptionId);
 
@@ -236,94 +508,37 @@ export async function POST(request: NextRequest) {
             canceledAt,
             endedAt
           });
-        } else if (licenseKey && email && plan) {
-          // Create if missing (e.g. if webhook arrived before checkout session ?)
-          await createSubscription({
-            stripeSubscriptionId: subscriptionId,
-            stripeCustomerId: subscription.customer as string,
-            licenseKey,
-            email,
-            planId: plan,
-            status,
-            currentPeriodStart,
-            currentPeriodEnd
-          });
-        }
-
-        // Update License Expiration & Status
-        // Finding license by key (if we have it) or by subscription_id
-        if (existingSub || licenseKey) {
-          const client = (await import('@/lib/supabase-storage')).getSupabaseClient();
-
-          // If active, extend license expiry to period end
-          if (status === 'active' || status === 'trialing') {
-            const updateData: any = {
-              subscription_status: status,
-              subscription_current_period_end: currentPeriodEnd.toISOString(),
-              subscription_cancel_at_period_end: cancelAtPeriodEnd,
-              expires_at: currentPeriodEnd.toISOString() // Sync license expiry with sub period
-            };
-
-            if (licenseKey) {
-              // Check if license exists
-              const { data: existingLicense } = await client
-                .from('licenses')
-                .select('id')
-                .eq('license_key', licenseKey)
-                .maybeSingle();
-
-              if (existingLicense) {
-                await client.from('licenses').update(updateData).eq('license_key', licenseKey);
-              } else {
-                // License missing (e.g. Standard Flow where PI event was skipped) - CREATE IT
-                console.log(`License missing for active subscription ${subscriptionId}, creating...`);
-
-                // Get price from subscription items
-                const priceItem = subscription.items.data[0]?.price;
-                const amountCents = priceItem?.unit_amount || 0;
-                const amountDollars = amountCents / 100;
-                const fullName = metadata.fullName || 'Valued Customer';
-
-                await createLicense({
-                  licenseKey,
-                  email: email || '',
-                  plan: plan || 'pro_monthly', // fallback
-                  expiresAt: currentPeriodEnd,
-                  paymentId: subscription.latest_invoice as string, // Link to invoice
-                  amount: amountDollars,
-                  currency: priceItem?.currency || 'usd',
-                  payment_type: 'subscription',
-                  subscription_id: subscriptionId,
-                  subscription_status: status
-                });
-
-                if (email) {
-                  // Generate a magic link for easy login
-                  const magicLinkToken = await createMagicLinkToken(email);
-                  const magicLinkUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/verify-magic-link?token=${magicLinkToken}`;
-
-                  await sendStripeLicenseEmail({
-                    to: email,
-                    fullName: fullName,
-                    licenseKey: licenseKey,
-                    plan: plan || 'Subscription',
-                    orderId: typeof subscription.latest_invoice === 'string' ? subscription.latest_invoice : subscription.latest_invoice?.id || 'SUB-INV',
-                    amount: amountDollars,
-                    magicLinkUrl: magicLinkUrl
-                  });
-                }
-              }
-
-            } else {
-              // No license key in metadata? Try to find by subscription_id
-              await client.from('licenses').update(updateData).eq('subscription_id', subscriptionId);
+        } else if (licenseKey && email && plan && (status === 'active' || status === 'trialing')) {
+          // Create if missing (only for active/trialing subscriptions that have licenses)
+          try {
+            await createSubscription({
+              stripeSubscriptionId: subscriptionId,
+              stripeCustomerId: subscription.customer as string,
+              licenseKey,
+              email,
+              planId: plan,
+              status,
+              currentPeriodStart,
+              currentPeriodEnd
+            });
+          } catch (err: any) {
+            console.error("Failed to create subscription record:", err);
+            // Verify if it was FK error
+            if (err.code === '23503') {
+              console.error("License key still missing despite check!");
             }
-          } else {
-            // Past due, canceled, unpaid
-            await client.from('licenses').update({
-              subscription_status: status,
-              subscription_cancel_at_period_end: cancelAtPeriodEnd
-            }).eq('subscription_id', subscriptionId);
+          }
+        }
+        // 3. Sync Order Status (Crucial because we skip payment_intent.succeeded for subscriptions)
+        const orderId = metadata.orderId;
+        if (orderId && licenseKey && (status === 'active' || status === 'trialing')) {
+          console.log(`Syncing order ${orderId} status to paid with license ${licenseKey}`);
+          try {
+            // Import dynamically to avoid circular dependencies if any, or just use the imported one
+            const { updateStripeOrderStatus } = await import('@/lib/orders-supabase');
+            await updateStripeOrderStatus(orderId, 'paid', licenseKey);
+          } catch (err) {
+            console.error(`Failed to sync order status for ${orderId}:`, err);
           }
         }
         break;
@@ -336,14 +551,25 @@ export async function POST(request: NextRequest) {
         const subscription = event.data.object as Stripe.Subscription;
         console.log('Subscription deleted:', subscription.id);
 
+        const endedAt = subscription.ended_at
+          ? new Date(subscription.ended_at * 1000)
+          : new Date();
+
         await updateSubscriptionStatus(subscription.id, {
           status: subscription.status,
-          endedAt: new Date()
+          endedAt: endedAt
         });
 
-        // Mark license as expired/canceled?
-        // Usually we keep the expiry date as is, but if it was immediate cancel, we might need to check.
-        // For now, just updating status is enough.
+        // Update License to reflect cancellation/expiration
+        const client = (await import('@/lib/supabase-storage')).getSupabaseClient();
+        await client.from('licenses')
+          .update({
+            subscription_status: subscription.status,
+            expires_at: endedAt.toISOString()
+          })
+          .eq('subscription_id', subscription.id);
+
+        console.log(`Marked license for subscription ${subscription.id} as ${subscription.status} (Ended: ${endedAt.toISOString()})`);
         break;
       }
 
@@ -382,9 +608,11 @@ export async function POST(request: NextRequest) {
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         console.log('PaymentIntent succeeded:', paymentIntent.id);
+        console.log('PI Invoice:', (paymentIntent as any).invoice);
 
         // Ignore if this PI belongs to a subscription invoice (handled by checkout/invoice events)
-        if ((paymentIntent as any).invoice) {
+        if ((paymentIntent as any).invoice || paymentIntent.description?.includes("Subscription")) {
+          console.log("Skipping payment_intent.succeeded for subscription payment");
           break;
         }
 
