@@ -47,6 +47,13 @@ export function CountrySelect({ value, onChange, disabled, required, className }
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      onInput={(e) => {
+        // Handle autofill - onInput fires even when browser autofills
+        const target = e.target as HTMLSelectElement;
+        if (target.value && target.value !== value) {
+          onChange(target.value);
+        }
+      }}
       disabled={disabled}
       required={required}
       className={`w-full rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-white placeholder:text-zinc-500 focus:border-blue-500 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed ${className || ''}`}

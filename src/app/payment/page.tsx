@@ -589,6 +589,13 @@ function PaymentForm() {
                     required
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    onInput={(e) => {
+                      // Handle autofill - onInput fires even when browser autofills
+                      const target = e.target as HTMLInputElement;
+                      if (target.value && target.value !== formData.fullName) {
+                        setFormData({ ...formData, fullName: target.value });
+                      }
+                    }}
                     placeholder="John Doe"
                     disabled={isLoggedIn && !purchaseForDifferentEmail}
                     className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-white placeholder:text-zinc-500 focus:border-blue-500 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
@@ -612,8 +619,36 @@ function PaymentForm() {
                       setEmailVerified(false);
                       setShowVerification(false);
                     }}
+                    onInput={(e) => {
+                      // Handle autofill - onInput fires even when browser autofills
+                      const target = e.target as HTMLInputElement;
+                      const newValue = target.value;
+                      const oldValue = formData.email;
+
+                      // Only trigger auto-verification if this looks like autofill:
+                      // - Significant value change (more than 3 characters difference)
+                      // - Or value went from empty to filled
+                      const isLikelyAutofill = (oldValue === "" && newValue.length > 5) ||
+                        (Math.abs(newValue.length - oldValue.length) > 3);
+
+                      if (newValue && newValue !== oldValue) {
+                        setFormData({ ...formData, email: newValue });
+                        setEmailVerified(false);
+
+                        // Only auto-show verification if it's likely autofill AND email is valid
+                        // Require at least 2 chars after the dot (e.g., .com, .net, .co.uk)
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+                        if (isLikelyAutofill && emailRegex.test(newValue) && !emailVerified && (!isLoggedIn || purchaseForDifferentEmail)) {
+                          // Use setTimeout to ensure state update happens first
+                          setTimeout(() => setShowVerification(true), 100);
+                        }
+                      }
+                    }}
                     onBlur={() => {
-                      if (formData.email && formData.email.includes("@") && !emailVerified) {
+                      // Only show verification if email is valid and complete
+                      // Require at least 2 chars after the dot (e.g., .com, .net, .co.uk)
+                      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+                      if (formData.email && emailRegex.test(formData.email) && !emailVerified) {
                         setShowVerification(true);
                       }
                     }}
