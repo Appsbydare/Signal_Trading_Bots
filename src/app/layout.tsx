@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Script from "next/script";
 import Image from "next/image";
 import localFont from "next/font/local";
 import { Geist, Geist_Mono } from "next/font/google";

@@ -14,11 +14,12 @@ export function EmailVerification({ email, onVerified }: EmailVerificationProps)
   const [error, setError] = useState<string | null>(null);
   const [codeSent, setCodeSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [userExists, setUserExists] = useState(false);
 
   // Get email provider for inbox button
   const getEmailProvider = (email: string): { name: string; url: string } | null => {
     const domain = email.split("@")[1]?.toLowerCase();
-    
+
     if (domain?.includes("gmail")) {
       return { name: "Gmail", url: "https://mail.google.com" };
     } else if (domain?.includes("outlook") || domain?.includes("hotmail") || domain?.includes("live")) {
@@ -28,7 +29,7 @@ export function EmailVerification({ email, onVerified }: EmailVerificationProps)
     } else if (domain?.includes("icloud") || domain?.includes("me.com")) {
       return { name: "iCloud", url: "https://www.icloud.com/mail" };
     }
-    
+
     return null;
   };
 
@@ -45,6 +46,7 @@ export function EmailVerification({ email, onVerified }: EmailVerificationProps)
   async function handleSendCode() {
     setSending(true);
     setError(null);
+    setUserExists(false);
 
     try {
       const response = await fetch("/api/auth/send-verification-code", {
@@ -56,6 +58,10 @@ export function EmailVerification({ email, onVerified }: EmailVerificationProps)
       const data = await response.json();
       if (!response.ok || !data.success) {
         setError(data.message || "Failed to send code");
+        // Check if user already exists
+        if (data.userExists) {
+          setUserExists(true);
+        }
         return;
       }
 
@@ -120,74 +126,92 @@ export function EmailVerification({ email, onVerified }: EmailVerificationProps)
       </div>
 
       {error && (
-        <div className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+        <div className={`rounded-md border px-3 py-2 text-sm ${userExists
+          ? 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+          : 'border-red-500/30 bg-red-500/10 text-red-300'
+          }`}>
           {error}
+          {userExists && (
+            <div className="mt-2">
+              <a
+                href="/login"
+                className="inline-flex items-center gap-1 font-semibold text-amber-200 hover:text-amber-100 underline"
+              >
+                Go to Login Page
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </a>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Verification Code Input */}
-      <form onSubmit={handleVerify} className="space-y-4">
-        <div>
-          <label className="mb-2 block text-sm font-medium text-zinc-300">
-            Enter 6-Digit Code
-          </label>
-          <input
-            type="text"
-            value={code}
-            onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-            placeholder="000000"
-            maxLength={6}
-            required
-            className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-4 py-3 text-center text-2xl font-mono font-bold tracking-[0.5em] text-white placeholder:text-zinc-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <p className="mt-1 text-xs text-zinc-500">
-            Code expires in 15 minutes
-          </p>
-        </div>
+      {/* Verification Code Input - Only show if user doesn't already exist */}
+      {!userExists && (
+        <form onSubmit={handleVerify} className="space-y-4">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-zinc-300">
+              Enter 6-Digit Code
+            </label>
+            <input
+              type="text"
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="000000"
+              maxLength={6}
+              required
+              className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-4 py-3 text-center text-2xl font-mono font-bold tracking-[0.5em] text-white placeholder:text-zinc-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="mt-1 text-xs text-zinc-500">
+              Code expires in 15 minutes
+            </p>
+          </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            disabled={verifying || code.length !== 6}
-            className="flex-1 rounded-md bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2.5 text-sm font-medium text-white transition hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {verifying ? "Verifying..." : "Verify & Continue"}
-          </button>
-
-          {emailProvider && (
-            <a
-              href={emailProvider.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-800/50 px-4 py-2.5 text-sm font-medium text-zinc-300 transition hover:bg-zinc-700"
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={verifying || code.length !== 6}
+              className="flex-1 rounded-md bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2.5 text-sm font-medium text-white transition hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              Open {emailProvider.name}
-            </a>
-          )}
-        </div>
+              {verifying ? "Verifying..." : "Verify & Continue"}
+            </button>
 
-        {/* Resend Code */}
-        <div className="text-center">
-          <button
-            type="button"
-            onClick={handleSendCode}
-            disabled={sending || countdown > 0}
-            className="text-sm text-zinc-400 hover:text-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {sending ? (
-              "Sending..."
-            ) : countdown > 0 ? (
-              `Resend code in ${countdown}s`
-            ) : (
-              "Didn't receive code? Resend"
+            {emailProvider && (
+              <a
+                href={emailProvider.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-800/50 px-4 py-2.5 text-sm font-medium text-zinc-300 transition hover:bg-zinc-700"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Open {emailProvider.name}
+              </a>
             )}
-          </button>
-        </div>
-      </form>
+          </div>
+
+          {/* Resend Code */}
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={handleSendCode}
+              disabled={sending || countdown > 0}
+              className="text-sm text-zinc-400 hover:text-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {sending ? (
+                "Sending..."
+              ) : countdown > 0 ? (
+                `Resend code in ${countdown}s`
+              ) : (
+                "Didn't receive code? Resend"
+              )}
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

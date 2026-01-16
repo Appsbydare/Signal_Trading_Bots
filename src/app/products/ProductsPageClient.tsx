@@ -9,6 +9,7 @@ import { ProductTabPill } from "@/components/ProductTabPill";
 import { ComingSoonMessage } from "@/components/ComingSoonMessage";
 import TelegramLogo from "../../../assets/telegram.webp";
 import MT5Logo from "../../../assets/mt5.png";
+import { TrialBanner } from "@/components/TrialBanner";
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -217,345 +218,346 @@ export function ProductsPageClient() {
   };
 
   return (
-    <div className="space-y-4">
-      <motion.section
-        initial="hidden"
-        animate="visible"
-        variants={staggerContainer}
-        className="space-y-2"
-      >
-        <motion.h1 id="choose-bot" variants={fadeInUp} className="brand-heading text-xl font-semibold tracking-tight">
-          Products
-        </motion.h1>
-        <motion.div variants={fadeInUp} className="flex items-center justify-between gap-4">
-          <p className="text-sm text-zinc-400 flex-1">
-            Automate MT5 trades from Telegram signals today, and explore upcoming bots
-            for WhatsApp and rule‑based MT5/MT4 strategies. Choose the automation that
-            best fits your trading workflow.
-          </p>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-xs font-medium text-zinc-500">Compatible with:</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 border-2 border-[#5e17eb] shadow-md p-1.5 overflow-hidden transition hover:scale-110">
-              <Image
-                src={TelegramLogo}
-                alt="Telegram Compatible"
-                title="Works with Telegram signals"
-                width={32}
-                height={32}
-                className="h-full w-full object-contain"
-                loading="lazy"
-              />
-            </div>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#5e17eb] shadow-md p-1.5 overflow-hidden transition hover:scale-110">
-              <Image
-                src={MT5Logo}
-                alt="MT5 Supported"
-                title="Executes trades via MetaTrader 5"
-                width={32}
-                height={32}
-                className="h-full w-full object-contain"
-                loading="lazy"
-              />
-            </div>
-          </div>
-        </motion.div>
-      </motion.section>
-
-      {/* Unified Product Selection & Pricing Section */}
-      <section id="product-selector" className="space-y-3">
-        {/* Horizontal Product Tabs */}
-        <motion.div
+    <div className="w-screen ml-[calc(50%-50vw)] bg-white min-h-screen py-12">
+      <div className="max-w-6xl mx-auto px-6 space-y-12">
+        <motion.section
           initial="hidden"
           animate="visible"
           variants={staggerContainer}
           className="space-y-2"
         >
-          <motion.h2 variants={fadeInUp} className="text-sm font-semibold text-zinc-400">
-            Choose your bot
-          </motion.h2>
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-            {products.map((product) => (
-              <ProductTabPill
-                key={product.id}
-                product={product}
-                isActive={product.id === activeProduct}
-                onClick={() => setActiveProduct(product.id)}
-              />
-            ))}
-          </div>
-        </motion.div>
+          <motion.h1 id="choose-bot" variants={fadeInUp} className="text-4xl font-extrabold uppercase tracking-tight text-zinc-900">
+            Products
+          </motion.h1>
+          <motion.div variants={fadeInUp} className="flex items-center justify-between gap-4">
+            <p className="text-sm text-zinc-600 flex-1">
+              Automate MT5 trades from Telegram signals today, and explore upcoming bots
+              for WhatsApp and rule‑based MT5/MT4 strategies. Choose the automation that
+              best fits your trading workflow.
+            </p>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className="text-xs font-medium text-zinc-500">Compatible with:</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 border-2 border-[#5e17eb] shadow-md p-1.5 overflow-hidden transition hover:scale-110">
+                <Image
+                  src={TelegramLogo}
+                  alt="Telegram Compatible"
+                  title="Works with Telegram signals"
+                  width={32}
+                  height={32}
+                  className="h-full w-full object-contain"
+                  loading="lazy"
+                />
+              </div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#5e17eb] shadow-md p-1.5 overflow-hidden transition hover:scale-110">
+                <Image
+                  src={MT5Logo}
+                  alt="MT5 Supported"
+                  title="Executes trades via MetaTrader 5"
+                  width={32}
+                  height={32}
+                  className="h-full w-full object-contain"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </motion.div>
+        </motion.section>
 
-        {/* Product Details & Pricing Layout */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeInUp}
-          className="space-y-6"
-        >
-          {(() => {
-            const selectedProduct = products.find((p) => p.id === activeProduct);
-            if (!selectedProduct) return null;
+        {/* Unified Product Selection & Pricing Section */}
+        <section id="product-selector" className="space-y-3">
+          {/* Horizontal Product Tabs */}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={staggerContainer}
+            className="space-y-2"
+          >
+            <motion.h2 variants={fadeInUp} className="text-sm font-semibold text-zinc-500">
+              Choose your bot
+            </motion.h2>
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+              {products.map((product) => (
+                <ProductTabPill
+                  key={product.id}
+                  product={product}
+                  isActive={product.id === activeProduct}
+                  onClick={() => setActiveProduct(product.id)}
+                />
+              ))}
+            </div>
+          </motion.div>
 
-            return (
-              <>
-                {/* Product Details - Collapsible */}
-                <div className="rounded-xl border border-zinc-700 bg-gradient-to-br from-zinc-900 to-black shadow-lg overflow-hidden">
-                  {/* Collapsible Header */}
-                  <button
-                    onClick={() => setShowProductDetails(!showProductDetails)}
-                    className="w-full flex items-center justify-between p-4 text-left hover:bg-zinc-800/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-lg font-bold text-white">
-                        {selectedProduct.name}
-                      </h3>
-                      <span
-                        className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
-                          selectedProduct.statusTone === "primary"
+          {/* Product Details & Pricing Layout */}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={fadeInUp}
+            className="space-y-6"
+          >
+            {(() => {
+              const selectedProduct = products.find((p) => p.id === activeProduct);
+              if (!selectedProduct) return null;
+
+              return (
+                <>
+                  {/* Product Details - Collapsible */}
+                  <div className="rounded-xl border border-zinc-700 bg-gradient-to-br from-zinc-900 to-black shadow-lg overflow-hidden">
+                    {/* Collapsible Header */}
+                    <button
+                      onClick={() => setShowProductDetails(!showProductDetails)}
+                      className="w-full flex items-center justify-between p-4 text-left hover:bg-zinc-800/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-bold text-white">
+                          {selectedProduct.name}
+                        </h3>
+                        <span
+                          className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${selectedProduct.statusTone === "primary"
                             ? "bg-blue-600 text-white"
                             : "bg-zinc-700 text-zinc-300"
-                        }`}
-                      >
-                        {selectedProduct.status}
-                      </span>
-                    </div>
-                    <motion.div
-                      animate={{ rotate: showProductDetails ? 180 : 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="text-zinc-400"
-                    >
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M5 7.5L10 12.5L15 7.5"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </motion.div>
-                  </button>
-
-                  {/* Collapsible Content */}
-                  <AnimatePresence>
-                    {showProductDetails && (
+                            }`}
+                        >
+                          {selectedProduct.status}
+                        </span>
+                      </div>
                       <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="overflow-hidden"
+                        animate={{ rotate: showProductDetails ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="text-zinc-400"
                       >
-                        <div className="border-t border-zinc-700 p-4">
-                          <p className="mb-3 text-sm text-zinc-300">
-                            {selectedProduct.description}
-                          </p>
-                          <ul className="space-y-1.5">
-                            {selectedProduct.bullets.map((bullet, idx) => (
-                              <li key={idx} className="flex items-start gap-2 text-sm text-zinc-400">
-                                <span className="mt-0.5 inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-[#5e17eb]/20 text-xs text-[#5e17eb]">
-                                  ✓
-                                </span>
-                                <span className="text-xs">{bullet}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        {/* Key Features (only for Telegram MT5) */}
-                        {activeProduct === "telegram-mt5" && (
-                          <div className="border-t border-zinc-700 px-4 py-4">
-                            <h4 className="mb-3 text-sm font-semibold text-white">Key Features</h4>
-                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                              {features.map((feature) => (
-                                <div key={feature.title} className="space-y-0.5">
-                                  <h5 className="text-xs font-semibold text-white">{feature.title}</h5>
-                                  <p className="text-xs text-zinc-400">{feature.description}</p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 20 20"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M5 7.5L10 12.5L15 7.5"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
                       </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                    </button>
 
-                {/* Pricing Section or Coming Soon */}
-                {activeProduct === "telegram-mt5" ? (
-                  <div>
-                    {/* Pricing Cards - Horizontal */}
-                    <div className="grid gap-4 md:grid-cols-3">
-                      {pricingPlans.map((plan) => {
-                        const planKey = plan.name.toLowerCase();
-                        const license = customerLicenses.find((l: any) =>
-                          l.plan.toLowerCase().startsWith(planKey)
-                        );
-                        const isCurrentPlan = !!license;
-                        const expiresAt = license?.expires_at;
-                        const daysRemaining = expiresAt
-                          ? Math.max(
+                    {/* Collapsible Content */}
+                    <AnimatePresence>
+                      {showProductDetails && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="border-t border-zinc-700 p-4">
+                            <p className="mb-3 text-sm text-zinc-300">
+                              {selectedProduct.description}
+                            </p>
+                            <ul className="space-y-1.5">
+                              {selectedProduct.bullets.map((bullet, idx) => (
+                                <li key={idx} className="flex items-start gap-2 text-sm text-zinc-400">
+                                  <span className="mt-0.5 inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-[#5e17eb]/20 text-xs text-[#5e17eb]">
+                                    ✓
+                                  </span>
+                                  <span className="text-xs">{bullet}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          {/* Key Features (only for Telegram MT5) */}
+                          {activeProduct === "telegram-mt5" && (
+                            <div className="border-t border-zinc-700 px-4 py-4">
+                              <h4 className="mb-3 text-sm font-semibold text-white">Key Features</h4>
+                              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                {features.map((feature) => (
+                                  <div key={feature.title} className="space-y-0.5">
+                                    <h5 className="text-xs font-semibold text-white">{feature.title}</h5>
+                                    <p className="text-xs text-zinc-400">{feature.description}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Pricing Section or Coming Soon */}
+                  {activeProduct === "telegram-mt5" ? (
+                    <div>
+                      {/* Trial Banner moved here */}
+                      <TrialBanner />
+
+                      {/* Pricing Cards - Horizontal */}
+                      <div className="grid gap-4 md:grid-cols-3">
+                        {pricingPlans.map((plan) => {
+                          const planKey = plan.name.toLowerCase();
+                          const license = customerLicenses.find((l: any) =>
+                            l.plan.toLowerCase().startsWith(planKey)
+                          );
+                          const isCurrentPlan = !!license;
+                          const expiresAt = license?.expires_at;
+                          const daysRemaining = expiresAt
+                            ? Math.max(
                               0,
                               Math.ceil(
                                 (new Date(expiresAt).getTime() - new Date().getTime()) /
-                                  (1000 * 60 * 60 * 24)
+                                (1000 * 60 * 60 * 24)
                               )
                             )
-                          : undefined;
+                            : undefined;
 
-                        const showPromoOffer =
-                          plan.name === "Starter" && customerLicenses.length === 0;
-                        const isLifetime = plan.name === "Lifetime";
+                          const showPromoOffer =
+                            plan.name === "Starter" && customerLicenses.length === 0;
+                          const isLifetime = plan.name === "Lifetime";
 
-                        const hasMonthlyPlan =
-                          license && !license.plan.toLowerCase().includes("yearly") && !isLifetime;
-                        const isViewingYearly = billingInterval === "yearly" && !isLifetime;
-                        const canUpgradeToYearly = hasMonthlyPlan && isViewingYearly;
+                          const hasMonthlyPlan =
+                            license && !license.plan.toLowerCase().includes("yearly") && !isLifetime;
+                          const isViewingYearly = billingInterval === "yearly" && !isLifetime;
+                          const canUpgradeToYearly = hasMonthlyPlan && isViewingYearly;
 
-                        let proratedCredit = 0;
-                        if (canUpgradeToYearly && daysRemaining) {
-                          const monthlyPrice = plan.name === "Pro" ? 49 : 29;
-                          const dailyRate = monthlyPrice / 30;
-                          proratedCredit = Math.min(
-                            Math.ceil(dailyRate * daysRemaining),
-                            monthlyPrice
-                          );
-                        }
+                          let proratedCredit = 0;
+                          if (canUpgradeToYearly && daysRemaining) {
+                            const monthlyPrice = plan.name === "Pro" ? 49 : 29;
+                            const dailyRate = monthlyPrice / 30;
+                            proratedCredit = Math.min(
+                              Math.ceil(dailyRate * daysRemaining),
+                              monthlyPrice
+                            );
+                          }
 
-                        return (
-                          <DarkProductCard
-                            key={plan.name}
-                            name={plan.name}
-                            badge={plan.badge}
-                            price={
-                              plan.name === "Starter"
-                                ? billingInterval === "monthly"
-                                  ? "$29/month"
-                                  : "$313/year"
-                                : plan.name === "Pro"
-                                ? billingInterval === "monthly"
-                                  ? "$49/month"
-                                  : "$529/year"
-                                : "$999 one-time"
-                            }
-                            yearlyNote={
-                              plan.name === "Lifetime"
-                                ? "All future versions and features included"
-                                : billingInterval === "monthly"
-                                ? "Save 10% with yearly billing"
-                                : "Billed annually (10% discount applied)"
-                            }
-                            features={plan.features}
-                            featured={plan.featured}
-                            paymentLink={
-                              plan.name === "Starter"
-                                ? `/payment?plan=${
-                                    billingInterval === "monthly" ? "starter" : "starter_yearly"
+                          return (
+                            <DarkProductCard
+                              key={plan.name}
+                              name={plan.name}
+                              badge={plan.badge}
+                              price={
+                                plan.name === "Starter"
+                                  ? billingInterval === "monthly"
+                                    ? "$29/month"
+                                    : "$313/year"
+                                  : plan.name === "Pro"
+                                    ? billingInterval === "monthly"
+                                      ? "$49/month"
+                                      : "$529/year"
+                                    : "$999 one-time"
+                              }
+                              yearlyNote={
+                                plan.name === "Lifetime"
+                                  ? "All future versions and features included"
+                                  : billingInterval === "monthly"
+                                    ? "Save 10% with yearly billing"
+                                    : "Billed annually (10% discount applied)"
+                              }
+                              features={plan.features}
+                              featured={plan.featured}
+                              paymentLink={
+                                plan.name === "Starter"
+                                  ? `/payment?plan=${billingInterval === "monthly" ? "starter" : "starter_yearly"
                                   }`
-                                : plan.name === "Pro"
-                                ? `/payment?plan=${
-                                    billingInterval === "monthly" ? "pro" : "pro_yearly"
-                                  }`
-                                : "/payment?plan=lifetime"
-                            }
-                            onViewDetailsClick={() => setShowProductDetails(true)}
-                            isCurrentPlan={isCurrentPlan}
-                            expiresAt={expiresAt}
-                            daysRemaining={daysRemaining}
-                            showPromoOffer={showPromoOffer}
-                            isLifetime={isLifetime}
-                            canUpgradeToYearly={canUpgradeToYearly}
-                            upgradeYearlyLink={
-                              canUpgradeToYearly
-                                ? `/payment?plan=${plan.name.toLowerCase()}_yearly&upgrade=true&credit=${proratedCredit.toFixed(
+                                  : plan.name === "Pro"
+                                    ? `/payment?plan=${billingInterval === "monthly" ? "pro" : "pro_yearly"
+                                    }`
+                                    : "/payment?plan=lifetime"
+                              }
+                              onViewDetailsClick={() => setShowProductDetails(true)}
+                              isCurrentPlan={isCurrentPlan}
+                              expiresAt={expiresAt}
+                              daysRemaining={daysRemaining}
+                              showPromoOffer={showPromoOffer}
+                              isLifetime={isLifetime}
+                              canUpgradeToYearly={canUpgradeToYearly}
+                              upgradeYearlyLink={
+                                canUpgradeToYearly
+                                  ? `/payment?plan=${plan.name.toLowerCase()}_yearly&upgrade=true&credit=${proratedCredit.toFixed(
                                     2
                                   )}`
-                                : undefined
-                            }
-                            proratedCredit={proratedCredit}
-                            billingInterval={billingInterval}
-                            onBillingIntervalChange={setBillingInterval}
-                            showBillingToggle={plan.name !== "Lifetime"}
-                          />
-                        );
-                      })}
+                                  : undefined
+                              }
+                              proratedCredit={proratedCredit}
+                              billingInterval={billingInterval}
+                              onBillingIntervalChange={setBillingInterval}
+                              showBillingToggle={plan.name !== "Lifetime"}
+                            />
+                          );
+                        })}
+                      </div>
+
+                      {/* Help text */}
+                      <div className="text-center text-sm text-zinc-600">
+                        Have questions?{" "}
+                        <Link href="/contact" className="font-medium text-[#5e17eb] hover:text-[#4512c2]">
+                          Contact us
+                        </Link>
+                      </div>
                     </div>
+                  ) : (
+                    <ComingSoonMessage
+                      productName={selectedProduct.name}
+                      productDescription="This product is currently under development. We'll notify you when it's ready."
+                    />
+                  )}
+                </>
+              );
+            })()}
+          </motion.div>
+        </section>
 
-                    {/* Help text */}
-                    <div className="text-center text-sm text-zinc-400">
-                      Have questions?{" "}
-                      <Link href="/contact" className="font-medium text-[#5e17eb] hover:text-[#4512c2]">
-                        Contact us
-                      </Link>
-                    </div>
-                  </div>
-                ) : (
-                  <ComingSoonMessage
-                    productName={selectedProduct.name}
-                    productDescription="This product is currently under development. We'll notify you when it's ready."
-                  />
-                )}
-              </>
-            );
-          })()}
-        </motion.div>
-      </section>
+        {/* Key Features Section */}
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={staggerContainer}
+          className="py-16"
+        >
+          <motion.div variants={fadeInUp} className="text-center mb-12">
+            <h2 className="text-2xl font-bold text-zinc-900 mb-3">
+              BUILT FOR REAL TELEGRAM SIGNAL WORKFLOWS
+            </h2>
+            <p className="text-sm text-zinc-600 max-w-3xl mx-auto">
+              Simple to configure, but powerful enough to handle multiple take-profits, risk-based sizing, and
+              different signal formats.
+            </p>
+          </motion.div>
 
-      {/* Key Features Section */}
-      <motion.section
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true }}
-        variants={staggerContainer}
-        className="py-16"
-      >
-        <motion.div variants={fadeInUp} className="text-center mb-12">
-          <h2 className="text-2xl font-bold text-white mb-3">
-            BUILT FOR REAL TELEGRAM SIGNAL WORKFLOWS
-          </h2>
-          <p className="text-sm text-zinc-400 max-w-3xl mx-auto">
-            Simple to configure, but powerful enough to handle multiple take-profits, risk-based sizing, and
-            different signal formats.
-          </p>
-        </motion.div>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          {[
-            {
-              title: "24/7 AUTOMATION",
-              description: "Let the bot watch your Telegram channels and execute MT5 trades around the clock.",
-            },
-            {
-              title: "MULTI-TP & SL LOGIC",
-              description: "Configure multiple take-profit levels, stop loss, and partial closes based on your strategy.",
-            },
-            {
-              title: "RISK-BASED SIZING",
-              description: "Control position size by fixed lot or percentage risk per trade on supported MT5 brokers.",
-            },
-            {
-              title: "FLEXIBLE MAPPING",
-              description: "Adapt to different Telegram signal formats with configurable mapping rules.",
-            },
-          ].map((feature, index) => (
-            <motion.div
-              key={index}
-              variants={cardVariants}
-              className="rounded-xl border border-blue-500/30 bg-gradient-to-br from-slate-900 to-black p-6 shadow-lg hover:border-blue-500/50 transition-colors"
-            >
-              <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">{feature.description}</p>
-            </motion.div>
-          ))}
-        </div>
-      </motion.section>
-
+          <div className="grid gap-6 md:grid-cols-2">
+            {[
+              {
+                title: "24/7 AUTOMATION",
+                description: "Let the bot watch your Telegram channels and execute MT5 trades around the clock.",
+              },
+              {
+                title: "MULTI-TP & SL LOGIC",
+                description: "Configure multiple take-profit levels, stop loss, and partial closes based on your strategy.",
+              },
+              {
+                title: "RISK-BASED SIZING",
+                description: "Control position size by fixed lot or percentage risk per trade on supported MT5 brokers.",
+              },
+              {
+                title: "FLEXIBLE MAPPING",
+                description: "Adapt to different Telegram signal formats with configurable mapping rules.",
+              },
+            ].map((feature, index) => (
+              <motion.div
+                key={index}
+                variants={cardVariants}
+                className="rounded-xl border border-blue-500/30 bg-gradient-to-br from-slate-900 to-black p-6 shadow-lg hover:border-blue-500/50 transition-colors"
+              >
+                <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
+                <p className="text-sm text-zinc-400 leading-relaxed">{feature.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.section>
+      </div>
     </div>
   );
 }

@@ -11,6 +11,7 @@ import TradingBotLogo from "../../assets/Tradingbot - Copy.png";
 import MT5Logo from "../../assets/mt5.png";
 import { resourceArticles } from "@/data/resources";
 import { PricingSection } from "@/components/PricingSection";
+import { TrustBox } from "@/components/TrustBox";
 
 const heroMessages = [
   {
@@ -487,6 +488,14 @@ export default function Home() {
               >
                 View product details
               </Link>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.7 }}
+            >
+              <TrustBox />
             </motion.div>
           </div>
         </div>
@@ -990,10 +999,10 @@ export default function Home() {
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--brand-blue-deep)]">
                 Resources
               </p>
-              <h3 className="text-2xl font-semibold text-[var(--text-main)] md:text-3xl">
+              <h3 className="text-2xl font-semibold text-zinc-900 md:text-3xl">
                 Learn the playbooks behind reliable automation
               </h3>
-              <p className="max-w-2xl text-sm text-[var(--text-muted)] md:text-base leading-relaxed">
+              <p className="max-w-2xl text-sm text-zinc-600 md:text-base leading-relaxed">
                 Articles covering Telegram → MT5 setup, prop firm guardrails, and VPS best
                 practices. All content is written for traders who prefer clarity over hype.
               </p>
@@ -1016,19 +1025,19 @@ export default function Home() {
               >
                 <Link
                   href={`/resources/${article.id}`}
-                  className="block rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-light-2)] p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg h-full"
+                  className="block rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg h-full"
                 >
                   <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[var(--brand-blue-deep)]">
                     <span>{article.category}</span>
-                    <span className="text-[var(--text-muted)]">· {article.readTime}</span>
+                    <span className="text-zinc-600">· {article.readTime}</span>
                   </div>
-                  <h4 className="mb-3 text-base font-semibold text-[var(--text-main)]">
+                  <h4 className="mb-3 text-base font-semibold text-zinc-900">
                     {article.title}
                   </h4>
-                  <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                  <p className="text-xs text-zinc-900 leading-relaxed font-medium">
                     {article.description}
                   </p>
-                  <div className="mt-5 text-[0.65rem] uppercase tracking-wide text-[var(--text-muted)]">
+                  <div className="mt-5 text-[0.65rem] uppercase tracking-wide text-zinc-500 font-medium">
                     Keyword: {article.primaryKeyword}
                   </div>
                 </Link>

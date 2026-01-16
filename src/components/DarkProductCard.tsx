@@ -77,7 +77,7 @@ export function DarkProductCard({
         </div>
       )}
 
-   
+
       {/* Card content */}
       <div
         className={`relative z-10 flex h-full flex-col rounded-xl border p-6 text-left shadow-lg transition-all duration-200 hover:shadow-xl ${featured
@@ -92,18 +92,17 @@ export function DarkProductCard({
               {badge}
             </span>
           )}
-          
+
           {/* Billing Toggle (if enabled) */}
           {showBillingToggle && onBillingIntervalChange && (
             <button
               onClick={() => onBillingIntervalChange(billingInterval === "yearly" ? "monthly" : "yearly")}
               className="flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-800/50 px-2.5 py-1.5 transition-all hover:border-[#5e17eb]/50 hover:bg-zinc-700/50"
             >
-              <div className={`h-3.5 w-3.5 rounded border-2 transition-colors ${
-                billingInterval === "yearly"
-                  ? "border-[#5e17eb] bg-[#5e17eb]"
-                  : "border-zinc-600 bg-transparent"
-              }`}>
+              <div className={`h-3.5 w-3.5 rounded border-2 transition-colors ${billingInterval === "yearly"
+                ? "border-[#5e17eb] bg-[#5e17eb]"
+                : "border-zinc-600 bg-transparent"
+                }`}>
                 {billingInterval === "yearly" && (
                   <svg
                     viewBox="0 0 12 12"
@@ -116,9 +115,8 @@ export function DarkProductCard({
                   </svg>
                 )}
               </div>
-              <span className={`text-xs font-medium transition-colors ${
-                billingInterval === "yearly" ? "text-white" : "text-zinc-400"
-              }`}>
+              <span className={`text-xs font-medium transition-colors ${billingInterval === "yearly" ? "text-white" : "text-zinc-400"
+                }`}>
                 Yearly <span className="text-[10px] text-purple-400">(Save 10%)</span>
               </span>
             </button>
@@ -145,7 +143,7 @@ export function DarkProductCard({
               <>
                 {/* Yellow/Gold Animated gradient border for Special Offer */}
                 <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 bg-[length:200%_100%] animate-[gradient_3s_linear_infinite]" />
-                
+
                 {/* Inner content with dark background */}
                 <div className="relative rounded-lg bg-gradient-to-br from-slate-900 to-black p-3 text-center">
                   <div className="flex items-center justify-center gap-1.5">
@@ -162,7 +160,7 @@ export function DarkProductCard({
               <>
                 {/* Yellow/Gold gradient for Most Popular */}
                 <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 bg-[length:200%_100%] animate-[gradient_3s_linear_infinite]" />
-                
+
                 {/* Inner content with dark background */}
                 <div className="relative rounded-lg bg-gradient-to-br from-slate-900 to-black p-3 text-center">
                   <div className="flex items-center justify-center gap-1.5">

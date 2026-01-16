@@ -53,11 +53,11 @@ export default async function ResourceArticle({
         >
           Resources
         </Link>
-        <h1 className="text-3xl font-semibold text-[var(--text-main)] md:text-4xl">
+        <h1 className="text-3xl font-semibold text-white md:text-4xl">
           {article.title}
         </h1>
-        <p className="text-sm text-[var(--text-muted)] md:text-base">{content.intro}</p>
-        <div className="flex flex-wrap gap-2 text-xs text-[var(--text-muted)]">
+        <p className="text-sm text-zinc-300 md:text-base">{content.intro}</p>
+        <div className="flex flex-wrap gap-2 text-xs text-zinc-400">
           <span>{article.category}</span>
           <span>· {article.readTime}</span>
           <span>· Updated {article.lastUpdated}</span>

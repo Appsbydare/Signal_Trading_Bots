@@ -16,9 +16,27 @@ export async function POST(request: NextRequest) {
 
     const supabase = getSupabaseClient();
 
+    // Check if customer already exists with this email
+    const { data: existingCustomer } = await supabase
+      .from("customers")
+      .select("id, email")
+      .eq("email", email.toLowerCase())
+      .single();
+
+    if (existingCustomer) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "An account with this email already exists. Please log in instead.",
+          userExists: true
+        },
+        { status: 409 } // 409 Conflict
+      );
+    }
+
     // Generate 6-digit code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
-    
+
     // Calculate expiry time (15 minutes from now)
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 15);
