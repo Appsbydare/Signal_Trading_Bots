@@ -1145,7 +1145,6 @@ function PaymentForm() {
                   <div className="flex justify-between text-zinc-400">
                     <span>Subtotal</span>
                     <span className="text-white">
-                      {!isLifetime && <span className="line-through mr-2">${basePrice}</span>}
                       ${isLifetime ? finalPrice : basePrice} USD
                     </span>
                   </div>
