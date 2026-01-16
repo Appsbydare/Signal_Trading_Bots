@@ -418,6 +418,8 @@ export async function sendLicenseEmail(params: {
   licenseKey: string;
   plan: string;
   expiresAt: string;
+  price?: number; // Optional price parameter
+  paymentMethod?: string; // Optional payment method (card or crypto)
 }): Promise<void> {
   if (!RESEND_API_KEY) {
     console.warn(
@@ -484,6 +486,57 @@ export async function sendLicenseEmail(params: {
         </tr>
       </table>
     </div>
+    
+    ${params.price && params.plan.toLowerCase() !== 'lifetime' ? `
+    <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+      <h3 style="margin: 0 0 15px 0; color: #667eea; font-size: 18px;">Purchase Summary</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eee; color: #666;">Subtotal</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right;">
+            <span style="text-decoration: line-through; color: #999; margin-right: 8px;">$${params.price}</span>
+            $${params.price} USD
+          </td>
+        </tr>
+        ${params.paymentMethod === 'card' ? `
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eee; color: #22c55e; font-weight: 600;">Free Trial Discount</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right; color: #22c55e; font-weight: 600;">-$${params.price} USD</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eee; color: #666;">Processing Fee</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right;">$0 USD</td>
+        </tr>
+        ` : `
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eee; color: #666;">Crypto Processing Fee</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right;">$1.00 USD</td>
+        </tr>
+        `}
+        <tr>
+          <td style="padding: 15px 0 10px 0; font-size: 18px; font-weight: bold;">Total</td>
+          <td style="padding: 15px 0 10px 0; text-align: right; font-size: 18px; font-weight: bold;">
+            $${params.paymentMethod === 'crypto' ? '1.00' : '0.00'} USD
+          </td>
+        </tr>
+      </table>
+      
+      ${params.paymentMethod === 'crypto' ? `
+      <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin-top: 15px; border-radius: 4px;">
+        <p style="margin: 0; color: #92400e; font-size: 13px; line-height: 1.5;">
+          <strong>Note:</strong> 30-day free trial is available only for Card Payments. For Crypto Payments you will need to pay a $1.00 processing fee.
+        </p>
+      </div>
+      ` : `
+      <div style="background-color: #dbeafe; border-left: 4px solid #3b82f6; padding: 12px; margin-top: 15px; border-radius: 4px;">
+        <p style="margin: 0; color: #1e40af; font-size: 13px; line-height: 1.5;">
+          Your trial will end on <strong>${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</strong> (30 days from purchase date) and start the subscription. You can cancel the subscription any time before that.
+        </p>
+      </div>
+      `}
+    </div>
+    ` : ''}
+    
     
     <h2 style="color: #667eea; font-size: 20px; margin-top: 30px;">Getting Started</h2>
     <ol style="padding-left: 20px;">

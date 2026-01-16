@@ -33,10 +33,8 @@ export function TrialBanner() {
 
                 {/* Right Side: CTA Button */}
                 <div className="flex-shrink-0">
-                    <button
-                        onClick={() => {
-                            document.getElementById("product-selector")?.scrollIntoView({ behavior: "smooth" });
-                        }}
+                    <a
+                        href="/payment?plan=starter"
                         className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-lg bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-500 px-6 py-2.5 font-bold text-zinc-950 transition-all duration-300 hover:from-yellow-300 hover:via-amber-400 hover:to-yellow-400 hover:shadow-[0_0_25px_rgba(245,158,11,0.5)] focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-black"
                     >
                         <span>Start Free Trial</span>
@@ -48,7 +46,7 @@ export function TrialBanner() {
                         >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
-                    </button>
+                    </a>
                 </div>
             </div>
         </motion.div>

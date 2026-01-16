@@ -17,19 +17,15 @@ export function ProductTabPill({ product, isActive, onClick }: ProductTabPillPro
       onClick={onClick}
       className={`
         relative flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition-all duration-200
-        ${
-          isActive
-            ? "border-blue-600 bg-gradient-to-br from-slate-900 to-black shadow-lg shadow-blue-500/20"
-            : "border-zinc-700 bg-gradient-to-br from-zinc-900 to-black hover:border-zinc-600 hover:shadow-md"
+        ${isActive
+          ? "border-blue-600 bg-zinc-700 shadow-lg shadow-blue-500/20"
+          : "border-zinc-600 bg-zinc-800 hover:border-zinc-500 hover:shadow-md"
         }
       `}
     >
+      {/* Status badge - blue when active, gray when inactive */}
       <span
-        className={`text-[10px] font-semibold uppercase tracking-wide ${
-          product.statusTone === "primary"
-            ? "text-blue-400"
-            : "text-zinc-500"
-        }`}
+        className={`text-[10px] font-semibold uppercase tracking-wide ${isActive ? "text-blue-400" : "text-zinc-400"}`}
       >
         {product.status}
       </span>

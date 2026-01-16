@@ -152,7 +152,19 @@ function PaymentForm() {
     }
   }, [selectedLicenseToUpgrade, licenses, isUpgrade]);
 
-  const finalPrice = isUpgrade ? Math.max(0, basePrice - dynamicCredit) : basePrice;
+  // Calculate final price based on payment method
+  const getFinalPrice = () => {
+    if (isLifetime) {
+      return isUpgrade ? Math.max(0, basePrice - dynamicCredit) : basePrice;
+    }
+    // For starter/pro plans
+    if (selectedPayment === "crypto") {
+      return 1; // $1 for crypto payments
+    }
+    return 0; // $0 for card payments (free trial)
+  };
+
+  const finalPrice = getFinalPrice();
 
   // Stripe-specific state
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -365,7 +377,7 @@ function PaymentForm() {
         </div>
 
         <h1 className="reveal mb-2 text-2xl font-semibold tracking-tight text-white">
-          Complete Your Purchase
+          {isLifetime ? "Complete Your Purchase" : "COMPLETE YOUR FREE TRIAL INFORMATION"}
         </h1>
         <p className="reveal mb-8 text-sm text-zinc-400">Telegram Trading Bot - {planName} Plan</p>
 
@@ -1132,18 +1144,67 @@ function PaymentForm() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-zinc-400">
                     <span>Subtotal</span>
-                    <span className="text-white">${finalPrice} USD</span>
+                    <span className="text-white">
+                      {!isLifetime && <span className="line-through mr-2">${basePrice}</span>}
+                      ${isLifetime ? finalPrice : basePrice} USD
+                    </span>
                   </div>
-                  <div className="flex justify-between text-zinc-400">
-                    <span>Processing Fee</span>
-                    <span className="text-white">$0 USD</span>
-                  </div>
+
+                  {/* Free Trial Discount - Only for card payments on non-lifetime plans */}
+                  {!isLifetime && selectedPayment === "card" && (
+                    <div className="flex justify-between text-green-400">
+                      <span>Free Trial Discount</span>
+                      <span>-${basePrice} USD</span>
+                    </div>
+                  )}
+
+                  {/* Crypto Processing Fee - Only for crypto payments on non-lifetime plans */}
+                  {!isLifetime && selectedPayment === "crypto" && (
+                    <div className="flex justify-between text-zinc-400">
+                      <span>Crypto Processing Fee</span>
+                      <span className="text-white">$1.00 USD</span>
+                    </div>
+                  )}
+
+                  {/* Processing Fee for card/lifetime */}
+                  {(isLifetime || selectedPayment === "card") && (
+                    <div className="flex justify-between text-zinc-400">
+                      <span>Processing Fee</span>
+                      <span className="text-white">$0 USD</span>
+                    </div>
+                  )}
+
                   <div className="border-t border-zinc-700 pt-2">
                     <div className="flex justify-between text-lg font-semibold text-white">
                       <span>Total</span>
-                      <span>${finalPrice} USD</span>
+                      <span>
+                        ${isLifetime
+                          ? finalPrice
+                          : selectedPayment === "crypto"
+                            ? (basePrice - basePrice + 1).toFixed(2)
+                            : '0.00'
+                        } USD
+                      </span>
                     </div>
                   </div>
+
+                  {/* Crypto Payment Notice - Only for crypto on non-lifetime plans */}
+                  {!isLifetime && selectedPayment === "crypto" && (
+                    <div className="mt-4 rounded-md bg-amber-500/10 border border-amber-500/30 p-4">
+                      <p className="text-xs text-amber-200 leading-relaxed">
+                        <strong>Note:</strong> 30-day free trial is available only for Card Payments. For Crypto Payments you will need to pay a $1.00 processing fee.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Trial End Message - Only for card payments on non-lifetime plans */}
+                  {!isLifetime && selectedPayment === "card" && (
+                    <div className="mt-4 rounded-md bg-blue-500/10 border border-blue-500/30 p-4">
+                      <p className="text-xs text-blue-200 leading-relaxed">
+                        Your trial will end on <span className="font-semibold">{new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span> (30 days from purchase date) and start the subscription. You can cancel the subscription any time before that.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </section>
             )}

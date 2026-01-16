@@ -301,7 +301,7 @@ export function ProductsPageClient() {
               return (
                 <>
                   {/* Product Details - Collapsible */}
-                  <div className="rounded-xl border border-zinc-700 bg-gradient-to-br from-zinc-900 to-black shadow-lg overflow-hidden">
+                  <div className="rounded-xl border border-zinc-700 bg-zinc-800 shadow-lg overflow-hidden">
                     {/* Collapsible Header */}
                     <button
                       onClick={() => setShowProductDetails(!showProductDetails)}
@@ -312,10 +312,7 @@ export function ProductsPageClient() {
                           {selectedProduct.name}
                         </h3>
                         <span
-                          className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${selectedProduct.statusTone === "primary"
-                            ? "bg-blue-600 text-white"
-                            : "bg-zinc-700 text-zinc-300"
-                            }`}
+                          className="whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide bg-zinc-700 text-zinc-300"
                         >
                           {selectedProduct.status}
                         </span>
