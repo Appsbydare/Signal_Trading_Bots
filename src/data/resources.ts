@@ -43,6 +43,39 @@ export const resourceArticles: ResourceArticle[] = [
     primaryKeyword: "mt5 vps automation",
     lastUpdated: "November 2024",
   },
+  {
+    id: "telegram-signal-trading-gold",
+    title: "Telegram Signal Trading in Gold – A Game Changer for Retail Traders",
+    description:
+      "Discover how Telegram signal trading is transforming gold trading for retail investors. Learn the benefits, risks, and strategies to maximize profits.",
+    category: "Trading Strategies",
+    readTime: "8 min read",
+    status: "available",
+    primaryKeyword: "telegram signal trading gold",
+    lastUpdated: "January 2026",
+  },
+  {
+    id: "signal-trading-gold-market-volatility",
+    title: "How Signal Trading Impacts Gold Market Volatility",
+    description:
+      "Explore how Telegram signal trading influences gold market volatility. Understand the pros, cons, and future of automated trading signals.",
+    category: "Market Analysis",
+    readTime: "7 min read",
+    status: "available",
+    primaryKeyword: "gold market volatility telegram signals",
+    lastUpdated: "January 2026",
+  },
+  {
+    id: "telegram-bots-gold-trading",
+    title: "Leveraging Telegram Signal Bots for Profitable Gold Trading",
+    description:
+      "Learn how to use Telegram signal bots to enhance your gold trading strategy. Discover automation, risk control, and profit potential.",
+    category: "Automation",
+    readTime: "7 min read",
+    status: "available",
+    primaryKeyword: "telegram bots gold trading",
+    lastUpdated: "January 2026",
+  },
 ];
 
 

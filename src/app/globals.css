@@ -180,3 +180,43 @@ h3 {
   max-height: none !important;
   overflow: visible !important;
 }
+
+/* Article Headings Enhancement */
+article h1 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+article h2 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  scroll-margin-top: 6rem;
+}
+
+article h3 {
+  font-weight: 600;
+  line-height: 1.3;
+  scroll-margin-top: 6rem;
+}
+
+/* Article Content Readability */
+article p {
+  line-height: 1.7;
+}
+
+article ul li {
+  line-height: 1.6;
+}
+
+/* Article Smooth Scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

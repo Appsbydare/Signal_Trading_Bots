@@ -75,6 +75,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" style={{ colorScheme: 'dark' }}>
+      <head>
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="SignalTradingBots Resources RSS Feed"
+          href="/resources/rss.xml"
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased overflow-x-hidden bg-zinc-950 text-white`}
       >
@@ -120,6 +128,11 @@ export default function RootLayout({
                   <li>
                     <Link href="/specs" className="text-zinc-400 hover:text-zinc-200">
                       Specifications
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/resources" className="text-zinc-400 hover:text-zinc-200">
+                      Trading Resources
                     </Link>
                   </li>
                 </ul>
