@@ -105,15 +105,15 @@ import { getNextWalletFromDB } from "./wallets-supabase";
 
 // Calculate embedded price based on order count for this specific wallet
 // Resets to base price when it would exceed display price
-// Base price: displayPrice - 0.01989 (starts from 28.98011 for $29)
+// Base price: displayPrice - 0.01989 (starts from 8.98011 for $9)
 export function getEmbeddedPrice(displayPrice: number, orderCount: number): number {
   // Base: displayPrice - 0.019890 (smaller loss, starts closer to display price)
   const base = displayPrice - 0.01989;
   
   // Calculate maximum order count before price exceeds display price
   // maxOrderCount = (displayPrice - base) / 0.00001
+  // For $9: (9 - 8.98011) / 0.00001 = 1989
   // For $29: (29 - 28.98011) / 0.00001 = 1989
-  // For $49: (49 - 48.98011) / 0.00001 = 1989
   const maxOrderCount = Math.floor((displayPrice - base) / 0.00001);
   
   // Reset orderCount if it would exceed display price

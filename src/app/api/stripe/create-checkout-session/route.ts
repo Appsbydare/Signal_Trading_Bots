@@ -27,11 +27,11 @@ export async function POST(req: NextRequest) {
         const isPro = basePlan === "pro";
 
         // Calculate price
-        let price = 29;
+        let price = 9;
         if (isPro) {
-            price = isYearly ? 529 : 49;
+            price = isYearly ? 348 : 29;
         } else {
-            price = isYearly ? 313 : 29;
+            price = isYearly ? 108 : 9;
         }
 
         const priceInCents = price * 100;

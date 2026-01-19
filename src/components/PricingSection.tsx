@@ -154,7 +154,7 @@ export function PricingSection() {
 
                         let proratedCredit = 0;
                         if (canUpgradeToYearly && daysRemaining) {
-                            const monthlyPrice = plan.name === "Pro" ? 49 : 29;
+                            const monthlyPrice = plan.name === "Pro" ? 29 : 9;
                             const dailyRate = monthlyPrice / 30;
                             proratedCredit = Math.min(dailyRate * Math.max(0, daysRemaining - 1), monthlyPrice);
                         }
@@ -166,9 +166,9 @@ export function PricingSection() {
                                     badge={plan.badge}
                                     price={
                                         plan.name === "Starter"
-                                            ? (billingInterval === 'monthly' ? "$29/month" : "$313/year")
+                                            ? (billingInterval === 'monthly' ? "$9/month" : "$108/year")
                                             : plan.name === "Pro"
-                                                ? (billingInterval === 'monthly' ? "$49/month" : "$529/year")
+                                                ? (billingInterval === 'monthly' ? "$29/month" : "$348/year")
                                                 : "$999 one-time"
                                     }
                                     yearlyNote={

@@ -26,10 +26,10 @@ function PaymentForm() {
   const isUpgrade = searchParams.get("upgrade") === "true";
   const creditAmount = parseFloat(searchParams.get("credit") || "0");
 
-  let basePrice = 29;
+  let basePrice = 9;
   if (isLifetime) basePrice = 999;
-  else if (isPro) basePrice = isYearly ? 529 : 49;
-  else basePrice = isYearly ? 313 : 29; // Starter
+  else if (isPro) basePrice = isYearly ? 348 : 29;
+  else basePrice = isYearly ? 108 : 9; // Starter
 
   // Apply credit if upgrading
   // price is calculated dynamically in render or derived state now

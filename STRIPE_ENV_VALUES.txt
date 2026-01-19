@@ -1,0 +1,35 @@
+# =============================================================================
+# STRIPE ENVIRONMENT VARIABLES - Updated Pricing (2026-01-19)
+# =============================================================================
+# Add these to your .env.local file
+#
+# New Pricing:
+# - Starter Monthly: $9/month (was $29)
+# - Starter Yearly: $108/year (was $313)
+# - Pro Monthly: $29/month (was $49)
+# - Pro Yearly: $348/year (was $529)
+# - Lifetime: $999 (unchanged)
+# =============================================================================
+
+# Stripe Product IDs
+STRIPE_PRODUCT_STARTER_MONTHLY=prod_TmH7VBKCjZ2trs
+STRIPE_PRODUCT_STARTER_YEARLY=prod_TmH7pEMlccufzA
+STRIPE_PRODUCT_PRO_MONTHLY=prod_TmH77zvQKAdZen
+STRIPE_PRODUCT_PRO_YEARLY=prod_TmH7AzIrAhXQ05
+STRIPE_PRODUCT_LIFETIME=prod_TmH7h8KEAv1ZpQ
+
+# Stripe Price IDs (Updated 2026-01-19)
+STRIPE_PRICE_STARTER_MONTHLY=price_1SrELO4Bt8xvcLgoFBWeyy1U
+STRIPE_PRICE_STARTER_YEARLY=price_1SrENA4Bt8xvcLgoCY7GZtcl
+STRIPE_PRICE_PRO_MONTHLY=price_1SrEMI4Bt8xvcLgon9UvZVPV
+STRIPE_PRICE_PRO_YEARLY=price_1SrENy4Bt8xvcLgokabnj67M
+STRIPE_PRICE_LIFETIME=price_1SoiZ94Bt8xvcLgoPbsnBJWG
+
+# =============================================================================
+# INSTRUCTIONS:
+# 1. Copy all the variables above
+# 2. Paste them into your .env.local file
+# 3. Make sure to replace any existing Stripe price variables
+# 4. Restart your development server
+# =============================================================================
+

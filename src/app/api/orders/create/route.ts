@@ -19,12 +19,12 @@ export async function POST(request: NextRequest) {
     } else {
       const priceMap: Record<string, number> = {
         lifetime: 999,
-        pro: 49,
-        starter: 29,
-        pro_yearly: 529,
-        starter_yearly: 313,
+        pro: 29,
+        starter: 9,
+        pro_yearly: 348,
+        starter_yearly: 108,
       };
-      displayPrice = priceMap[plan as string] || 29;
+      displayPrice = priceMap[plan as string] || 9;
     }
 
     const selectedCoinNetwork = coinNetwork || "USDT-TRC20"; // Default to USDT-TRC20 if not provided

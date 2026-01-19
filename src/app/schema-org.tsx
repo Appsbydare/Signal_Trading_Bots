@@ -56,7 +56,7 @@ export default function SchemaOrg() {
       offers: {
         "@type": "Offer",
         priceCurrency: "USD",
-        price: "49",
+        price: "9",
         availability: "https://schema.org/PreOrder",
       },
       url: siteUrl,

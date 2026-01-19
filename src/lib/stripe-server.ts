@@ -70,8 +70,8 @@ export function isStripeEnabled(): boolean {
 
 /**
  * Convert USD amount to cents for Stripe
- * @param amount - Amount in USD (e.g., 29, 49, 999)
- * @returns Amount in cents (e.g., 2900, 4900, 99900)
+ * @param amount - Amount in USD (e.g., 9, 29, 108, 348, 999)
+ * @returns Amount in cents (e.g., 900, 2900, 10800, 34800, 99900)
  */
 export function convertToCents(amount: number): number {
   return Math.round(amount * 100);

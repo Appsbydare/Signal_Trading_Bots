@@ -303,7 +303,7 @@ export default function Home() {
     {
       name: "Starter",
       badge: "Basic plan",
-      price: "$29/month",
+      price: "$9/month",
       yearlyNote: "Save 10% with yearly billing",
       features: [
         "Ideal for demo and small live accounts",
@@ -315,7 +315,7 @@ export default function Home() {
       name: "Pro",
       badge: "Most popular",
       featured: true,
-      price: "$49/month",
+      price: "$29/month",
       yearlyNote: "Save 10% with yearly billing",
       features: [
         "Full configuration flexibility",
