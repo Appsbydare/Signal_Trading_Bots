@@ -433,11 +433,7 @@ export default function Home() {
                           <motion.span
                             animate={{ opacity: [1, 0] }}
                             transition={{ duration: 0.8, repeat: Infinity, repeatType: "reverse" }}
-<<<<<<< HEAD
                             className="inline-block w-2 md:w-3 h-[1.625rem] md:h-[2.5rem] lg:h-[3.5rem] bg-[#5e17eb] ml-1 md:ml-3"
-=======
-                            className="inline-block w-2 md:w-3 h-[2.75rem] md:h-[5rem] lg:h-[7rem] bg-[#5e17eb] ml-2 md:ml-3"
->>>>>>> origin/main
                             style={{ verticalAlign: 'middle', display: 'inline-block' }}
                           />
                         )}
