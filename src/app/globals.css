@@ -88,9 +88,11 @@ h3 {
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
@@ -169,13 +171,8 @@ h3 {
 
 /* Override h1 font-size for hero typewriter text */
 .hero-typewriter-text {
-<<<<<<< HEAD
   font-size: clamp(2rem, 8vw, 6.5rem) !important;
   line-height: 1.05 !important;
-=======
-  font-size: clamp(2.75rem, 9vw, 8rem) !important;
-  line-height: 1.1 !important;
->>>>>>> origin/main
   overflow: visible !important;
   display: block !important;
 }

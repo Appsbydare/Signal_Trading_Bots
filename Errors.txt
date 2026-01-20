@@ -1,0 +1,15 @@
+03:07:56.490 Running build in Washington, D.C., USA (East) – iad1
+03:07:56.491 Build machine configuration: 2 cores, 8 GB
+03:07:56.883 Cloning github.com/Appsbydare/Signal_Trading_Bots (Branch: main, Commit: c1c4ddb)
+03:08:00.379 Cloning completed: 3.496s
+03:08:00.564 Skipping build cache since Node.js version changed from "22.x" to ""
+03:08:00.827 Error: Could not read /vercel/path0/package.json: Expected double-quoted property name in JSON at position 374.
+03:08:00.827     at findPackageJson (/var/task/sandbox.js:81:47560)
+03:08:00.827     at async getNodeVersion (/var/task/sandbox.js:81:46275)
+03:08:00.828     at async /var/task/sandbox.js:819:4340
+03:08:00.828     at async Yke (/var/task/sandbox.js:819:2372)
+03:08:00.828     at async Promise.all (index 0)
+03:08:00.828     at async /var/task/sandbox.js:846:46343
+03:08:00.828     at async fHt (/var/task/sandbox.js:846:44230)
+03:08:00.829     at async MSn (/var/task/sandbox.js:848:1379)
+03:08:00.829     at async BSn (/var/task/sandbox.js:848:1180)

@@ -12,10 +12,7 @@ import MT5Logo from "../../assets/mt5.png";
 import { resourceArticles } from "@/data/resources";
 import { PricingSection } from "@/components/PricingSection";
 import { TrustBox } from "@/components/TrustBox";
-<<<<<<< HEAD
 import { CustomerFeedback } from "@/components/CustomerFeedback";
-=======
->>>>>>> origin/main
 
 const heroMessages = [
   {
@@ -168,11 +165,7 @@ export default function Home() {
       // Pause before fading out
       timeout = setTimeout(() => {
         setIsFadingOut(true);
-<<<<<<< HEAD
       }, 600000); // 10 minutes (600,000ms) delay
-=======
-      }, 3000);
->>>>>>> origin/main
     } else if (isFadingOut) {
       // Fade out animation (wait for animation to complete)
       timeout = setTimeout(() => {
@@ -377,14 +370,9 @@ export default function Home() {
         {/* Telegram Signals Background Animation */}
         <HeroTelegramSignals opacity={0.35} />
 
-<<<<<<< HEAD
         <div className="relative z-10 mx-auto w-full max-w-7xl px-6 py-12 md:py-20">
           {/* Left Column: Text Content (Full Width) */}
           <div className="lg:col-span-12 space-y-8 text-left">
-=======
-        <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-12 md:py-20">
-          <div className="space-y-8 w-full max-w-6xl text-left">
->>>>>>> origin/main
             {/* Typewriter Animation */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -393,19 +381,11 @@ export default function Home() {
               className="flex flex-col justify-start"
             >
               <h1
-<<<<<<< HEAD
                 className="font-bold leading-tight mb-3 hero-typewriter-text min-h-[12rem] sm:min-h-[10rem] md:min-h-[14rem] lg:min-h-[20rem]"
                 style={{
                   fontSize: '8vw',
                   lineHeight: '1.05',
                   overflow: 'visible',
-=======
-                className="font-bold leading-tight mb-3 hero-typewriter-text h-[9.075rem] md:h-[12rem] lg:h-[17.6rem]"
-                style={{
-                  fontSize: 'clamp(2.75rem, 9vw, 8rem)',
-                  lineHeight: '1.1',
-                  overflow: 'hidden',
->>>>>>> origin/main
                   wordWrap: 'break-word',
                   wordBreak: 'break-word'
                 }}
@@ -441,11 +421,7 @@ export default function Home() {
                                   <motion.span
                                     animate={{ opacity: [1, 0] }}
                                     transition={{ duration: 0.8, repeat: Infinity, repeatType: "reverse" }}
-<<<<<<< HEAD
                                     className="inline-block w-2 md:w-3 h-[1.625rem] md:h-[2.5rem] lg:h-[3.5rem] bg-[#5e17eb] ml-1 md:ml-3"
-=======
-                                    className="inline-block w-2 md:w-3 h-[2.75rem] md:h-[5rem] lg:h-[7rem] bg-[#5e17eb] ml-2 md:ml-3"
->>>>>>> origin/main
                                     style={{ verticalAlign: 'middle', display: 'inline-block' }}
                                   />
                                 )}
@@ -476,11 +452,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: isFadingOut ? 0 : 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
-<<<<<<< HEAD
                 className="text-base md:text-lg lg:text-xl text-[var(--text-muted)] max-w-2xl leading-relaxed mt-4"
-=======
-                className="text-base md:text-lg lg:text-xl text-[var(--text-muted)] max-w-5xl leading-relaxed mt-4 md:mt-4"
->>>>>>> origin/main
               >
                 {heroMessages[currentMessageIndex].subtext}
               </motion.p>
@@ -504,30 +476,10 @@ export default function Home() {
                 View Specs
               </Link>
               <Link
-<<<<<<< HEAD
                 href="/take-a-tour"
                 className="rounded-lg border-2 border-[var(--border-subtle)] px-5 py-3 md:px-8 md:py-4 text-sm md:text-base font-semibold text-[var(--text-main)] transition hover:border-[#5e17eb] hover:text-[#5e17eb] hover:bg-gray-50"
               >
                 Product Preview
-=======
-                href="#how-it-works"
-                className="rounded-lg border-2 border-[var(--border-subtle)] px-5 py-3 md:px-8 md:py-4 text-sm md:text-base font-semibold text-[var(--text-main)] transition hover:border-[#5e17eb] hover:text-[#5e17eb] hover:bg-gray-50 scroll-smooth"
-                onClick={(e) => {
-                  e.preventDefault();
-                  const element = document.getElementById('how-it-works');
-                  if (element) {
-                    const headerOffset = 80;
-                    const elementPosition = element.getBoundingClientRect().top;
-                    const offsetPosition = elementPosition + window.scrollY - headerOffset;
-                    window.scrollTo({
-                      top: offsetPosition,
-                      behavior: 'smooth'
-                    });
-                  }
-                }}
-              >
-                View product details
->>>>>>> origin/main
               </Link>
             </motion.div>
 
@@ -542,12 +494,9 @@ export default function Home() {
         </div>
       </section>
 
-<<<<<<< HEAD
       {/* Customer Feedback Carousel */}
       <CustomerFeedback />
 
-=======
->>>>>>> origin/main
       {/* How It Works (DARK) - MOVED TO TOP - ENHANCED WITH ANIMATIONS */}
       <section id="how-it-works" className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-black py-20">
         <div className="mx-auto max-w-6xl px-6">
@@ -733,17 +682,10 @@ export default function Home() {
           <div className="absolute top-1/4 -left-48 w-96 h-96 bg-[#3b82f6]/5 rounded-full blur-3xl" />
           <div className="absolute bottom-1/4 -right-48 w-96 h-96 bg-[#8b5cf6]/5 rounded-full blur-3xl" />
         </div>
-<<<<<<< HEAD
-      </section >
-
-      {/* Execution flow & security reminders (LIGHT) - ENHANCED WITH ANIMATIONS */}
-      < section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-20" >
-=======
       </section>
 
       {/* Execution flow & security reminders (LIGHT) - ENHANCED WITH ANIMATIONS */}
       <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-20">
->>>>>>> origin/main
         <div className="mx-auto max-w-6xl px-6 space-y-16">
           <div className="text-center">
             <motion.h3
@@ -1034,17 +976,10 @@ export default function Home() {
             </div>
           </motion.div>
         </div>
-<<<<<<< HEAD
-      </section >
-
-      {/* Pricing Section with License-Aware Logic */}
-      < PricingSection />
-=======
       </section>
 
       {/* Pricing Section with License-Aware Logic */}
-      <PricingSection />
->>>>>>> origin/main
+      < PricingSection />
 
       {/* Resources teaser (LIGHT) */}
       < section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-5" >
@@ -1106,10 +1041,10 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section >
+      </section>
 
       {/* Manual vs Bot Comparison (DARK) */}
-      < section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-dark-3)] py-16 text-[var(--text-on-dark)]" >
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-dark-3)] py-16 text-[var(--text-on-dark)]">
         <div className="mx-auto max-w-6xl px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1169,10 +1104,10 @@ export default function Home() {
             </div>
           </motion.div>
         </div>
-      </section >
+      </section>
 
       {/* Comparison CTA (LIGHT) - SEPARATOR */}
-      < section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-16 border-y border-zinc-100" >
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-16 border-y border-zinc-100">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -1192,10 +1127,10 @@ export default function Home() {
             <span aria-hidden="true">&rarr;</span>
           </Link>
         </motion.div>
-      </section >
+      </section>
 
       {/* Testimonials (DARK) */}
-      < section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-dark-2)] py-16 text-[var(--text-on-dark)]" >
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-dark-2)] py-16 text-[var(--text-on-dark)]">
         <div className="mx-auto max-w-6xl px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1231,14 +1166,10 @@ export default function Home() {
             ))}
           </div>
         </div>
-<<<<<<< HEAD
-      </section >
-=======
       </section>
->>>>>>> origin/main
 
       {/* Support highlight + FAQ (LIGHT) */}
-      < section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16" >
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16">
         <div className="mx-auto max-w-6xl px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1327,10 +1258,10 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section >
+      </section>
 
       {/* Final CTA Strip */}
-      < section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-dark-1)] py-12 text-[var(--text-on-dark)]" >
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-dark-1)] py-12 text-[var(--text-on-dark)]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -1362,7 +1293,7 @@ export default function Home() {
             </Link>
           </div>
         </motion.div>
-      </section >
+      </section>
     </>
   );
 }
