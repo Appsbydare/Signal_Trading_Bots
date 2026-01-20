@@ -1,0 +1,286 @@
+================================================================================
+CRYPTO PAYMENT SYSTEM - IMPLEMENTATION PLAN & STATUS
+================================================================================
+
+PROJECT: signaltradingbots.com - Telegram Trading Bot Payment System
+DATE: November 2025
+STATUS: Partially Implemented - Needs Wallet Configuration & Auto-Verification
+
+================================================================================
+1. OVERALL SYSTEM DESIGN
+================================================================================
+
+GOAL: Build a custom crypto payment system without third-party gateways that:
+- Accepts payments in multiple cryptocurrencies (USDT, BTC, ETH, BNB, USDC)
+- Automatically verifies payments via blockchain APIs
+- Uses wallet rotation to prevent payment collisions
+- Implements embedded price fingerprinting for unique order matching
+- Provides fallback manual verification via Transaction ID
+
+PAYMENT FLOW:
+1. User fills customer info on /payment page
+2. User selects "Cryptocurrency" payment method
+3. System creates order with unique embedded price
+4. System assigns wallet from rotation pool (15 wallets per coin)
+5. User redirected to /payment-crypto page
+6. User sees QR code, wallet address, exact amount (6 decimals)
+7. User sends payment from their wallet
+8. System auto-verifies via blockchain APIs (every 30-60 seconds)
+9. If auto-verification fails after 5 minutes, user can enter TX ID
+10. On successful verification, license key generated and emailed
+11. User redirected to success page
+
+================================================================================
+2. KEY FEATURES IMPLEMENTED
+================================================================================
+
+A. WALLET ROTATION SYSTEM
+   - 15 wallets per cryptocurrency
+   - Automatic rotation every 15 minutes
+   - Prevents payment collisions
+   - Location: src/lib/wallets.ts
+   - Status: ✅ Code complete, ⚠️ Needs wallet addresses added
+
+B. EMBEDDED PRICE FINGERPRINTING
+   - Display price: $29 (Starter), $49 (Pro)
+   - Embedded price formula: basePrice - 0.099890 + (walletIndex * 0.000010)
+   - Example: Wallet 1 = 28.900110, Wallet 2 = 28.900120, etc.
+   - Resets to first wallet after 15 minutes
+   - Location: src/lib/wallets.ts (getEmbeddedPrice function)
+   - Status: ✅ Implemented
+
+C. ORDER CREATION API
+   - Endpoint: /api/orders/create
+   - Creates order with unique embedded price
+   - Assigns wallet from rotation pool
+   - Sets 15-minute expiry
+   - Returns orderId, walletAddress, embeddedPrice
+   - Location: src/app/api/orders/create/route.ts
+   - Status: ✅ Implemented
+
+D. PAYMENT PAGE (Customer Info)
+   - Collects: Full Name, Email, Country
+   - Terms & Conditions checkbox
+   - Payment method selection (Crypto, Card, Binance Pay)
+   - Creates order on submit
+   - Location: src/app/payment/page.tsx
+   - Status: ✅ Implemented
+
+E. CRYPTO PAYMENT PAGE
+   - Displays QR code with wallet address + amount
+   - Shows exact amount (6 decimals)
+   - 15-minute countdown timer
+   - Real-time status polling (every 5 seconds)
+   - Copy wallet address button
+   - "Pay from wallet" button (deep link)
+   - Location: src/app/payment-crypto/page.tsx
+   - Status: ✅ Implemented
+
+F. TX ID FALLBACK VERIFICATION
+   - Shows after 5 minutes if auto-verification fails
+   - User enters transaction hash
+   - System verifies TX via blockchain API
+   - If TX doesn't match → redirects to customer service
+   - Location: src/app/payment-crypto/page.tsx (UI)
+   - Location: src/app/api/verify/tx/route.ts (API)
+   - Status: ✅ Implemented
+
+G. STATUS POLLING API
+   - Endpoint: /api/orders/[orderId]/status
+   - Returns order status, payment detected, confirmations
+   - Used by frontend for real-time updates
+   - Location: src/app/api/orders/[orderId]/status/route.ts
+   - Status: ✅ Implemented
+
+================================================================================
+3. WHAT STILL NEEDS TO BE DONE
+================================================================================
+
+A. WALLET ADDRESSES CONFIGURATION
+   Priority: HIGH
+   Status: ⚠️ PENDING
+   Action Required:
+   - Create 15 wallets for each cryptocurrency:
+     * USDT-TRC20 (Tron network)
+     * USDT-ERC20 (Ethereum network)
+     * BTC (Bitcoin)
+     * ETH (Ethereum)
+     * BNB (Binance Smart Chain)
+     * USDC-ERC20 (Ethereum network)
+   - Add addresses to src/lib/wallets.ts
+   - Note: Can reuse same MetaMask accounts for ERC20, ETH, BNB, USDC
+
+B. AUTO-VERIFICATION BACKGROUND JOB
+   Priority: HIGH
+   Status: ❌ NOT IMPLEMENTED
+   Action Required:
+   - Create /api/verify/auto endpoint
+   - Poll blockchain APIs every 30-60 seconds
+   - Check pending orders (status = "waiting_for_payment")
+   - Verify payments match: address, amount, token, time window, confirmations
+   - Update order status to "paid" on match
+   - Generate license key
+   - Send email with license
+   - Options for implementation:
+     * Vercel Cron Jobs (recommended)
+     * External cron service (cron-job.org, EasyCron)
+     * Google Apps Script (as discussed)
+   - Blockchain APIs needed:
+     * TRC20: TronScan API (https://apilist.tronscan.org/api/account/trc20/transfers)
+     * ERC20: Etherscan API (https://api.etherscan.io/api?module=account&action=tokentx)
+     * BTC: BlockCypher API (https://api.blockcypher.com/v1/btc/main/addrs/{address}/full)
+     * BSC: BscScan API (https://api.bscscan.com/api?module=account&action=tokentx)
+
+C. EMAIL SERVICE INTEGRATION
+   Priority: MEDIUM
+   Status: ❌ NOT IMPLEMENTED
+   Action Required:
+   - Integrate email service (Resend, SendGrid, or similar)
+   - Send license key email when payment verified
+   - Email template with license key and instructions
+
+D. DATABASE/STORAGE
+   Priority: MEDIUM
+   Status: ⚠️ USING IN-MEMORY (TEMPORARY)
+   Current: Using Map() in-memory storage (lost on server restart)
+   Action Required:
+   - Replace with persistent storage:
+     * Google Sheets (as discussed)
+     * Database (PostgreSQL, MongoDB, etc.)
+     * Vercel KV (Redis)
+   - Store: orders, payment logs, license keys
+
+E. PAYMENT SUCCESS PAGE
+   Priority: LOW
+   Status: ❌ NOT IMPLEMENTED
+   Action Required:
+   - Create /payment-success page
+   - Display order confirmation
+   - Show license key
+   - Download instructions
+
+F. MULTI-CRYPTO SELECTION
+   Priority: LOW
+   Status: ⚠️ PARTIAL
+   Current: Only USDT-TRC20 implemented
+   Action Required:
+   - Add crypto selection UI on payment page
+   - Support all 6 cryptocurrencies
+   - Update order creation to use selected crypto
+
+================================================================================
+4. TECHNICAL DETAILS
+================================================================================
+
+VERIFICATION MATCHING CRITERIA:
+- To address = order.walletAddress (exact match)
+- Amount = order.embeddedPrice (exact match, 6 decimals)
+- Token/Contract = expected token contract address
+- Transaction time within order window (createdAt to expiresAt)
+- Confirmations >= threshold:
+  * TRC20: 1-2 confirmations
+  * ERC20: 2-3 confirmations
+  * BTC: 1-2 confirmations (can use 3+ for safety)
+  * BSC: 2-3 confirmations
+
+PRICE EMBEDDING FORMULA:
+- Base price: $29 (Starter) or $49 (Pro)
+- Embedded: basePrice - 0.099890 + (walletIndex * 0.000010)
+- Wallet 1: 28.900110
+- Wallet 2: 28.900120
+- Wallet 3: 28.900130
+- ... up to Wallet 15: 28.900250
+- Resets to 28.900110 after 15 minutes
+
+WALLET ROTATION LOGIC:
+- 15-minute time windows
+- windowIndex = Math.floor(now / (15 * 60 * 1000)) % 15
+- walletIndex = windowIndex % pool.length
+- Automatically rotates every 15 minutes
+
+FALLBACK MECHANISM:
+- If no payment detected after 5 minutes → show TX ID input
+- User enters transaction hash
+- System verifies TX via blockchain API
+- If TX matches order → mark paid, generate license
+- If TX doesn't match → redirect to /contact?reason=payment_verification_failed
+
+================================================================================
+5. FILE STRUCTURE
+================================================================================
+
+src/
+├── lib/
+│   └── wallets.ts                    # Wallet pool config & price calculation
+├── app/
+│   ├── payment/
+│   │   └── page.tsx                  # Customer info & payment method selection
+│   ├── payment-crypto/
+│   │   └── page.tsx                  # QR code, wallet address, status polling
+│   └── api/
+│       ├── orders/
+│       │   ├── create/
+│       │   │   └── route.ts          # Create order API
+│       │   └── [orderId]/
+│       │       └── status/
+│       │           └── route.ts      # Order status polling API
+│       └── verify/
+│           └── tx/
+│               └── route.ts          # Manual TX ID verification API
+
+================================================================================
+6. DEPENDENCIES INSTALLED
+================================================================================
+
+- qrcode.react (for QR code generation)
+- Next.js 16.0.1
+- React 19.2.0
+- TypeScript
+
+================================================================================
+7. NEXT STEPS (PRIORITY ORDER)
+================================================================================
+
+1. ⚠️ Add wallet addresses to src/lib/wallets.ts
+   - Create 15 wallets per cryptocurrency
+   - Update WALLET_POOLS object with real addresses
+
+2. ❌ Implement auto-verification background job
+   - Create /api/verify/auto endpoint
+   - Set up Vercel Cron or external cron
+   - Integrate blockchain APIs
+   - Test verification logic
+
+3. ❌ Set up email service
+   - Choose provider (Resend recommended)
+   - Create email template
+   - Send license on payment verification
+
+4. ⚠️ Replace in-memory storage
+   - Choose storage solution (Google Sheets or database)
+   - Update all API routes to use persistent storage
+
+5. ❌ Create payment success page
+   - Display order confirmation
+   - Show license key
+
+6. ⚠️ Add multi-crypto selection
+   - Update payment page UI
+   - Support all 6 cryptocurrencies
+
+================================================================================
+8. NOTES & CONSIDERATIONS
+================================================================================
+
+- Current implementation uses in-memory storage (Map) - will lose data on restart
+- Auto-verification is critical for good UX - prioritize this
+- Wallet addresses must be added before system can work
+- Consider rate limits on blockchain APIs (may need API keys)
+- Test with small amounts first
+- Consider adding payment notifications/emails
+- May want to add admin dashboard to view orders/payments
+
+================================================================================
+END OF DOCUMENT
+================================================================================
+
