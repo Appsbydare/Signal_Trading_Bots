@@ -4,7 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+<<<<<<< HEAD
 import HangTag from "./HangTag";
+=======
+>>>>>>> origin/main
 
 interface Customer {
     id: number;
@@ -126,7 +129,11 @@ export default function Navbar() {
                         </div>
                     </div>
 
+<<<<<<< HEAD
                     <Link href="/take-a-tour" className="text-zinc-300 transition-colors hover:text-white">Product Preview</Link>
+=======
+                    <Link href="/demo" className="text-zinc-300 transition-colors hover:text-white">Demo</Link>
+>>>>>>> origin/main
                     <Link href="/contact" className="text-zinc-300 transition-colors hover:text-white">Contact</Link>
 
                     {/* User Profile or Sign In */}
@@ -161,6 +168,7 @@ export default function Navbar() {
                                 </div>
                             </div>
                         ) : (
+<<<<<<< HEAD
                             <div className="relative">
                                 <Link
                                     href="/login"
@@ -170,6 +178,14 @@ export default function Navbar() {
                                 </Link>
                                 <HangTag />
                             </div>
+=======
+                            <Link
+                                href="/login"
+                                className="rounded-md bg-[#5e17eb] px-5 py-2 text-sm font-medium text-white shadow-lg shadow-[#5e17eb]/20 transition-all hover:bg-[#4a12bf] hover:shadow-[#5e17eb]/40"
+                            >
+                                Sign in
+                            </Link>
+>>>>>>> origin/main
                         )
                     )}
                 </nav>
@@ -207,7 +223,11 @@ export default function Navbar() {
 
                         <div className="h-px bg-zinc-900"></div>
 
+<<<<<<< HEAD
                         <Link href="/take-a-tour" className="block rounded-md px-2 py-1.5 text-sm font-medium text-zinc-300 hover:bg-zinc-900 hover:text-white">Product Preview</Link>
+=======
+                        <Link href="/demo" className="block rounded-md px-2 py-1.5 text-sm font-medium text-zinc-300 hover:bg-zinc-900 hover:text-white">Demo</Link>
+>>>>>>> origin/main
                         <Link href="/contact" className="block rounded-md px-2 py-1.5 text-sm font-medium text-zinc-300 hover:bg-zinc-900 hover:text-white">Contact</Link>
 
                         {/* Mobile User Profile or Sign In */}

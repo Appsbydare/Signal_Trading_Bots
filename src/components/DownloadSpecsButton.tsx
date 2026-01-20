@@ -11,8 +11,13 @@ export function DownloadSpecsButton() {
         // Short delay to show the spinner (0.8s) before starting the download
         setTimeout(() => {
             const link = document.createElement('a');
+<<<<<<< HEAD
             link.href = '/docs/Telegram Signal Copier V13.2_spec_sheet.pdf';
             link.download = 'Telegram Signal Copier V13.2_spec_sheet.pdf';
+=======
+            link.href = '/docs/Mini Bot V13.1_spec_sheet.pdf';
+            link.download = 'Mini Bot V13.1_spec_sheet.pdf';
+>>>>>>> origin/main
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);

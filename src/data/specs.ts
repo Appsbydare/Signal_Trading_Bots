@@ -1,5 +1,9 @@
 export const specsData = {
+<<<<<<< HEAD
     title: "Telegram Signal Copier V13.2 – Feature Specification",
+=======
+    title: "Mini Bot V13.1 – Feature Specification",
+>>>>>>> origin/main
     description: "This page summarises what the desktop bot offers from a user experience point of view: which tabs exist, what they show, and how they work together with MT5 and Telegram. It avoids implementation details while giving enough depth for demos, documentation, or QA.",
     platformDetails: [
         "Windows 10/11 (64‑bit).",
