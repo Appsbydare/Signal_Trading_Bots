@@ -1,88 +1,122 @@
-03:17:12.948 Running build in Washington, D.C., USA (East) – iad1
-03:17:12.949 Build machine configuration: 2 cores, 8 GB
-03:17:13.083 Cloning github.com/Appsbydare/Signal_Trading_Bots (Branch: main, Commit: 5dad96f)
-03:17:14.625 Cloning completed: 1.541s
-03:17:14.758 Restored build cache from previous deployment (ArRSGxDiJMZZuPNDAuMx8v1dQxVv)
-03:17:15.085 Running "vercel build"
-03:17:16.038 Vercel CLI 50.4.8
-03:17:16.361 Installing dependencies...
-03:17:21.079 
-03:17:21.079 added 66 packages, and removed 17 packages in 4s
-03:17:21.080 
-03:17:21.080 153 packages are looking for funding
-03:17:21.080   run `npm fund` for details
-03:17:21.117 Detected Next.js version: 16.0.7
-03:17:21.124 Running "npm run build"
-03:17:21.240 
-03:17:21.240 > signal_trading_bots@0.1.0 build
-03:17:21.241 > next build
-03:17:21.241 
-03:17:22.195    Downloading swc package @next/swc-linux-x64-gnu... to /vercel/.cache/next-swc
-03:17:22.199  ⚠ Found lockfile missing swc dependencies, run next locally to automatically patch
-03:17:24.030    Downloading swc package @next/swc-linux-x64-musl... to /vercel/.cache/next-swc
-03:17:25.717    ▲ Next.js 16.0.7 (Turbopack)
-03:17:25.718    - Experiments (use with caution):
-03:17:25.718      · serverActions
-03:17:25.718 
-03:17:25.780    Creating an optimized production build ...
-03:17:26.382  ⚠ Found lockfile missing swc dependencies, run next locally to automatically patch
-03:17:46.945 
-03:17:46.945 > Build error occurred
-03:17:46.949 Error: Turbopack build failed with 2 errors:
-03:17:46.949 ./src/app/bebasneue_fed10c44.module.css
-03:17:46.950 Error evaluating Node.js code
-03:17:46.950 Error: Cannot find module '../lightningcss.linux-x64-gnu.node'
-03:17:46.950 Require stack:
-03:17:46.950 - /vercel/path0/node_modules/lightningcss/node/index.js
-03:17:46.950 - /vercel/path0/node_modules/@tailwindcss/node/dist/index.js
-03:17:46.950 - /vercel/path0/node_modules/@tailwindcss/postcss/dist/index.js
-03:17:46.950 - /vercel/path0/.next/build/chunks/[root-of-the-server]__51225daf._.js
-03:17:46.950 - /vercel/path0/.next/build/chunks/[turbopack]_runtime.js
-03:17:46.950 - /vercel/path0/.next/build/postcss.js
-03:17:46.950     [at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)]
-03:17:46.950     [at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)]
-03:17:46.950     [at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)]
-03:17:46.950     [at Function._load (node:internal/modules/cjs/loader:1192:37)]
-03:17:46.950     [at TracingChannel.traceSync (node:diagnostics_channel:328:14)]
-03:17:46.950     [at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)]
-03:17:46.951     [at Module.require (node:internal/modules/cjs/loader:1463:12)]
-03:17:46.951     [at require (node:internal/modules/helpers:147:16)]
-03:17:46.951     [at Object.<anonymous> (/vercel/path0/node_modules/lightningcss/node/index.js:22:22)]
-03:17:46.951     [at Module._compile (node:internal/modules/cjs/loader:1706:14)]
-03:17:46.951 
-03:17:46.951 Import trace:
-03:17:46.951   Server Component:
-03:17:46.951     ./src/app/bebasneue_fed10c44.module.css
-03:17:46.951     ./src/app/bebasneue_fed10c44.js
-03:17:46.951     ./src/app/layout.tsx
-03:17:46.951 
-03:17:46.951 
-03:17:46.951 ./src/app/globals.css
-03:17:46.951 Error evaluating Node.js code
-03:17:46.951 Error: Cannot find module '../lightningcss.linux-x64-gnu.node'
-03:17:46.951 Require stack:
-03:17:46.951 - /vercel/path0/node_modules/lightningcss/node/index.js
-03:17:46.951 - /vercel/path0/node_modules/@tailwindcss/node/dist/index.js
-03:17:46.952 - /vercel/path0/node_modules/@tailwindcss/postcss/dist/index.js
-03:17:46.952 - /vercel/path0/.next/build/chunks/[root-of-the-server]__51225daf._.js
-03:17:46.952 - /vercel/path0/.next/build/chunks/[turbopack]_runtime.js
-03:17:46.952 - /vercel/path0/.next/build/postcss.js
-03:17:46.952     [at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)]
-03:17:46.952     [at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)]
-03:17:46.952     [at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)]
-03:17:46.952     [at Function._load (node:internal/modules/cjs/loader:1192:37)]
-03:17:46.952     [at TracingChannel.traceSync (node:diagnostics_channel:328:14)]
-03:17:46.957     [at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)]
-03:17:46.957     [at Module.require (node:internal/modules/cjs/loader:1463:12)]
-03:17:46.957     [at require (node:internal/modules/helpers:147:16)]
-03:17:46.957     [at Object.<anonymous> (/vercel/path0/node_modules/lightningcss/node/index.js:22:22)]
-03:17:46.957     [at Module._compile (node:internal/modules/cjs/loader:1706:14)]
-03:17:46.957 
-03:17:46.957 Import trace:
-03:17:46.957   Client Component Browser:
-03:17:46.957     ./src/app/globals.css [Client Component Browser]
-03:17:46.958     ./src/app/layout.tsx [Server Component]
-03:17:46.958 
-03:17:46.958 
-03:17:46.958     at ignore-listed frames
-03:17:47.026 Error: Command "npm run build" exited with 1
+11:57:39.209 Running build in Washington, D.C., USA (East) – iad1
+11:57:39.210 Build machine configuration: 2 cores, 8 GB
+11:57:39.362 Cloning github.com/Appsbydare/Signal_Trading_Bots (Branch: main, Commit: 4cec5cf)
+11:57:40.992 Cloning completed: 1.629s
+11:57:41.473 Restored build cache from previous deployment (9WBKW9oZ7haCQrW8z3xGCnNrJRtd)
+11:57:41.779 Running "vercel build"
+11:57:43.116 Vercel CLI 50.4.8
+11:57:43.413 Installing dependencies...
+11:57:49.482 
+11:57:49.483 added 2 packages, removed 8 packages, and changed 2 packages in 6s
+11:57:49.484 
+11:57:49.484 155 packages are looking for funding
+11:57:49.484   run `npm fund` for details
+11:57:49.682 Detected Next.js version: 16.0.7
+11:57:49.695 Running "npm run build"
+11:57:49.856 
+11:57:49.857 > signal_trading_bots@0.1.0 build
+11:57:49.857 > next build
+11:57:49.857 
+11:57:50.886    ▲ Next.js 16.0.7 (Turbopack)
+11:57:50.886    - Experiments (use with caution):
+11:57:50.887      · serverActions
+11:57:50.887 
+11:57:50.966    Creating an optimized production build ...
+11:58:12.158 
+11:58:12.159 > Build error occurred
+11:58:12.164 Error: Turbopack build failed with 2 errors:
+11:58:12.165 ./src/app/bebasneue_fed10c44.module.css
+11:58:12.165 Error evaluating Node.js code
+11:58:12.165 Error: Cannot find native binding. npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). Please try `npm i` again after removing both package-lock.json and node_modules directory.
+11:58:12.165     [at Object.<anonymous> (/vercel/path0/node_modules/@tailwindcss/oxide/index.js:562:11)]
+11:58:12.165     [at Module._compile (node:internal/modules/cjs/loader:1706:14)]
+11:58:12.165     [at Object..js (node:internal/modules/cjs/loader:1839:10)]
+11:58:12.165     [at Module.load (node:internal/modules/cjs/loader:1441:32)]
+11:58:12.166     [at Function._load (node:internal/modules/cjs/loader:1263:12)]
+11:58:12.166     [at TracingChannel.traceSync (node:diagnostics_channel:328:14)]
+11:58:12.166     [at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)]
+11:58:12.166     [at Module.require (node:internal/modules/cjs/loader:1463:12)]
+11:58:12.166     [at require (node:internal/modules/helpers:147:16)]
+11:58:12.166     [at Object.<anonymous> (/vercel/path0/node_modules/@tailwindcss/postcss/dist/index.js:1:1406)]
+11:58:12.166 Caused by: Error: Cannot find module '@tailwindcss/oxide-linux-x64-gnu'
+11:58:12.166 Require stack:
+11:58:12.166 - /vercel/path0/node_modules/@tailwindcss/oxide/index.js
+11:58:12.166     [at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)]
+11:58:12.167     [at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)]
+11:58:12.167     [at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)]
+11:58:12.167     [at Function._load (node:internal/modules/cjs/loader:1192:37)]
+11:58:12.167     [at TracingChannel.traceSync (node:diagnostics_channel:328:14)]
+11:58:12.167     [at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)]
+11:58:12.167     [at Module.require (node:internal/modules/cjs/loader:1463:12)]
+11:58:12.167     [at require (node:internal/modules/helpers:147:16)]
+11:58:12.168     [at requireNative (/vercel/path0/node_modules/@tailwindcss/oxide/index.js:291:27)]
+11:58:12.168     [at Object.<anonymous> (/vercel/path0/node_modules/@tailwindcss/oxide/index.js:529:17)]
+11:58:12.168 Caused by: Error: Cannot find module './tailwindcss-oxide.linux-x64-gnu.node'
+11:58:12.168 Require stack:
+11:58:12.168 - /vercel/path0/node_modules/@tailwindcss/oxide/index.js
+11:58:12.168     [at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)]
+11:58:12.168     [at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)]
+11:58:12.168     [at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)]
+11:58:12.168     [at Function._load (node:internal/modules/cjs/loader:1192:37)]
+11:58:12.168     [at TracingChannel.traceSync (node:diagnostics_channel:328:14)]
+11:58:12.169     [at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)]
+11:58:12.169     [at Module.require (node:internal/modules/cjs/loader:1463:12)]
+11:58:12.169     [at require (node:internal/modules/helpers:147:16)]
+11:58:12.169     [at requireNative (/vercel/path0/node_modules/@tailwindcss/oxide/index.js:286:18)]
+11:58:12.169     [at Object.<anonymous> (/vercel/path0/node_modules/@tailwindcss/oxide/index.js:529:17)]
+11:58:12.169 
+11:58:12.169 Import trace:
+11:58:12.170   Server Component:
+11:58:12.170     ./src/app/bebasneue_fed10c44.module.css
+11:58:12.170     ./src/app/bebasneue_fed10c44.js
+11:58:12.170     ./src/app/layout.tsx
+11:58:12.170 
+11:58:12.170 
+11:58:12.170 ./src/app/globals.css
+11:58:12.170 Error evaluating Node.js code
+11:58:12.170 Error: Cannot find native binding. npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). Please try `npm i` again after removing both package-lock.json and node_modules directory.
+11:58:12.176     [at Object.<anonymous> (/vercel/path0/node_modules/@tailwindcss/oxide/index.js:562:11)]
+11:58:12.176     [at Module._compile (node:internal/modules/cjs/loader:1706:14)]
+11:58:12.176     [at Object..js (node:internal/modules/cjs/loader:1839:10)]
+11:58:12.177     [at Module.load (node:internal/modules/cjs/loader:1441:32)]
+11:58:12.177     [at Function._load (node:internal/modules/cjs/loader:1263:12)]
+11:58:12.177     [at TracingChannel.traceSync (node:diagnostics_channel:328:14)]
+11:58:12.177     [at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)]
+11:58:12.177     [at Module.require (node:internal/modules/cjs/loader:1463:12)]
+11:58:12.177     [at require (node:internal/modules/helpers:147:16)]
+11:58:12.178     [at Object.<anonymous> (/vercel/path0/node_modules/@tailwindcss/postcss/dist/index.js:1:1406)]
+11:58:12.178 Caused by: Error: Cannot find module '@tailwindcss/oxide-linux-x64-gnu'
+11:58:12.178 Require stack:
+11:58:12.178 - /vercel/path0/node_modules/@tailwindcss/oxide/index.js
+11:58:12.178     [at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)]
+11:58:12.178     [at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)]
+11:58:12.179     [at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)]
+11:58:12.180     [at Function._load (node:internal/modules/cjs/loader:1192:37)]
+11:58:12.180     [at TracingChannel.traceSync (node:diagnostics_channel:328:14)]
+11:58:12.180     [at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)]
+11:58:12.180     [at Module.require (node:internal/modules/cjs/loader:1463:12)]
+11:58:12.180     [at require (node:internal/modules/helpers:147:16)]
+11:58:12.180     [at requireNative (/vercel/path0/node_modules/@tailwindcss/oxide/index.js:291:27)]
+11:58:12.180     [at Object.<anonymous> (/vercel/path0/node_modules/@tailwindcss/oxide/index.js:529:17)]
+11:58:12.180 Caused by: Error: Cannot find module './tailwindcss-oxide.linux-x64-gnu.node'
+11:58:12.180 Require stack:
+11:58:12.180 - /vercel/path0/node_modules/@tailwindcss/oxide/index.js
+11:58:12.181     [at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)]
+11:58:12.181     [at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)]
+11:58:12.181     [at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)]
+11:58:12.181     [at Function._load (node:internal/modules/cjs/loader:1192:37)]
+11:58:12.181     [at TracingChannel.traceSync (node:diagnostics_channel:328:14)]
+11:58:12.181     [at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)]
+11:58:12.181     [at Module.require (node:internal/modules/cjs/loader:1463:12)]
+11:58:12.181     [at require (node:internal/modules/helpers:147:16)]
+11:58:12.181     [at requireNative (/vercel/path0/node_modules/@tailwindcss/oxide/index.js:286:18)]
+11:58:12.182     [at Object.<anonymous> (/vercel/path0/node_modules/@tailwindcss/oxide/index.js:529:17)]
+11:58:12.182 
+11:58:12.182 Import trace:
+11:58:12.182   Client Component Browser:
+11:58:12.182     ./src/app/globals.css [Client Component Browser]
+11:58:12.182     ./src/app/layout.tsx [Server Component]
+11:58:12.182 
+11:58:12.182 
+11:58:12.182     at ignore-listed frames
+11:58:12.306 Error: Command "npm run build" exited with 1
