@@ -236,26 +236,7 @@ export default function Home() {
 
 
 
-  const testimonials = [
-    {
-      name: "Daniel M.",
-      role: "Forex trader (demo to live)",
-      quote:
-        "After switching to the bot, I stopped missing late‑night signals. It quietly runs on my VPS and mirrors my Telegram channel.",
-    },
-    {
-      name: "Sara K.",
-      role: "Signal follower",
-      quote:
-        "Setup was straightforward and the risk controls give me confidence. I started on demo first, then moved to a small live account.",
-    },
-    {
-      name: "Imran T.",
-      role: "Automated trading enthusiast",
-      quote:
-        "Exactly what I needed: simple Telegram → MT5 automation without extra noise. Support helped me configure my broker in one session.",
-    },
-  ];
+
 
   const executionFlow = [
     {
@@ -1125,44 +1106,7 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Testimonials (DARK) */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-dark-2)] py-16 text-[var(--text-on-dark)]">
-        <div className="mx-auto max-w-6xl px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="mb-8 text-center"
-          >
-            <h2 className="mb-3 text-2xl font-semibold md:text-3xl">
-              Traders testing and using the bot
-            </h2>
-            <p className="mx-auto max-w-2xl text-sm text-zinc-400 md:text-base">
-              These are example quotes you can replace with real feedback from your own
-              users.
-            </p>
-          </motion.div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {testimonials.map((t, index) => (
-              <motion.div
-                key={t.name}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.15 }}
-                className="flex flex-col rounded-xl border border-[var(--border-on-dark-strong)] bg-[var(--bg-dark-3)] p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(15,23,42,0.75)] hover:border-[var(--brand-blue-soft)]"
-              >
-                <p className="mb-4 text-sm text-zinc-200">&ldquo;{t.quote}&rdquo;</p>
-                <div className="mt-auto text-sm">
-                  <div className="font-semibold">{t.name}</div>
-                  <div className="text-xs text-zinc-400">{t.role}</div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       {/* Support highlight + FAQ (LIGHT) */}
       <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-[var(--bg-light-2)] py-16">

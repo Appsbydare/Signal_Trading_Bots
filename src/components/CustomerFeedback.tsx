@@ -16,64 +16,64 @@ const testimonials: Testimonial[] = [
     {
         id: 1,
         name: "John M.",
-        country: "United States",
-        flag: "🇺🇸",
+        country: "Forex Trader (Demo to Live)",
+        flag: "",
         quote: "The keyword mapping is genius. Signals come in and the bot instantly executes the trade in MetaTrader5 without me lifting a finger. It's like autopilot for my portfolio.",
         image: "/customerfeedback/1.jpeg"
     },
     {
         id: 2,
         name: "Alicia R.",
-        country: "United States",
-        flag: "🇺🇸",
+        country: "Signal Follower",
+        flag: "",
         quote: "Risk management is what sold me. The app makes sure I don't overexpose my account while firing trades automatically. I can finally relax knowing everything is under control.",
         image: "/customerfeedback/2.jpeg"
     },
     {
         id: 3,
         name: "Carlos D.",
-        country: "United States",
-        flag: "🇺🇸",
+        country: "Automated Trading Enthusiast",
+        flag: "",
         quote: "Honestly, I just love the simplicity. It runs smoothly in the background while MetaTrader5 stays perfectly synced. Support was a huge help with the initial setup.",
         image: "/customerfeedback/3.jpeg"
     },
     {
         id: 4,
         name: "Eric G.",
-        country: "United Kingdom",
-        flag: "🇬🇧",
+        country: "Gold & Indices Specialist",
+        flag: "",
         quote: "The auditing is super clear. Every triggered trade is logged so I can review my history anytime. It makes reporting and compliance completely stress-free.",
         image: "/customerfeedback/4.jpeg"
     },
     {
         id: 5,
         name: "David P.",
-        country: "United Kingdom",
-        flag: "🇬🇧",
+        country: "Professional Signal Provider",
+        flag: "",
         quote: "I love the strategy creation feature. I can customize my own TP and SL rules and they apply automatically to my MetaTrader5 setups. Flexible and very reliable.",
         image: "/customerfeedback/5.jpeg"
     },
     {
         id: 6,
         name: "Thabo Mokoena",
-        country: "South Africa",
-        flag: "🇿🇦",
+        country: "Scalping Expert",
+        flag: "",
         quote: "Support fixed my setup issues quickly, and now everything flows perfectly. Great team and very fast execution. Highly recommended!",
         image: "/customerfeedback/6.jpeg"
     },
     {
         id: 7,
         name: "Omar A.",
-        country: "United Arab Emirates",
-        flag: "🇦🇪",
+        country: "Long-term Swing Trader",
+        flag: "",
         quote: "It just works. Everything happens automatically and I don't have to babysit the charts anymore. Smooth, reliable, and very easy to use.",
         image: "/customerfeedback/7.jpeg"
     },
     {
         id: 8,
         name: "Ruwan S.",
-        country: "Sri Lanka",
-        flag: "🇱🇰",
+        country: "Risk Management Focused",
+        flag: "",
         quote: "Spot on balance between automation and control. I run in autopilot mode but can still tweak my strategies when I want. Definitely the best of both worlds.",
         image: "/customerfeedback/8.jpeg"
     }
@@ -122,7 +122,7 @@ export const CustomerFeedback: React.FC = () => {
                 {/* Compact Section Header */}
                 <div className="text-center mb-8">
                     <h2 className="text-lg md:text-xl font-bold text-slate-800 tracking-tight mb-2 uppercase">
-                        Customer Feedback
+                        Traders testing and using the bot
                     </h2>
                     <div className="w-10 h-0.5 bg-blue-600/40 mx-auto rounded-full" />
                 </div>
@@ -160,10 +160,7 @@ export const CustomerFeedback: React.FC = () => {
                                             </p>
                                         </div>
 
-                                        {/* Flag - Discrete */}
-                                        <div className="absolute top-2.5 right-2.5 bg-black/20 backdrop-blur-sm rounded-full px-1.5 py-0.5 border border-white/10">
-                                            <span className="text-xs">{testimonial.flag}</span>
-                                        </div>
+                                        {/* Removed flag overlay */}
                                     </div>
 
                                     {/* Tiny Content Area */}

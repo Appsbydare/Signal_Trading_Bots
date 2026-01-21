@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     return jsonError(200, "Session not found or already inactive", "SESSION_NOT_FOUND");
   }
 
-  await deactivateSession(sessionId);
+  await deactivateSession(sessionId, false);
 
   // Log deactivation
   await logValidation({

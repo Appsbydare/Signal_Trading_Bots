@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
   if (expired) {
     // Mark as inactive and signal expiration
     await import("@/lib/license-db").then(async ({ deactivateSession }) => {
-      await deactivateSession(sessionId);
+      await deactivateSession(sessionId, false);
     });
 
     // Log session expiration
