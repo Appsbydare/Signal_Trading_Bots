@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 export default function UserManualPage() {
-    const [activeTab, setActiveTab] = useState<"quickstart" | "settings" | "strategy">("quickstart");
+    const [activeTab, setActiveTab] = useState<"video" | "quickstart" | "settings" | "strategy">("video");
     const [activeSection, setActiveSection] = useState<string>("");
 
     useEffect(() => {
@@ -77,6 +77,7 @@ export default function UserManualPage() {
                                 </h3>
                                 <nav className="space-y-2">
                                     {[
+                                        { id: "video", label: "Video Tutorials", icon: "🎬", desc: "Watch step-by-step guides" },
                                         { id: "quickstart", label: "Quick Start Guide", icon: "🚀", desc: "Get started in 15 minutes" },
                                         { id: "settings", label: "Settings Manual", icon: "⚙️", desc: "Configure your bot" },
                                         { id: "strategy", label: "Strategy Manual", icon: "📊", desc: "Create trading strategies" },
@@ -122,6 +123,7 @@ export default function UserManualPage() {
 
                     {/* Content Area */}
                     <main className="space-y-8">
+                        {activeTab === "video" && <VideoTutorialsContent />}
                         {activeTab === "quickstart" && <QuickStartContent scrollToSection={scrollToSection} />}
                         {activeTab === "settings" && <SettingsContent scrollToSection={scrollToSection} />}
                         {activeTab === "strategy" && <StrategyContent scrollToSection={scrollToSection} />}
@@ -133,11 +135,16 @@ export default function UserManualPage() {
 }
 
 function TableOfContents({ activeTab, activeSection, scrollToSection }: {
-    activeTab: "quickstart" | "settings" | "strategy";
+    activeTab: "video" | "quickstart" | "settings" | "strategy";
     activeSection: string;
     scrollToSection: (id: string) => void;
 }) {
     const sections = {
+        video: [
+            { id: "full-guide", title: "Complete Setup Guide", icon: "📺" },
+            { id: "telegram-setup", title: "Telegram Integration", icon: "📱" },
+            { id: "mt5-connection", title: "MT5 Linkage", icon: "💹" },
+        ],
         quickstart: [
             { id: "before-begin", title: "Before You Begin", icon: "✅" },
             { id: "installation", title: "Installation", icon: "📥" },
@@ -221,6 +228,57 @@ function LinkButton({ href, children }: { href: string; children: React.ReactNod
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
         </a>
+    );
+}
+
+// Video Tutorial Content Component
+function VideoTutorialsContent() {
+    return (
+        <div className="space-y-8">
+            <div className="bg-gradient-to-r from-[#5e17eb]/10 to-purple-500/10 border border-[#5e17eb]/20 rounded-lg p-6">
+                <h2 className="text-2xl font-bold text-white mb-2">🎬 Video Tutorials</h2>
+                <p className="text-zinc-300">
+                    Watch our step-by-step guides to master the Signal Trading Bot. Follow along as we demonstrate setup and features.
+                </p>
+            </div>
+
+            <Section id="full-guide" title="Complete Setup Guide" icon="📹">
+                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+                    <div className="aspect-video w-full">
+                        <iframe
+                            className="w-full h-full"
+                            src="https://www.youtube.com/embed/Rfy0Jy7m2ak"
+                            title="Signal Trading Bot - Complete Setup Tutorial"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowFullScreen
+                        ></iframe>
+                    </div>
+                </div>
+                <div className="mt-6 space-y-4">
+                    <SubSection title="📺 What's Covered in This Video:">
+                        <CheckList>
+                            <CheckItem>Software Installation & First Run</CheckItem>
+                            <CheckItem>Telegram API Credentials Generation</CheckItem>
+                            <CheckItem>MetaTrader 5 Installation & Account Linkage</CheckItem>
+                            <CheckItem>Creating and Testing Your First Strategy</CheckItem>
+                            <CheckItem>Interpreting Logs and Audit History</CheckItem>
+                        </CheckList>
+                    </SubSection>
+                </div>
+            </Section>
+
+            <Section id="telegram-setup" title="Telegram Integration" icon="🗺️">
+                <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                    <p className="text-zinc-400 mb-4 text-sm leading-relaxed">
+                        Learn how to correctly map symbols and keywords from your signal channels to the bot for 100% accuracy.
+                    </p>
+                    <div className="aspect-video rounded-xl overflow-hidden bg-zinc-900 flex items-center justify-center text-zinc-500">
+                        <span className="text-sm italic">Additional Telegram tutorial video coming soon...</span>
+                    </div>
+                </div>
+            </Section>
+        </div>
     );
 }
 
