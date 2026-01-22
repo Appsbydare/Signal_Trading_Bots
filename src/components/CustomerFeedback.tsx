@@ -140,47 +140,66 @@ export const CustomerFeedback: React.FC = () => {
                                 style={{ width: `${cardWidth}px` }}
                                 className="flex-shrink-0"
                             >
-                                <div className="bg-white rounded-lg shadow-sm border border-slate-100 overflow-hidden h-full flex flex-col transition-all duration-300 hover:shadow-md group">
-                                    {/* Slim Portrait Image */}
-                                    <div className="relative h-[240px] overflow-hidden bg-slate-50">
-                                        <Image
-                                            src={testimonial.image}
-                                            alt={testimonial.name}
-                                            fill
-                                            className="object-cover transition-transform duration-1000 group-hover:scale-105"
-                                            sizes="238px"
-                                        />
-                                        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-
-                                        {/* Tiny User Info Overlay */}
-                                        <div className="absolute bottom-3 left-4 text-white">
-                                            <h4 className="font-bold text-sm leading-tight">{testimonial.name}</h4>
-                                            <p className="text-[9px] text-blue-200 flex items-center gap-1 mt-0.5 font-medium opacity-90">
-                                                {testimonial.country}
-                                            </p>
+                                <div className="bg-white rounded-xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 p-5 h-full flex flex-col transition-all duration-300 hover:shadow-lg group">
+                                    {/* Card Header: Avatar + User Info */}
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="relative w-12 h-12 flex-shrink-0">
+                                            <div className="w-full h-full rounded-full overflow-hidden border-2 border-slate-50 shadow-sm">
+                                                <Image
+                                                    src={testimonial.image}
+                                                    alt={testimonial.name}
+                                                    fill
+                                                    className="object-cover"
+                                                    sizes="48px"
+                                                />
+                                            </div>
+                                            {/* Optional Badge on Avatar like in example */}
+                                            <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm border border-slate-100">
+                                                <svg className="w-3 h-3 text-orange-500 fill-current" viewBox="0 0 20 20">
+                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                </svg>
+                                            </div>
                                         </div>
-
-                                        {/* Removed flag overlay */}
+                                        <div className="flex-grow min-w-0">
+                                            <h4 className="font-bold text-slate-800 text-sm truncate">{testimonial.name}</h4>
+                                            <p className="text-[10px] text-slate-400 font-medium truncate">{testimonial.country}</p>
+                                        </div>
+                                        <div className="flex-shrink-0 opacity-20 transition-opacity group-hover:opacity-40">
+                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12.48 10.92v3.28h4.69c-.19 1.02-.78 1.88-1.66 2.46l2.6 1.99c2.19-2.02 3.45-5 3.45-8.45 0-.58-.05-1.14-.15-1.68H12.48z" />
+                                                <path d="M12.48 24c3.24 0 5.95-1.08 7.93-2.91l-2.6-2.02c-.72.48-1.65.77-2.65.77-2.04 0-3.77-1.38-4.38-3.24H2.43v2.08C4.38 20.44 8.13 24 12.48 24z" />
+                                            </svg>
+                                        </div>
                                     </div>
 
-                                    {/* Tiny Content Area */}
-                                    <div className="p-4 flex-grow flex flex-col justify-between">
-                                        <div>
-                                            <p className="text-slate-600 text-[12px] leading-relaxed italic">
-                                                "{testimonial.quote}"
-                                            </p>
+                                    {/* Star Rating + Verified Badge */}
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="flex gap-0.5">
+                                            {[1, 2, 3, 4, 5].map((s) => (
+                                                <svg key={s} className="w-4 h-4 text-amber-400 fill-current" viewBox="0 0 20 20">
+                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                </svg>
+                                            ))}
                                         </div>
+                                        <div className="bg-blue-500 rounded-full p-0.5">
+                                            <svg className="w-2.5 h-2.5 text-white fill-current" viewBox="0 0 20 20">
+                                                <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
+                                            </svg>
+                                        </div>
+                                    </div>
 
-                                        <div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between">
-                                            <div className="flex gap-0.5">
-                                                {[1, 2, 3, 4, 5].map((s) => (
-                                                    <svg key={s} className="w-2 h-2 text-amber-400 fill-current" viewBox="0 0 20 20">
-                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                                    </svg>
-                                                ))}
-                                            </div>
-                                            <span className="text-[7px] font-bold text-blue-500/80 uppercase tracking-widest">Verified</span>
-                                        </div>
+                                    {/* Review Text */}
+                                    <div className="flex-grow">
+                                        <p className="text-slate-600 text-[13px] leading-relaxed">
+                                            {testimonial.quote}
+                                        </p>
+                                    </div>
+
+                                    {/* Footer: Read More */}
+                                    <div className="mt-4">
+                                        <button className="text-slate-400 font-bold text-xs hover:text-blue-600 transition-colors">
+                                            Read more
+                                        </button>
                                     </div>
                                 </div>
                             </div>
