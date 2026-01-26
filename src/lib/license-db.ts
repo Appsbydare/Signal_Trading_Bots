@@ -1,5 +1,7 @@
 import "server-only";
 
+
+import { licenseConfig } from "./license-config";
 import { getSupabaseClient } from "./supabase-storage";
 
 export type LicenseStatus = "active" | "expired" | "revoked";
@@ -245,6 +247,50 @@ export async function deactivateSession(sessionId: string, notify: boolean = tru
 
   if (error) {
     throw error;
+  }
+  if (error) {
+    throw error;
+  }
+}
+
+/**
+ * Clean up "zombie" sessions that are marked active but haven't sent a heartbeat within the grace period.
+ * This handles cases where clients crash (Alt+F4) or disconnect without notifying termination.
+ */
+export async function expireZombieSessions(): Promise<void> {
+  const client = getSupabaseClient();
+  const gracePeriodSeconds = licenseConfig.heartbeatGraceSeconds + 60; // Add 60s buffer
+
+  const cutoffDate = new Date();
+  cutoffDate.setSeconds(cutoffDate.getSeconds() - gracePeriodSeconds);
+
+  try {
+    // Find sessions that are active but older than cutoff
+    const { data: zombies, error: fetchError } = await client
+      .from("license_sessions")
+      .select("session_id, license_key")
+      .eq("active", true)
+      .lt("last_seen_at", cutoffDate.toISOString());
+
+    if (fetchError) throw fetchError;
+
+    if (zombies && zombies.length > 0) {
+      console.log(`[ZombieCleanup] Found ${zombies.length} stale sessions to expire`);
+
+      const sessionIds = zombies.map(s => s.session_id);
+
+      // Mark them as inactive
+      const { error: updateError } = await client
+        .from("license_sessions")
+        .update({ active: false })
+        .in("session_id", sessionIds);
+
+      if (updateError) throw updateError;
+
+      console.log(`[ZombieCleanup] Successfully expired ${zombies.length} zombie sessions`);
+    }
+  } catch (error) {
+    console.error(`[ZombieCleanup] Failed to cleanup zombie sessions:`, error);
   }
 }
 

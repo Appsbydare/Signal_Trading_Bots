@@ -7,6 +7,10 @@ import { AdminLicenseTable } from "@/components/AdminLicenseTable";
 import { STRIPE_PRODUCTS } from "@/lib/stripe-products";
 
 async function getLicensesWithData() {
+  // Prune zombies first
+  const { expireZombieSessions } = await import("@/lib/license-db");
+  await expireZombieSessions();
+
   const client = getSupabaseClient();
 
   // 1. Get all licenses
