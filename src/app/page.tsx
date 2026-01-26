@@ -494,7 +494,7 @@ export default function Home() {
                   <p className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">Powered By & Integrated With</p>
                   <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
                     <div className="relative h-16 w-46 transition-all duration-300 cursor-pointer hover:scale-105 opacity-80 ">
-                      <Image src="/assets/MT5.png" alt="MetaTrader 5" fill className="object-contain" />
+                      <Image src="/assets/mt5.png" alt="MetaTrader 5" fill className="object-contain" />
                     </div>
                     <div className="relative h-16 w-46 transition-all duration-300 cursor-pointer hover:scale-105 opacity-80 ">
                       <Image src="/assets/MT4.png" alt="MetaTrader 4" fill className="object-contain" />
