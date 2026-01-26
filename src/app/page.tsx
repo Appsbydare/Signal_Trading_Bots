@@ -17,7 +17,7 @@ import { CustomerFeedback } from "@/components/CustomerFeedback";
 const heroMessages = [
   {
     number: 1,
-    text: "Automate Telegram trading signals directly into MetaTrader 5",
+    text: "Automate Telegram signals into MetaTrader 5",
     importantWords: ["Automate", "Telegram", "signals"],
     subtext: "Fast,Reliable, and Fully customizable.",
   },
@@ -341,11 +341,11 @@ export default function Home() {
   return (
     <>
       {/* Hero Section - Large and Impactful (LIGHT) */}
-      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white overflow-hidden flex items-center min-h-[auto] md:min-h-[80vh]">
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white overflow-hidden flex items-center min-h-[auto]">
         {/* Telegram Signals Background Animation */}
         <HeroTelegramSignals opacity={0.35} />
 
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-6 py-12 md:py-20">
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pt-4 pb-8 md:pt-10 md:pb-10">
           {/* Left Column: Text Content (Full Width) */}
           <div className="lg:col-span-12 space-y-8 text-left">
             {/* Typewriter Animation */}
@@ -477,21 +477,119 @@ export default function Home() {
               >
                 Product Preview
               </Link>
+              <TrustBox />
             </motion.div>
 
+
+
+            {/* Tech Providers - Integrated into Hero but separated */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.7 }}
+              transition={{ duration: 0.6, delay: 0.9 }}
+              className="mt-4 md:mt-6 relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-6 border-t border-b border-slate-100 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)]"
             >
-              <TrustBox />
+              <div className="mx-auto max-w-6xl px-6">
+                <div className="flex flex-col items-center gap-4">
+                  <p className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">Powered By & Integrated With</p>
+                  <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
+                    <div className="relative h-16 w-46 transition-all duration-300 cursor-pointer hover:scale-105 opacity-80 ">
+                      <Image src="/assets/MT5.png" alt="MetaTrader 5" fill className="object-contain" />
+                    </div>
+                    <div className="relative h-16 w-46 transition-all duration-300 cursor-pointer hover:scale-105 opacity-80 ">
+                      <Image src="/assets/MT4.png" alt="MetaTrader 4" fill className="object-contain" />
+                    </div>
+                    <div className="relative h-18 w-46 transition-all duration-300 cursor-pointer hover:scale-105 opacity-80 mr-5 ">
+                      <Image src="/assets/geminilogo.png" alt="Gemini" fill className="object-contain" />
+                    </div>
+                    <div className="relative h-12 w-43 transition-all duration-300 cursor-pointer hover:scale-105 opacity-80 ">
+                      <Image src="/assets/TG.png" alt="Telegram" fill className="object-contain" />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </div>
         </div>
       </section>
 
+
       {/* Customer Feedback Carousel */}
       <CustomerFeedback />
+
+      {/* Video Showcase Section */}
+      <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-gradient-to-b from-slate-50 to-white py-16 md:py-20">
+        <div className="mx-auto max-w-6xl px-6">
+          {/* Section Header */}
+          <div className="text-center mb-10">
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+              className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-4"
+            >
+              See It In Action 🎬
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              viewport={{ once: true }}
+              className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto"
+            >
+              Watch how Signal Trading Bot transforms Telegram signals into profitable trades automatically
+            </motion.p>
+          </div>
+
+          {/* Video Container */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="relative"
+          >
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-slate-200/50">
+              <div className="aspect-video w-full bg-slate-900">
+                <iframe
+                  className="w-full h-full"
+                  src="https://www.youtube.com/embed/1Kp-uGMg33E?si=16a9yY4Luobihvs9"
+                  title="YouTube video player"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                ></iframe>
+              </div>
+            </div>
+
+            {/* Decorative elements */}
+            <div className="absolute -top-4 -left-4 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl"></div>
+            <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl"></div>
+          </motion.div>
+
+          {/* Call to Action */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            viewport={{ once: true }}
+            className="text-center mt-10"
+          >
+            <p className="text-slate-600 mb-4">Ready to automate your trading?</p>
+            <a
+              href="/products"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[#5e17eb] to-[#7c3aed] text-white font-semibold rounded-lg hover:from-[#7c3aed] hover:to-[#5e17eb] transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+            >
+              Get Started Now
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </a>
+          </motion.div>
+        </div>
+      </section>
 
       {/* How It Works (DARK) - MOVED TO TOP - ENHANCED WITH ANIMATIONS */}
       <section id="how-it-works" className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-black py-20">

@@ -247,7 +247,7 @@ function VideoTutorialsContent() {
                     <div className="aspect-video w-full">
                         <iframe
                             className="w-full h-full"
-                            src="https://www.youtube.com/embed/Rfy0Jy7m2ak"
+                            src="https://www.youtube.com/embed/1Kp-uGMg33E?si=iJaLtAHAAVhqCtcj"
                             title="Signal Trading Bot - Complete Setup Tutorial"
                             frameBorder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -273,8 +273,18 @@ function VideoTutorialsContent() {
                     <p className="text-zinc-400 mb-4 text-sm leading-relaxed">
                         Learn how to correctly map symbols and keywords from your signal channels to the bot for 100% accuracy.
                     </p>
-                    <div className="aspect-video rounded-xl overflow-hidden bg-zinc-900 flex items-center justify-center text-zinc-500">
-                        <span className="text-sm italic">Additional Telegram tutorial video coming soon...</span>
+                    <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+                        <div className="aspect-video w-full">
+                            <iframe
+                                className="w-full h-full"
+                                src="https://www.youtube.com/embed/nf2oTTGoR7w?si=DJ6GIix1WYl-u3o1"
+                                title="YouTube video player"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                referrerPolicy="strict-origin-when-cross-origin"
+                                allowFullScreen
+                            ></iframe>
+                        </div>
                     </div>
                 </div>
             </Section>
