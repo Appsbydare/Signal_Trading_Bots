@@ -17,33 +17,27 @@ import { CustomerFeedback } from "@/components/CustomerFeedback";
 const heroMessages = [
   {
     number: 1,
+    text: "Automate Telegram trading signals directly into MetaTrader 5",
+    importantWords: ["Automate", "Telegram", "signals"],
+    subtext: "Fast,Reliable, and Fully customizable.",
+  },
+  {
+    number: 2,
     text: "Stop losing money—missing Telegram signals",
     importantWords: ["Stop losing money", "Telegram signals"],
     subtext: "Your MT5 executes every trade automatically — no hesitation, no excuses.",
   },
   {
-    number: 2,
+    number: 3,
     text: "Fast signals need faster execution",
     importantWords: ["Fast signals", "faster execution"],
     subtext: "Automate every Telegram signal directly into MT5 with precision.",
   },
   {
-    number: 3,
+    number: 4,
     text: "Manual trading is costing you profits",
     importantWords: ["Manual trading", "costing", "profits"],
     subtext: "Let your Telegram‑to‑MT5 auto‑trader fire every setup instantly.",
-  },
-  {
-    number: 4,
-    text: "Your signals don't sleep why should trade?",
-    importantWords: ["signals don't sleep", "trade"],
-    subtext: "24/7 automated MT5 execution for forex, gold, and indices.",
-  },
-  {
-    number: 5,
-    text: "Dominate the market with automation",
-    importantWords: ["Dominate", "market", "automation"],
-    subtext: "Turn Telegram signals into real MT5 trades before other traders even react.",
   },
 ];
 
@@ -361,6 +355,31 @@ export default function Home() {
               transition={{ duration: 0.6 }}
               className="flex flex-col justify-start"
             >
+              {/* Trusted Badge */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/50 px-3 py-1.5 md:px-4 md:py-2 backdrop-blur-sm self-start"
+              >
+                <div className="flex gap-0">
+                  {[1, 2, 3, 4, 5].map((_, i) => (
+                    <svg
+                      key={i}
+                      className="h-3 w-3 md:h-4 md:w-4 text-yellow-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <div className="h-3 w-px bg-blue-200 lg:h-4" />
+                <span className="text-xs font-semibold text-blue-900 md:text-sm">
+                  Trusted by 100+ traders
+                </span>
+              </motion.div>
+
               <h1
                 className="font-bold leading-tight mb-3 hero-typewriter-text min-h-[12rem] sm:min-h-[10rem] md:min-h-[14rem] lg:min-h-[20rem]"
                 style={{
