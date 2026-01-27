@@ -477,6 +477,19 @@ export default function Home() {
               >
                 Product Preview
               </Link>
+
+              {/* Download for Windows Button */}
+              <a
+                href="/api/download/public"
+                className="group relative flex items-center gap-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-3 md:px-8 md:py-4 text-sm md:text-base font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-cyan-500/25 hover:from-cyan-400 hover:to-blue-500"
+              >
+                <svg className="h-5 w-5 fill-current" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M0 12.402l35.687-4.86.016 34.423-35.67.203zm35.67 33.529l.028 34.453L.028 75.48l-.028-33.646zm6.338-38.16l45.965-6.65v41.01l-45.965.265zm0 38.307l45.965.226v41.28l-45.965-6.505z" />
+                </svg>
+                <span>Download for Windows</span>
+                <div className="absolute inset-0 -z-10 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 opacity-0 blur transition-opacity duration-300 group-hover:opacity-50" />
+              </a>
+
               <TrustBox />
             </motion.div>
 
