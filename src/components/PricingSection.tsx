@@ -200,6 +200,9 @@ export function PricingSection() {
                                             : undefined
                                     }
                                     proratedCredit={proratedCredit}
+                                    billingInterval={billingInterval}
+                                    onBillingIntervalChange={setBillingInterval}
+                                    showBillingToggle={plan.name !== "Lifetime"}
                                 />
                             </motion.div>
                         );

@@ -133,22 +133,35 @@ export function DarkProductCard({
 
         {/* Price */}
         <div className="mb-4">
-          {/* Show strikethrough original price for Starter and Pro */}
-          {(name === "Starter" || name === "Pro") && (
-            <p className="text-lg font-semibold text-zinc-500 line-through mb-1">
-              {name === "Starter"
-                ? billingInterval === "monthly"
-                  ? "$29/month"
-                  : "$348/year"
-                : billingInterval === "monthly"
-                  ? "$49/month"
-                  : "$588/year"
-              }
+          {(name === "Starter" || name === "Pro") ? (
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Strikethrough original price */}
+              <span className="text-3xl font-bold text-zinc-600 line-through" style={{ fontFamily: "var(--font-heading)" }}>
+                {name === "Starter"
+                  ? billingInterval === "monthly"
+                    ? "$29"
+                    : "$348"
+                  : billingInterval === "monthly"
+                    ? "$49"
+                    : "$588"
+                }
+              </span>
+
+              {/* Kickstart Price label */}
+              <span className="text-sm font-medium text-zinc-400">
+                Kickstart Price
+              </span>
+
+              {/* Discounted price */}
+              <span className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent" style={{ fontFamily: "var(--font-heading)" }}>
+                {price}
+              </span>
+            </div>
+          ) : (
+            <p className="text-3xl font-bold text-white" style={{ fontFamily: "var(--font-heading)" }}>
+              {price}
             </p>
           )}
-          <p className="text-3xl font-bold text-white" style={{ fontFamily: "var(--font-heading)" }}>
-            {price}
-          </p>
         </div>
 
         {/* Trial Offer Banner */}
