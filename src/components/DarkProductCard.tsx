@@ -132,9 +132,24 @@ export function DarkProductCard({
         </p>
 
         {/* Price */}
-        <p className="mb-4 text-3xl font-bold text-white" style={{ fontFamily: "var(--font-heading)" }}>
-          {price}
-        </p>
+        <div className="mb-4">
+          {/* Show strikethrough original price for Starter and Pro */}
+          {(name === "Starter" || name === "Pro") && (
+            <p className="text-lg font-semibold text-zinc-500 line-through mb-1">
+              {name === "Starter"
+                ? billingInterval === "monthly"
+                  ? "$29/month"
+                  : "$348/year"
+                : billingInterval === "monthly"
+                  ? "$49/month"
+                  : "$588/year"
+              }
+            </p>
+          )}
+          <p className="text-3xl font-bold text-white" style={{ fontFamily: "var(--font-heading)" }}>
+            {price}
+          </p>
+        </div>
 
         {/* Trial Offer Banner */}
         {(showPromoOffer || (featured && !isCurrentPlan)) && (
