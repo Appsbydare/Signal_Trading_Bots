@@ -19,8 +19,18 @@ export async function GET() {
         return NextResponse.redirect(signedUrl);
     } catch (error) {
         console.error("Failed to generate public download link:", error);
+
+        // Log more details about the error
+        if (error instanceof Error) {
+            console.error("Error message:", error.message);
+            console.error("Error stack:", error.stack);
+        }
+
         return NextResponse.json(
-            { error: "Internal server error" },
+            {
+                error: "Internal server error",
+                details: error instanceof Error ? error.message : "Unknown error"
+            },
             { status: 500 }
         );
     }

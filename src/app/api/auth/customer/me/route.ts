@@ -132,6 +132,15 @@ export async function GET() {
       }
     }
 
+    // Check if user is an admin
+    const { data: adminUser } = await supabase
+      .from("admins")
+      .select("*")
+      .eq("email", customer.email)
+      .single();
+
+    const isAdmin = !!adminUser;
+
     return NextResponse.json({
       customer: {
         id: customer.id,
@@ -140,6 +149,7 @@ export async function GET() {
         name: customerData?.name || null,
         country: customerData?.country || null,
         licenses: licenses || [],
+        isAdmin,
       },
     });
   } catch (error) {
