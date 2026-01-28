@@ -4,6 +4,94 @@ const FROM_EMAIL = process.env.SUPPORT_FROM_EMAIL;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 /**
+ * Send admin notification email for new purchases/subscriptions
+ */
+export async function sendAdminNotificationEmail(params: {
+  customerEmail: string;
+  fullName: string;
+  licenseKey: string;
+  plan: string;
+  amount: number;
+  orderId: string;
+}): Promise<void> {
+  // Hardcoded as requested
+  const ADMIN_EMAIL = "support@signaltradingbots.com";
+
+  if (!RESEND_API_KEY) {
+    console.warn("RESEND_API_KEY is not configured. Admin email will not be sent.");
+    return;
+  }
+
+  if (!FROM_EMAIL) {
+    console.warn("SUPPORT_FROM_EMAIL is not configured. Admin email will not be sent.");
+    return;
+  }
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>New Purchase Notification</title>
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: #ffffff; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
+        <h2 style="color: #1f2937; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">New Purchase Received</h2>
+        <p style="font-size: 16px;">A new purchase/subscription has been made on Signal Trading Bots.</p>
+        
+        <div style="background-color: #f3f4f6; padding: 15px; border-radius: 6px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #4b5563;">Customer Details</h3>
+          <ul style="list-style-type: none; padding: 0;">
+            <li style="margin-bottom: 8px;"><strong>Name:</strong> ${params.fullName}</li>
+            <li style="margin-bottom: 8px;"><strong>Email:</strong> <a href="mailto:${params.customerEmail}">${params.customerEmail}</a></li>
+          </ul>
+        </div>
+        
+        <div style="background-color: #f3f4f6; padding: 15px; border-radius: 6px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #4b5563;">Order Selection</h3>
+          <ul style="list-style-type: none; padding: 0;">
+            <li style="margin-bottom: 8px;"><strong>Plan:</strong> ${params.plan}</li>
+            <li style="margin-bottom: 8px;"><strong>Amount:</strong> $${params.amount}</li>
+            <li style="margin-bottom: 8px;"><strong>Order ID:</strong> ${params.orderId}</li>
+          </ul>
+        </div>
+        
+        <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+          This is an automated notification.
+        </p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: FROM_EMAIL, // Send from the system email
+        to: ADMIN_EMAIL,
+        reply_to: params.customerEmail, // Allow replying to the customer
+        subject: `New Subscriber: ${params.fullName} (${params.plan})`,
+        html: html,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Failed to send admin notification email:", errorText);
+    } else {
+      console.log("Admin notification email sent to", ADMIN_EMAIL);
+    }
+  } catch (error) {
+    console.error("Error sending admin notification email:", error);
+  }
+}
+
+/**
  * Send license key email for Stripe orders
  */
 export async function sendStripeLicenseEmail(params: {
@@ -200,4 +288,3 @@ export async function sendStripeLicenseEmail(params: {
     throw new Error(`Failed to send license email: ${errorText}`);
   }
 }
-

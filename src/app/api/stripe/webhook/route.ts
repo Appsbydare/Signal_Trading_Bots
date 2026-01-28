@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyWebhookSignature, stripe, getPlanFromPrice, normalizePlanName, PLAN_RANK } from '@/lib/stripe-server';
 import { generateLicenseKey } from '@/lib/license-keys';
-import { sendStripeLicenseEmail } from '@/lib/email-stripe';
+import { sendStripeLicenseEmail, sendAdminNotificationEmail } from '@/lib/email-stripe';
+import { sendTelegramAdminNotification } from '@/lib/telegram';
 import { getStripeOrderByPaymentIntent, updateStripeOrderByPaymentIntent } from '@/lib/orders-supabase';
 import { createLicense, getLicensesForEmail, upgradeLicense, getLicenseByKey } from '@/lib/license-db';
 import { getCustomerByEmail, createCustomer } from '@/lib/auth-users';
@@ -20,7 +21,8 @@ async function handlePostPurchase(
   amount: number,
   orderId: string,
   request: NextRequest,
-  downloadLinkEnabled: boolean = true
+  downloadLinkEnabled: boolean = true,
+  options: { country?: string; stripeLink?: string } = {}
 ) {
   // 1. Check/Create Customer & Magic Link
   let customer = await getCustomerByEmail(email);
@@ -85,6 +87,32 @@ async function handlePostPurchase(
       downloadUrl,
     });
     console.log('License email sent to:', email);
+
+    // Send Admin Notification (Email & Telegram)
+    try {
+      await Promise.allSettled([
+        sendAdminNotificationEmail({
+          customerEmail: email,
+          fullName: fullName,
+          licenseKey,
+          plan,
+          amount,
+          orderId,
+        }),
+        sendTelegramAdminNotification({
+          email: email,
+          fullName: fullName,
+          plan,
+          amount,
+          orderId,
+          country: options.country,
+          stripeLink: options.stripeLink,
+        })
+      ]);
+      console.log('Admin notifications sent for:', email);
+    } catch (adminErr) {
+      console.error('Failed to send admin notifications:', adminErr);
+    }
   } catch (error) {
     console.error('Failed to send license email:', error);
   }
@@ -149,19 +177,28 @@ export async function POST(request: NextRequest) {
           const expiresAt = new Date();
           expiresAt.setDate(expiresAt.getDate() + 30); // Default validity, will be updated by subscription sync
 
-          await createLicense({
-            licenseKey,
-            email,
-            plan,
-            expiresAt,
-            paymentId: subscriptionId, // Use sub ID as payment ref
-            amount: session.amount_total ? session.amount_total / 100 : 0,
-            currency: session.currency || 'usd',
-            subscription_id: subscriptionId,
-            stripe_customer_id: customerId,
-            payment_type: 'subscription',
-            subscription_status: 'active'
-          });
+          try {
+            await createLicense({
+              licenseKey,
+              email,
+              plan,
+              expiresAt,
+              paymentId: subscriptionId, // Use sub ID as payment ref
+              amount: session.amount_total ? session.amount_total / 100 : 0,
+              currency: session.currency || 'usd',
+              subscription_id: subscriptionId,
+              stripe_customer_id: customerId,
+              payment_type: 'subscription',
+              subscription_status: 'active'
+            });
+          } catch (err: any) {
+            if (err.code === '23505' || err.message?.includes('duplicate key')) {
+              console.log(`License ${licenseKey} already exists (Race condition in checkout session). Proceeding...`);
+            } else {
+              console.error('Failed to create license in checkout session:', err);
+              throw err; // Re-throw real errors, but safe to ignore duplicate if we want to proceed to email
+            }
+          }
 
           // 2. Create Subscription Record
           // We need to fetch the actual subscription object to get dates
@@ -178,7 +215,12 @@ export async function POST(request: NextRequest) {
             plan,
             session.amount_total ? session.amount_total / 100 : 0,
             session.id, // Order ID for email
-            request
+            request,
+            true, // downloadLinkEnabled
+            {
+              country: session.customer_details?.address?.country || undefined,
+              stripeLink: `https://dashboard.stripe.com/${session.livemode ? '' : 'test/'}subscriptions/${subscriptionId}`
+            }
           );
         }
         break;
@@ -693,12 +735,17 @@ export async function POST(request: NextRequest) {
         await updateStripeOrderByPaymentIntent(paymentIntent.id, 'paid', licenseKey);
         await handlePostPurchase(
           order.email,
-          order.full_name,
+          order.full_name || "Valued Customer",
           licenseKey,
           order.plan,
           order.display_price,
-          order.order_id,
-          request
+          paymentIntent.id,
+          request,
+          true, // downloadLinkEnabled
+          {
+            country: paymentIntent.shipping?.address?.country || undefined,
+            stripeLink: `https://dashboard.stripe.com/${paymentIntent.livemode ? '' : 'test/'}payments/${paymentIntent.id}`
+          }
         );
         break;
       }
