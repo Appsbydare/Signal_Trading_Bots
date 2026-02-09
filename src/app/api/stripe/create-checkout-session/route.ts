@@ -3,7 +3,7 @@ import { stripe } from "@/lib/stripe-server";
 
 export async function POST(req: NextRequest) {
     try {
-        const { plan, email, fullName, country } = await req.json();
+        const { plan, email, fullName, country, skip_trial } = await req.json();
 
         if (!plan || !email || !fullName || !country) {
             return NextResponse.json(
@@ -52,10 +52,12 @@ export async function POST(req: NextRequest) {
             throw new Error("Stripe is not configured");
         }
 
+        const shouldHaveTrial = (isPro || !isYearly) && !skip_trial;
+
         // Create Stripe Checkout Session
         const session = await stripe.checkout.sessions.create({
             mode: "subscription",
-            payment_method_types: ["card"],
+            payment_method_collection: (shouldHaveTrial && !isPro) ? "if_required" : "always",
             line_items: [
                 {
                     price_data: {
@@ -80,8 +82,9 @@ export async function POST(req: NextRequest) {
                     plan,
                     fullName,
                     country,
+                    is_trial_conversion: (shouldHaveTrial && !isPro) ? "true" : "false"
                 },
-                trial_period_days: (isPro || !isYearly) ? 30 : undefined,
+                trial_period_days: shouldHaveTrial ? 30 : undefined,
             },
             metadata: {
                 licenseKey,

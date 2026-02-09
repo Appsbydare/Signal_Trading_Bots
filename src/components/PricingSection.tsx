@@ -33,6 +33,7 @@ const pricingPlans = [
             "Ideal for demo and small live accounts",
             "Core Telegram → MT5 automation",
             "Basic configuration templates",
+            "No credit card required",
         ],
     },
     {
@@ -69,16 +70,10 @@ export function PricingSection() {
             .then(data => {
                 if (data?.customer) {
                     setIsLoggedIn(true);
-                    // Fetch licenses
-                    fetch("/api/customer/licenses")
-                        .then(res => res.ok ? res.json() : null)
-                        .then(licensesData => {
-                            if (licensesData?.licenses) {
-                                setCustomerLicenses(licensesData.licenses);
-                            }
-                            setLoadingLicenses(false);
-                        })
-                        .catch(() => setLoadingLicenses(false));
+                    if (data.customer.licenses) {
+                        setCustomerLicenses(data.customer.licenses);
+                    }
+                    setLoadingLicenses(false);
                 } else {
                     setLoadingLicenses(false);
                 }
@@ -136,6 +131,13 @@ export function PricingSection() {
                         const license = customerLicenses.find((l: any) => l.plan.toLowerCase().startsWith(planKey));
                         const isCurrentPlan = !!license;
                         const expiresAt = license?.expires_at;
+
+                        // Check if user has ANY active starter license (to determine price display)
+                        const hasActiveStarter = customerLicenses.some((l: any) =>
+                            l.status === 'active' &&
+                            (l.plan.toLowerCase() === 'starter' || l.plan.toLowerCase().includes('starter'))
+                        );
+
                         const daysRemaining = expiresAt
                             ? Math.max(
                                 0,
@@ -166,7 +168,9 @@ export function PricingSection() {
                                     badge={plan.badge}
                                     price={
                                         plan.name === "Starter"
-                                            ? (billingInterval === 'monthly' ? "$9/month" : "$108/year")
+                                            ? (billingInterval === 'monthly'
+                                                ? (hasActiveStarter ? "$9/month" : "FREE FOR 30 DAYS")
+                                                : "$108/year")
                                             : plan.name === "Pro"
                                                 ? (billingInterval === 'monthly' ? "$29/month" : "$348/year")
                                                 : "$999 one-time"

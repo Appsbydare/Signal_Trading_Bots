@@ -128,11 +128,18 @@ export async function sendStripeLicenseEmail(params: {
   };
 
   const planName = planNames[params.plan.toLowerCase()] || params.plan;
+  const isTrial = params.plan.toLowerCase().includes('starter');
+
   const expiryDate = params.plan.toLowerCase() === 'lifetime'
     ? 'Never (Lifetime Access)'
     : params.plan.toLowerCase().includes('yearly')
       ? 'Renews annually'
       : 'Renews monthly';
+
+  const headline = isTrial ? "Trial Activated" : "Payment Successful";
+  const bodyText = isTrial
+    ? "Thank you for signing up! Your 30-day free trial has started and your trading bot license is ready to use."
+    : "Thank you for your purchase! Your payment has been processed successfully and your trading bot license is ready to use.";
 
   const html = `
 <!DOCTYPE html>
@@ -145,7 +152,7 @@ export async function sendStripeLicenseEmail(params: {
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 0; background-color: #f9fafb;">
   <div style="background: #ffffff; margin: 40px 20px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
     <div style="background: #1f2937; padding: 40px 30px; text-align: center;">
-      <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.5px;">Payment Successful</h1>
+      <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.5px;">${headline}</h1>
     </div>
   
     <div style="padding: 40px 30px;">
@@ -154,7 +161,7 @@ export async function sendStripeLicenseEmail(params: {
       </p>
       
       <p style="font-size: 16px; margin-bottom: 28px; color: #374151;">
-        Thank you for your purchase! Your payment has been processed successfully and your trading bot license is ready to use.
+        ${bodyText}
       </p>
       
       <div style="background-color: #f9fafb; padding: 20px; border-radius: 6px; margin: 24px 0; border-left: 3px solid #1f2937;">
@@ -206,8 +213,8 @@ export async function sendStripeLicenseEmail(params: {
             <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; color: #1f2937; font-weight: 600;">${planName}</td>
           </tr>
           <tr>
-            <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">Amount Paid</td>
-            <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; color: #1f2937; font-weight: 600;">$${params.amount} USD</td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">${isTrial ? 'Trial Period' : 'Amount Paid'}</td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; color: #1f2937; font-weight: 600;">${isTrial ? '30 Days Free' : `$${params.amount} USD`}</td>
           </tr>
           <tr>
             <td style="padding: 10px 0; color: #6b7280; font-size: 14px;">License Status</td>
@@ -277,7 +284,7 @@ export async function sendStripeLicenseEmail(params: {
     body: JSON.stringify({
       from: FROM_EMAIL,
       to: params.to,
-      subject: `Your ${planName} License Key - Signal Trading Bots`,
+      subject: isTrial ? `Your ${planName} Trial - Signal Trading Bots` : `Your ${planName} License Key - Signal Trading Bots`,
       html: html,
     }),
   });

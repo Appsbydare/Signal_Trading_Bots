@@ -71,7 +71,7 @@ export function DarkProductCard({
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 rounded-full blur-[2px] opacity-40" />
             <div className="relative bg-gradient-to-br from-slate-900 to-black border-2 border-yellow-400 text-yellow-300 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide shadow-lg shadow-yellow-500/20">
-              ⚡ Special Offer
+              ⚡No Credit Card Required
             </div>
           </div>
         </div>
@@ -287,7 +287,7 @@ export function DarkProductCard({
               href={paymentLink}
               className="inline-flex w-full items-center justify-center rounded-md bg-[#5e17eb] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4512c2]"
             >
-              {isLifetime ? "Start Automation →" : "Start Your 30-Day Trial"}
+              {isLifetime ? "Start Automation →" : "Start Free"}
             </Link>
           )}
         </div>

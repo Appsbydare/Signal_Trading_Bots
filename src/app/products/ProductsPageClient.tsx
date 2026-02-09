@@ -167,16 +167,10 @@ export function ProductsPageClient() {
       .then(data => {
         if (data?.customer) {
           setIsLoggedIn(true);
-          // Fetch licenses
-          fetch("/api/customer/licenses")
-            .then(res => res.ok ? res.json() : null)
-            .then(licensesData => {
-              if (licensesData?.licenses) {
-                setCustomerLicenses(licensesData.licenses);
-              }
-              setLoadingLicenses(false);
-            })
-            .catch(() => setLoadingLicenses(false));
+          if (data.customer.licenses) {
+            setCustomerLicenses(data.customer.licenses);
+          }
+          setLoadingLicenses(false);
         } else {
           setLoadingLicenses(false);
         }
@@ -388,8 +382,8 @@ export function ProductsPageClient() {
                   {/* Pricing Section or Coming Soon */}
                   {activeProduct === "telegram-mt5" ? (
                     <div>
-                      {/* Trial Banner moved here */}
-                      <TrialBanner />
+                      {/* Trial Banner moved here - Only show if user has NO licenses */}
+                      {!loadingLicenses && customerLicenses.length === 0 && <TrialBanner />}
 
                       {/* Pricing Cards - Horizontal */}
                       <div className="grid gap-4 md:grid-cols-3">
@@ -429,6 +423,13 @@ export function ProductsPageClient() {
                             );
                           }
 
+                          const hasActiveStarter = customerLicenses.some((l: any) => {
+                            const isStarter = l.plan.toLowerCase().includes('starter');
+                            const isActiveStatus = l.status?.toLowerCase() === 'active';
+                            const isNotExpired = l.expires_at ? new Date(l.expires_at) > new Date() : false;
+                            return isStarter && (isActiveStatus || isNotExpired);
+                          });
+
                           return (
                             <DarkProductCard
                               key={plan.name}
@@ -437,7 +438,7 @@ export function ProductsPageClient() {
                               price={
                                 plan.name === "Starter"
                                   ? billingInterval === "monthly"
-                                    ? "$9/month"
+                                    ? (hasActiveStarter ? "$9/month" : "Free for 30 days")
                                     : "$108/year"
                                   : plan.name === "Pro"
                                     ? billingInterval === "monthly"

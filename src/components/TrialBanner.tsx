@@ -20,7 +20,7 @@ export function TrialBanner() {
                     </div>
                     <div>
                         <h3 className="flex items-center gap-2 text-lg font-bold text-white">
-                            Risk-Free 30-Day Trial
+                            30-Day Free No Credit Card Required
                             <span className="rounded-full bg-gradient-to-r from-yellow-400/20 to-amber-500/20 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-yellow-300 border border-yellow-400/30 shadow-[0_0_10px_rgba(250,204,21,0.2)]">
                                 Special Offer
                             </span>
@@ -37,7 +37,7 @@ export function TrialBanner() {
                         href="/payment?plan=starter"
                         className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-lg bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-500 px-6 py-2.5 font-bold text-zinc-950 transition-all duration-300 hover:from-yellow-300 hover:via-amber-400 hover:to-yellow-400 hover:shadow-[0_0_25px_rgba(245,158,11,0.5)] focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-black"
                     >
-                        <span>Start Free Trial</span>
+                        <span>Start Free</span>
                         <svg
                             className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
                             fill="none"

@@ -152,6 +152,15 @@ function PaymentForm() {
     }
   }, [selectedLicenseToUpgrade, licenses, isUpgrade]);
 
+  // Check if user already has an active Starter license (to prevent double free trial)
+  // Check if user already has an active Starter license (to prevent double free trial)
+  const hasActiveStarter = licenses.some((l: any) => {
+    const isStarter = l.plan.toLowerCase().includes('starter');
+    const isActiveStatus = l.status?.toLowerCase() === 'active';
+    const isNotExpired = l.expires_at ? new Date(l.expires_at) > new Date() : false;
+    return isStarter && (isActiveStatus || isNotExpired);
+  });
+
   // Calculate final price based on payment method
   const getFinalPrice = () => {
     if (isLifetime) {
@@ -161,6 +170,13 @@ function PaymentForm() {
     if (selectedPayment === "crypto") {
       return 1; // $1 for crypto payments
     }
+
+    // For Card Payments:
+    // If it's Starter plan AND they already have an active Starter license -> Charge Full Price ($9)
+    if (!isPro && !isYearly && hasActiveStarter) {
+      return 9;
+    }
+
     return 0; // $0 for card payments (free trial)
   };
 
@@ -289,6 +305,7 @@ function PaymentForm() {
           email: formData.email,
           fullName: formData.fullName,
           country: formData.country,
+          skip_trial: hasActiveStarter,
         }),
       });
 
@@ -362,6 +379,8 @@ function PaymentForm() {
     l.plan.toLowerCase() !== 'lifetime'
   );
 
+
+
   const selectedLicenseObj = licenses.find((l: any) => l.license_key === selectedLicenseToUpgrade);
   const isSubscriptionDetailsUpgrade = isUpgrade && isLoggedIn && (selectedLicenseObj?.subscription_id || selectedLicenseObj?.payment_type === 'subscription');
 
@@ -377,7 +396,7 @@ function PaymentForm() {
         </div>
 
         <h1 className="reveal mb-2 text-2xl font-semibold tracking-tight text-white">
-          {isLifetime ? "Complete Your Purchase" : "COMPLETE YOUR FREE TRIAL INFORMATION"}
+          {isLifetime || finalPrice > 0 ? "Complete Your Purchase" : "COMPLETE YOUR FREE TRIAL INFORMATION"}
         </h1>
         <p className="reveal mb-8 text-sm text-zinc-400">Telegram Trading Bot - {planName} Plan</p>
 
@@ -817,95 +836,179 @@ function PaymentForm() {
             {/* Payment Methods */}
             {!isSubscriptionDetailsUpgrade && (
               <section className={`rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 ${!emailVerified ? 'opacity-50 pointer-events-none' : ''}`}>
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-white">Select Payment Method</h2>
-                  {!emailVerified && (
-                    <span className="flex items-center gap-2 text-sm text-amber-400">
-                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                      </svg>
-                      Verify email first
-                    </span>
-                  )}
-                </div>
-                <div className="space-y-3">
-                  <button
-                    type="button"
-                    onClick={() => emailVerified && setSelectedPayment("card")}
-                    disabled={!emailVerified}
-                    className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedPayment === "card"
-                      ? "border-blue-500 bg-blue-500/10"
-                      : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                      } disabled:cursor-not-allowed`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded bg-blue-500/20">
+                {!isPro && !isLifetime && !isYearly && !hasActiveStarter ? (
+                  // Starter Plan - Direct Trial Flow
+                  <div>
+                    <div className="mb-6 flex items-center justify-between">
+                      <h2 className="text-lg font-semibold text-white">Start Your Free Trial</h2>
+                    </div>
+
+                    <div className="mb-6 rounded-lg border border-blue-500/30 bg-blue-500/10 p-5">
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/20">
                           <svg className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                           </svg>
                         </div>
                         <div>
-                          <p className="font-semibold text-white">Credit / Debit Card</p>
-                          <p className="text-sm text-zinc-400">Visa, Mastercard, Amex, etc.</p>
+                          <h3 className="font-semibold text-blue-300">30-Day Free Access</h3>
+                          <p className="mt-1 text-sm text-blue-200/80">
+                            Get full access to the Starter plan for 30 days. No credit card required today.
+                          </p>
                         </div>
                       </div>
-                      <span className="rounded-md bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">Available</span>
                     </div>
-                  </button>
 
-                  <button
-                    type="button"
-                    onClick={() => emailVerified && setSelectedPayment("crypto")}
-                    disabled={!emailVerified}
-                    className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedPayment === "crypto"
-                      ? "border-green-500 bg-green-500/10"
-                      : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                      } disabled:cursor-not-allowed`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded bg-green-500/20">
-                          <span className="text-xl font-bold text-green-400">₿</span>
-                        </div>
-                        <div>
-                          <p className="font-semibold text-white">Cryptocurrency</p>
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm text-zinc-400">USDT, Bitcoin, BNB & more</p>
-                            <div className="flex gap-1">
-                              <span className="rounded border border-orange-500/30 bg-orange-500/10 px-1.5 py-0.5 text-[10px] font-medium text-orange-400">TRC20</span>
-                              <span className="rounded border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-medium text-blue-400">ERC20</span>
-                              <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 text-[10px] font-medium text-yellow-400">BSC</span>
-                            </div>
+                    {!formData.fullName || !formData.country ? (
+                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 mb-4">
+                        <div className="flex items-start gap-3">
+                          <svg className="h-5 w-5 flex-shrink-0 text-amber-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                          <div>
+                            <p className="text-sm font-medium text-amber-300">Complete Customer Information</p>
+                            <p className="mt-1 text-sm text-amber-200/80">
+                              Please fill in your Full Name and Country in the section above to start your trial.
+                            </p>
                           </div>
                         </div>
                       </div>
-                      <span className="rounded-md bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">Available</span>
-                    </div>
-                  </button>
+                    ) : (
+                      <>
+                        <div className="mb-6">
+                          <div className="flex items-start gap-2">
+                            <input
+                              type="checkbox"
+                              id="terms-trial"
+                              required
+                              checked={agreedToTerms}
+                              onChange={(e) => setAgreedToTerms(e.target.checked)}
+                              className="mt-1 h-4 w-4 rounded border-zinc-700 bg-zinc-800 text-blue-500 focus:ring-blue-500"
+                            />
+                            <label htmlFor="terms-trial" className="text-sm text-zinc-300">
+                              I agree to the <Link href="/terms" className="text-blue-400 hover:text-blue-300">Terms of Service</Link> and <Link href="/privacy" className="text-blue-400 hover:text-blue-300">Privacy Policy</Link>.
+                            </label>
+                          </div>
+                        </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setSelectedPayment("binance")}
-                    className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedPayment === "binance"
-                      ? "border-yellow-500 bg-yellow-500/10"
-                      : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
-                      }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500/20">
-                          <span className="text-lg font-bold text-yellow-400">BNB</span>
-                        </div>
-                        <div>
-                          <p className="font-semibold text-white">Binance Pay</p>
-                          <p className="text-sm text-zinc-400">Quick crypto payment via Binance</p>
-                        </div>
-                      </div>
-                      <span className="rounded-md bg-orange-500/20 px-3 py-1 text-xs font-medium text-orange-400">Coming Soon</span>
+                        <button
+                          onClick={handleSubscriptionCheckout}
+                          disabled={loadingStripe || !agreedToTerms}
+                          className="w-full rounded-lg bg-[#5e17eb] p-4 text-center font-semibold text-white transition-all hover:bg-[#4a11c0] shadow-lg shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {loadingStripe ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                              </svg>
+                              Starting Trial...
+                            </span>
+                          ) : (
+                            "Start 30-Day Free Trial"
+                          )}
+                        </button>
+
+                        <p className="mt-4 text-center text-xs text-zinc-500">
+                          By starting the trial, you agree to receive account-related emails.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  // Original Payment Method Selection for Pro/Lifetime
+                  <>
+                    <div className="mb-4 flex items-center justify-between">
+                      <h2 className="text-lg font-semibold text-white">Select Payment Method</h2>
+                      {!emailVerified && (
+                        <span className="flex items-center gap-2 text-sm text-amber-400">
+                          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                          </svg>
+                          Verify email first
+                        </span>
+                      )}
                     </div>
-                  </button>
-                </div>
+                    <div className="space-y-3">
+                      <button
+                        type="button"
+                        onClick={() => emailVerified && setSelectedPayment("card")}
+                        disabled={!emailVerified}
+                        className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedPayment === "card"
+                          ? "border-blue-500 bg-blue-500/10"
+                          : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                          } disabled:cursor-not-allowed`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded bg-blue-500/20">
+                              <svg className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="font-semibold text-white">Credit / Debit Card</p>
+                              <p className="text-sm text-zinc-400">Visa, Mastercard, Amex, etc.</p>
+                            </div>
+                          </div>
+                          <span className="rounded-md bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">Available</span>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => emailVerified && setSelectedPayment("crypto")}
+                        disabled={!emailVerified}
+                        className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedPayment === "crypto"
+                          ? "border-green-500 bg-green-500/10"
+                          : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                          } disabled:cursor-not-allowed`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded bg-green-500/20">
+                              <span className="text-xl font-bold text-green-400">₿</span>
+                            </div>
+                            <div>
+                              <p className="font-semibold text-white">Cryptocurrency</p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm text-zinc-400">USDT, Bitcoin, BNB & more</p>
+                                <div className="flex gap-1">
+                                  <span className="rounded border border-orange-500/30 bg-orange-500/10 px-1.5 py-0.5 text-[10px] font-medium text-orange-400">TRC20</span>
+                                  <span className="rounded border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-medium text-blue-400">ERC20</span>
+                                  <span className="rounded border border-yellow-500/30 bg-yellow-500/10 px-1.5 py-0.5 text-[10px] font-medium text-yellow-400">BSC</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <span className="rounded-md bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">Available</span>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPayment("binance")}
+                        className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedPayment === "binance"
+                          ? "border-yellow-500 bg-yellow-500/10"
+                          : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600"
+                          }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500/20">
+                              <span className="text-lg font-bold text-yellow-400">BNB</span>
+                            </div>
+                            <div>
+                              <p className="font-semibold text-white">Binance Pay</p>
+                              <p className="text-sm text-zinc-400">Quick crypto payment via Binance</p>
+                            </div>
+                          </div>
+                          <span className="rounded-md bg-orange-500/20 px-3 py-1 text-xs font-medium text-orange-400">Coming Soon</span>
+                        </div>
+                      </button>
+                    </div>
+                  </>
+                )}
               </section>
             )}
 
@@ -1149,8 +1252,8 @@ function PaymentForm() {
                     </span>
                   </div>
 
-                  {/* Free Trial Discount - Only for card payments on non-lifetime plans */}
-                  {!isLifetime && selectedPayment === "card" && (
+                  {/* Free Trial Discount - For Card payments OR Starter Monthly trial (ONLY if no active starter) */}
+                  {!isLifetime && (selectedPayment === "card" || (!isPro && !isYearly)) && !hasActiveStarter && (
                     <div className="flex justify-between text-green-400">
                       <span>Free Trial Discount</span>
                       <span>-${basePrice} USD</span>
@@ -1165,8 +1268,8 @@ function PaymentForm() {
                     </div>
                   )}
 
-                  {/* Processing Fee for card/lifetime */}
-                  {(isLifetime || selectedPayment === "card") && (
+                  {/* Processing Fee for card/lifetime/starter-trial */}
+                  {(isLifetime || selectedPayment === "card" || (!isPro && !isYearly)) && (
                     <div className="flex justify-between text-zinc-400">
                       <span>Processing Fee</span>
                       <span className="text-white">$0 USD</span>
@@ -1181,7 +1284,9 @@ function PaymentForm() {
                           ? finalPrice
                           : selectedPayment === "crypto"
                             ? (basePrice - basePrice + 1).toFixed(2)
-                            : '0.00'
+                            : (hasActiveStarter && !isPro && !isYearly)
+                              ? '9.00'
+                              : '0.00'
                         } USD
                       </span>
                     </div>
@@ -1196,8 +1301,8 @@ function PaymentForm() {
                     </div>
                   )}
 
-                  {/* Trial End Message - Only for card payments on non-lifetime plans */}
-                  {!isLifetime && selectedPayment === "card" && (
+                  {/* Trial End Message - For Card payments OR Starter Monthly trial (ONLY if no active starter) */}
+                  {!isLifetime && (selectedPayment === "card" || (!isPro && !isYearly)) && !hasActiveStarter && (
                     <div className="mt-4 rounded-md bg-blue-500/10 border border-blue-500/30 p-4">
                       <p className="text-xs text-blue-200 leading-relaxed">
                         Your trial will end on <span className="font-semibold">{new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span> (30 days from purchase date) and start the subscription. You can cancel the subscription any time before that.
