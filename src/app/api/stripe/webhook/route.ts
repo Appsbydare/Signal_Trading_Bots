@@ -74,7 +74,7 @@ async function handlePostPurchase(
     }
   }
 
-  // 3. Send Email
+  // 3. Send User Email
   try {
     await sendStripeLicenseEmail({
       to: email,
@@ -87,34 +87,34 @@ async function handlePostPurchase(
       downloadUrl,
     });
     console.log('License email sent to:', email);
-
-    // Send Admin Notification (Email & Telegram)
-    try {
-      await Promise.allSettled([
-        sendAdminNotificationEmail({
-          customerEmail: email,
-          fullName: fullName,
-          licenseKey,
-          plan,
-          amount,
-          orderId,
-        }),
-        sendTelegramAdminNotification({
-          email: email,
-          fullName: fullName,
-          plan,
-          amount,
-          orderId,
-          country: options.country,
-          stripeLink: options.stripeLink,
-        })
-      ]);
-      console.log('Admin notifications sent for:', email);
-    } catch (adminErr) {
-      console.error('Failed to send admin notifications:', adminErr);
-    }
   } catch (error) {
     console.error('Failed to send license email:', error);
+  }
+
+  // 4. Send Admin Notification (Email & Telegram)
+  try {
+    await Promise.allSettled([
+      sendAdminNotificationEmail({
+        customerEmail: email,
+        fullName: fullName,
+        licenseKey,
+        plan,
+        amount,
+        orderId,
+      }),
+      sendTelegramAdminNotification({
+        email: email,
+        fullName: fullName,
+        plan,
+        amount,
+        orderId,
+        country: options.country,
+        stripeLink: options.stripeLink,
+      })
+    ]);
+    console.log('Admin notifications sequence completed for:', email);
+  } catch (adminErr) {
+    console.error('Failed to process admin notifications:', adminErr);
   }
 }
 

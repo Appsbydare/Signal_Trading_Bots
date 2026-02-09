@@ -50,6 +50,18 @@ export async function POST(request: NextRequest) {
       expiresAt,
     });
 
+    // Send Telegram Notification for Pending Crypto Order
+    // (We use a fire-and-forget float promise to not block response)
+    const { sendTelegramAdminNotification } = await import("@/lib/telegram");
+    sendTelegramAdminNotification({
+      fullName,
+      email,
+      plan: `${plan} (Crypto Pending)`,
+      amount: displayPrice,
+      orderId,
+      country: `${country} | ${selectedCoinNetwork}`,
+    }).catch(err => console.error("Failed to send crypto telegram notification:", err));
+
     return NextResponse.json({
       orderId,
       embeddedPrice,
