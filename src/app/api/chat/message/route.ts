@@ -59,9 +59,11 @@ export async function POST(request: NextRequest) {
   const agent =
     agents.length > 0 ? agents[Math.floor(Math.random() * agents.length)] : null;
 
+  // ... inside POST
   let replyText: string;
   let isFromLlm = false;
   const aiEnabled = isAiAgentEnabled();
+  let aiMetadata: any = undefined; // Placeholder for metadata
 
   // Try AI agent first if enabled
   if (aiEnabled) {
@@ -82,19 +84,27 @@ export async function POST(request: NextRequest) {
         replyText = aiResponse.response;
         isFromLlm = true;
 
+        // Capture metadata
+        aiMetadata = {
+          phase: aiResponse.phase,
+          usedFaqCategories: aiResponse.usedFaqCategories,
+          tokensUsed: aiResponse.tokensUsed,
+          responseTime: Date.now() - startTime
+        };
+
         // Log AI interaction for monitoring
-        const responseTime = Date.now() - startTime;
         await logAiInteraction({
           conversationId,
           userMessage: text,
           agentResponse: aiResponse,
-          responseTime,
+          responseTime: aiMetadata.responseTime,
         });
       } else {
         // AI failed, fall back to old system if enabled
         throw new Error(aiResponse.error || "AI agent failed");
       }
     } catch (error) {
+      // ... existing catch logic
       console.error("AI agent error, falling back to old system:", error);
 
       // Fallback to old FAQ matching system
@@ -132,6 +142,7 @@ export async function POST(request: NextRequest) {
       }
     }
   } else {
+    // ... existing else logic
     // AI disabled, use old system
     const normalized = text.toLowerCase();
     const greetingPhrases = [
@@ -184,6 +195,7 @@ export async function POST(request: NextRequest) {
       },
       lastAgentMessage: agentMessage,
       messages,
+      aiMetadata,
     },
     { status: 200 },
   );

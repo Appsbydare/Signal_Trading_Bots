@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { motion, useAnimation } from "framer-motion";
 import Image from "next/image";
+import { usePreloader } from "@/context/PreloaderContext";
+
 
 interface Testimonial {
     id: number;
@@ -85,18 +87,23 @@ const displayItems = [...testimonials, ...testimonials];
 export const CustomerFeedback: React.FC = () => {
     const [index, setIndex] = useState(0);
     const controls = useAnimation();
+    const { isPreloaderFinished } = usePreloader();
 
     // Optimized for 4-card layout (further 15% reduction)
     const gap = 16;
     const cardWidth = 238;
 
     useEffect(() => {
+        if (!isPreloaderFinished) return; // Optional: pause auto-scroll until loaded? Maybe better to let it run but be invisible. 
+        // Actually, user wants entrance animation.
+        // Let's keep the interval running, it doesn't hurt.
+
         const timer = setInterval(() => {
             setIndex((prev) => prev + 1);
         }, 10000);
 
         return () => clearInterval(timer);
-    }, []);
+    }, [isPreloaderFinished]);
 
     useEffect(() => {
         const updatePosition = async () => {
@@ -114,21 +121,31 @@ export const CustomerFeedback: React.FC = () => {
         };
 
         updatePosition();
-    }, [index, controls]);
+    }, [index, controls, cardWidth, gap]); // Added dependencies for correctness
 
     return (
         <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-slate-50 py-10 md:py-12 overflow-hidden border-y border-slate-100/50">
             <div className="relative z-10 mx-auto px-6" style={{ maxWidth: (cardWidth * 4) + (gap * 3) + 48 }}>
                 {/* Compact Section Header */}
-                <div className="text-center mb-8">
+                <motion.div
+                    className="text-center mb-8"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={isPreloaderFinished ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                    transition={{ duration: 0.6, delay: 1.1 }}
+                >
                     <h2 className="text-lg md:text-xl font-bold text-slate-800 tracking-tight mb-2 uppercase">
                         Traders testing and using the bot
                     </h2>
                     <div className="w-10 h-0.5 bg-blue-600/40 mx-auto rounded-full" />
-                </div>
+                </motion.div>
 
                 {/* Carousel Viewport - 4 Cards View */}
-                <div className="relative overflow-hidden w-full">
+                <motion.div
+                    className="relative overflow-hidden w-full"
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={isPreloaderFinished ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+                    transition={{ duration: 0.6, delay: 1.3 }}
+                >
                     <motion.div
                         className="flex"
                         style={{ gap: `${gap}px` }}
@@ -208,10 +225,15 @@ export const CustomerFeedback: React.FC = () => {
                             </div>
                         ))}
                     </motion.div>
-                </div>
+                </motion.div>
 
                 {/* Minimal Navigation Dots */}
-                <div className="flex justify-center gap-1 mt-6">
+                <motion.div
+                    className="flex justify-center gap-1 mt-6"
+                    initial={{ opacity: 0 }}
+                    animate={isPreloaderFinished ? { opacity: 1 } : { opacity: 0 }}
+                    transition={{ duration: 0.6, delay: 1.5 }}
+                >
                     {testimonials.map((_, idx) => (
                         <button
                             key={idx}
@@ -222,7 +244,7 @@ export const CustomerFeedback: React.FC = () => {
                                 }`}
                         />
                     ))}
-                </div>
+                </motion.div>
             </div>
         </section>
     );

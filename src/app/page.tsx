@@ -13,6 +13,8 @@ import { resourceArticles } from "@/data/resources";
 import { PricingSection } from "@/components/PricingSection";
 import { TrustBox } from "@/components/TrustBox";
 import { CustomerFeedback } from "@/components/CustomerFeedback";
+import { DownloadModal } from "@/components/DownloadModal";
+import { usePreloader } from "@/context/PreloaderContext";
 
 const heroMessages = [
   {
@@ -51,6 +53,8 @@ export default function Home() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+  const { isPreloaderFinished } = usePreloader();
 
   // Helper function to split text into two lines - balanced split
   const splitIntoTwoLines = (text: string) => {
@@ -150,6 +154,8 @@ export default function Home() {
     const fullText = currentMessage.text;
     let timeout: NodeJS.Timeout;
 
+    if (!isPreloaderFinished) return;
+
     if (!isDeleting && !isFadingOut && displayedText.length < fullText.length) {
       // Typing
       timeout = setTimeout(() => {
@@ -174,7 +180,7 @@ export default function Home() {
     }
 
     return () => clearTimeout(timeout);
-  }, [displayedText, isDeleting, isFadingOut, currentMessageIndex]);
+  }, [displayedText, isDeleting, isFadingOut, currentMessageIndex, isPreloaderFinished]);
 
   const steps = [
     {
@@ -351,37 +357,48 @@ export default function Home() {
             {/* Typewriter Animation */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              animate={isPreloaderFinished ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.6 }}
               className="flex flex-col justify-start"
             >
-              {/* Trusted Badge */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/50 px-3 py-1.5 md:px-4 md:py-2 backdrop-blur-sm self-start"
-              >
-                <div className="flex gap-0">
-                  {[1, 2, 3, 4, 5].map((_, i) => (
-                    <svg
-                      key={i}
-                      className="h-3 w-3 md:h-4 md:w-4 text-yellow-400"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <div className="h-3 w-px bg-blue-200 lg:h-4" />
-                <span className="text-xs font-semibold text-blue-900 md:text-sm">
-                  Trusted by 100+ traders
-                </span>
-              </motion.div>
+              <div className="mb-6 flex flex-wrap items-center gap-3">
+                {/* Trusted Badge */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={isPreloaderFinished ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/50 px-3 py-1.5 md:px-4 md:py-2 backdrop-blur-sm self-start"
+                >
+                  <div className="flex gap-0">
+                    {[1, 2, 3, 4, 5].map((_, i) => (
+                      <svg
+                        key={i}
+                        className="h-3 w-3 md:h-4 md:w-4 text-yellow-400"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <div className="h-3 w-px bg-blue-200 lg:h-4" />
+                  <span className="text-xs font-semibold text-blue-900 md:text-sm">
+                    Trusted by 100+ traders
+                  </span>
+                </motion.div>
+
+                {/* TrustBox */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={isPreloaderFinished ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <TrustBox />
+                </motion.div>
+              </div>
 
               <h1
-                className="font-bold leading-tight mb-3 hero-typewriter-text min-h-[12rem] sm:min-h-[10rem] md:min-h-[14rem] lg:min-h-[20rem]"
+                className="font-bold leading-tight mb-3 hero-typewriter-text"
                 style={{
                   fontSize: '8vw',
                   lineHeight: '1.05',
@@ -391,55 +408,74 @@ export default function Home() {
                 }}
               >
                 <motion.div
-                  className="text-[var(--text-main)]"
+                  className="text-[var(--text-main)] relative"
                   style={{ display: 'block' }}
                   animate={{ opacity: isFadingOut ? 0 : 1 }}
                   transition={{ duration: 0.5, ease: "easeInOut" }}
                 >
-                  {(() => {
-                    const fullText = heroMessages[currentMessageIndex].text;
-                    const importantWords = heroMessages[currentMessageIndex].importantWords || [];
-                    const { line1, line2 } = splitIntoTwoLines(fullText);
-                    const line1Length = line1.length;
+                  {/* Ghost Element for Height Reservation */}
+                  <div className="invisible" aria-hidden="true">
+                    {(() => {
+                      const fullText = heroMessages[currentMessageIndex].text;
+                      const importantWords = heroMessages[currentMessageIndex].importantWords || [];
+                      const { line1, line2 } = splitIntoTwoLines(fullText);
+                      return (
+                        <>
+                          {renderTextWithHighlights(line1, importantWords)}
+                          {line2 && line2.length > 0 && <br />}
+                          {line2 && renderTextWithHighlights(line2, importantWords)}
+                        </>
+                      );
+                    })()}
+                  </div>
 
-                    // Display first line until it's complete, then second line
-                    const firstLineText = displayedText.substring(0, line1Length);
-                    const secondLineText = displayedText.substring(line1Length);
-                    const isFirstLineComplete = firstLineText.length >= line1Length;
-                    const hasSecondLine = secondLineText.length > 0;
+                  {/* Active Typewriter Element */}
+                  <div className="absolute inset-0 top-0 left-0">
+                    {(() => {
+                      const fullText = heroMessages[currentMessageIndex].text;
+                      const importantWords = heroMessages[currentMessageIndex].importantWords || [];
+                      const { line1, line2 } = splitIntoTwoLines(fullText);
+                      const line1Length = line1.length;
 
-                    return (
-                      <>
-                        {renderTextWithHighlights(firstLineText, importantWords)}
-                        {(isFirstLineComplete || hasSecondLine) && (
-                          <>
-                            <br />
-                            {hasSecondLine && (
-                              <>
-                                {renderTextWithHighlights(secondLineText, importantWords)}
-                                {!isFadingOut && (
-                                  <motion.span
-                                    animate={{ opacity: [1, 0] }}
-                                    transition={{ duration: 0.8, repeat: Infinity, repeatType: "reverse" }}
-                                    className="inline-block w-2 md:w-3 h-[1.625rem] md:h-[2.5rem] lg:h-[3.5rem] bg-[#5e17eb] ml-1 md:ml-3"
-                                    style={{ verticalAlign: 'middle', display: 'inline-block' }}
-                                  />
-                                )}
-                              </>
-                            )}
-                          </>
-                        )}
-                        {!isFirstLineComplete && !hasSecondLine && !isFadingOut && (
-                          <motion.span
-                            animate={{ opacity: [1, 0] }}
-                            transition={{ duration: 0.8, repeat: Infinity, repeatType: "reverse" }}
-                            className="inline-block w-2 md:w-3 h-[1.625rem] md:h-[2.5rem] lg:h-[3.5rem] bg-[#5e17eb] ml-1 md:ml-3"
-                            style={{ verticalAlign: 'middle', display: 'inline-block' }}
-                          />
-                        )}
-                      </>
-                    );
-                  })()}
+                      // Display first line until it's complete, then second line
+                      const firstLineText = displayedText.substring(0, line1Length);
+                      const secondLineText = displayedText.substring(line1Length);
+                      const isFirstLineComplete = firstLineText.length >= line1Length;
+                      const hasSecondLine = secondLineText.length > 0;
+
+                      return (
+                        <>
+                          {renderTextWithHighlights(firstLineText, importantWords)}
+                          {(isFirstLineComplete || hasSecondLine) && (
+                            <>
+                              <br />
+                              {hasSecondLine && (
+                                <>
+                                  {renderTextWithHighlights(secondLineText, importantWords)}
+                                  {!isFadingOut && (
+                                    <motion.span
+                                      animate={{ opacity: [1, 0] }}
+                                      transition={{ duration: 0.8, repeat: Infinity, repeatType: "reverse" }}
+                                      className="inline-block w-2 md:w-3 h-[1.625rem] md:h-[2.5rem] lg:h-[3.5rem] bg-[#5e17eb] ml-1 md:ml-3"
+                                      style={{ verticalAlign: 'middle', display: 'inline-block' }}
+                                    />
+                                  )}
+                                </>
+                              )}
+                            </>
+                          )}
+                          {!isFirstLineComplete && !hasSecondLine && !isFadingOut && (
+                            <motion.span
+                              animate={{ opacity: [1, 0] }}
+                              transition={{ duration: 0.8, repeat: Infinity, repeatType: "reverse" }}
+                              className="inline-block w-2 md:w-3 h-[1.625rem] md:h-[2.5rem] lg:h-[3.5rem] bg-[#5e17eb] ml-1 md:ml-3"
+                              style={{ verticalAlign: 'middle', display: 'inline-block' }}
+                            />
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
                 </motion.div>
               </h1>
 
@@ -455,7 +491,7 @@ export default function Home() {
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              animate={isPreloaderFinished ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.6, delay: 0.5 }}
               className="flex flex-wrap gap-3 mt-6 md:mt-8"
             >
@@ -465,22 +501,11 @@ export default function Home() {
               >
                 View Products
               </Link>
-              <Link
-                href="/specs"
-                className="rounded-lg border-2 border-[var(--border-subtle)] px-5 py-3 md:px-8 md:py-4 text-sm md:text-base font-semibold text-[var(--text-main)] transition hover:border-[#5e17eb] hover:text-[#5e17eb] hover:bg-gray-50"
-              >
-                View Specs
-              </Link>
-              <Link
-                href="/take-a-tour"
-                className="rounded-lg border-2 border-[var(--border-subtle)] px-5 py-3 md:px-8 md:py-4 text-sm md:text-base font-semibold text-[var(--text-main)] transition hover:border-[#5e17eb] hover:text-[#5e17eb] hover:bg-gray-50"
-              >
-                Product Preview
-              </Link>
 
               {/* Download for Windows Button */}
               <a
                 href="/api/download/public"
+                onClick={() => setIsDownloadModalOpen(true)}
                 className="group relative flex items-center gap-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-3 md:px-8 md:py-4 text-sm md:text-base font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-cyan-500/25 hover:from-cyan-400 hover:to-blue-500"
               >
                 <svg className="h-5 w-5 fill-current" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
@@ -490,7 +515,7 @@ export default function Home() {
                 <div className="absolute inset-0 -z-10 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 opacity-0 blur transition-opacity duration-300 group-hover:opacity-50" />
               </a>
 
-              <TrustBox />
+
             </motion.div>
 
 
@@ -498,7 +523,7 @@ export default function Home() {
             {/* Tech Providers - Integrated into Hero but separated */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              animate={isPreloaderFinished ? { opacity: 1 } : { opacity: 0 }}
               transition={{ duration: 0.6, delay: 0.9 }}
               className="mt-4 md:mt-6 relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-white py-6 border-t border-b border-slate-100 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)]"
             >
@@ -1364,6 +1389,10 @@ export default function Home() {
           </div>
         </motion.div>
       </section>
+      <DownloadModal
+        isOpen={isDownloadModalOpen}
+        onClose={() => setIsDownloadModalOpen(false)}
+      />
     </>
   );
 }

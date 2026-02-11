@@ -48,6 +48,59 @@ export async function getAllCategories(): Promise<string[]> {
 }
 
 /**
+ * Fuzzy match requested categories to actual database categories
+ * Handles cases where AI requests "Telegram Setup" but DB has "Telegram Configuration"
+ * @param requestedCategories - Categories requested by AI
+ * @param availableCategories - Actual categories in database
+ * @returns Matched category names from database
+ */
+function fuzzyMatchCategories(
+  requestedCategories: string[],
+  availableCategories: string[],
+): string[] {
+  const matched: string[] = [];
+
+  for (const requested of requestedCategories) {
+    const requestedLower = requested.toLowerCase();
+
+    // First try exact match (case-insensitive)
+    const exactMatch = availableCategories.find(
+      (cat) => cat.toLowerCase() === requestedLower,
+    );
+    if (exactMatch) {
+      matched.push(exactMatch);
+      continue;
+    }
+
+    // Then try partial match (contains or is contained by)
+    const partialMatch = availableCategories.find((cat) => {
+      const catLower = cat.toLowerCase();
+      return catLower.includes(requestedLower) || requestedLower.includes(catLower);
+    });
+    if (partialMatch) {
+      matched.push(partialMatch);
+      continue;
+    }
+
+    // Finally, try keyword matching
+    const requestedKeywords = requestedLower.split(/[\s&]+/);
+    const keywordMatch = availableCategories.find((cat) => {
+      const catKeywords = cat.toLowerCase().split(/[\s&]+/);
+      // Match if at least 2 keywords overlap, or 1 keyword if it's significant
+      const overlap = requestedKeywords.filter((kw) =>
+        catKeywords.some((ck) => ck.includes(kw) || kw.includes(ck)),
+      );
+      return overlap.length >= Math.min(2, requestedKeywords.length);
+    });
+    if (keywordMatch) {
+      matched.push(keywordMatch);
+    }
+  }
+
+  return [...new Set(matched)]; // Remove duplicates
+}
+
+/**
  * Get FAQs by specific categories
  * @param categories - Array of category names to fetch
  * @returns Array of FAQ objects
@@ -58,10 +111,29 @@ export async function getFaqsByCategories(categories: string[]): Promise<FAQ[]> 
   }
 
   try {
+    // Get all available categories for fuzzy matching
+    const availableCategories = await getAllCategories();
+
+    // Fuzzy match requested categories to actual database categories
+    const matchedCategories = fuzzyMatchCategories(categories, availableCategories);
+
+    if (matchedCategories.length === 0) {
+      console.warn(`No category matches found for: ${categories.join(", ")}`);
+      return [];
+    }
+
+    // Log the matching for debugging
+    if (process.env.NODE_ENV === "development") {
+      console.log("Category matching:", {
+        requested: categories,
+        matched: matchedCategories,
+      });
+    }
+
     const { data, error } = await supabase
       .from("faqs")
       .select("id, question, answer, category, tags, is_active")
-      .in("category", categories)
+      .in("category", matchedCategories)
       .eq("is_active", true)
       .order("category", { ascending: true });
 

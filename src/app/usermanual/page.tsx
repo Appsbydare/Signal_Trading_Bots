@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 export default function UserManualPage() {
     const [activeTab, setActiveTab] = useState<"video" | "quickstart" | "settings" | "strategy">("video");
     const [activeSection, setActiveSection] = useState<string>("");
+    const [searchQuery, setSearchQuery] = useState<string>("");
 
     useEffect(() => {
         const handleScroll = () => {
@@ -70,6 +71,32 @@ export default function UserManualPage() {
                     {/* Left Sidebar - Manual Navigation */}
                     <aside className="lg:block">
                         <div className="sticky top-8 space-y-3">
+                            {/* Search Bar */}
+                            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4">
+                                <div className="relative">
+                                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                    <input
+                                        type="text"
+                                        placeholder="Search manual..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#5e17eb] focus:border-transparent transition-all"
+                                    />
+                                    {searchQuery && (
+                                        <button
+                                            onClick={() => setSearchQuery("")}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
+                                        >
+                                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
                             {/* Manual Tabs */}
                             <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6">
                                 <h3 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">
@@ -116,6 +143,8 @@ export default function UserManualPage() {
                                     activeTab={activeTab}
                                     activeSection={activeSection}
                                     scrollToSection={scrollToSection}
+                                    searchQuery={searchQuery}
+                                    setActiveTab={setActiveTab}
                                 />
                             </div>
                         </div>
@@ -134,10 +163,12 @@ export default function UserManualPage() {
     );
 }
 
-function TableOfContents({ activeTab, activeSection, scrollToSection }: {
+function TableOfContents({ activeTab, activeSection, scrollToSection, searchQuery, setActiveTab }: {
     activeTab: "video" | "quickstart" | "settings" | "strategy";
     activeSection: string;
     scrollToSection: (id: string) => void;
+    searchQuery?: string;
+    setActiveTab: (tab: "video" | "quickstart" | "settings" | "strategy") => void;
 }) {
     const sections = {
         video: [
@@ -173,21 +204,85 @@ function TableOfContents({ activeTab, activeSection, scrollToSection }: {
         ],
     };
 
+    // Global search across all tabs
+    const allSections = Object.entries(sections).flatMap(([tabKey, tabSections]) =>
+        tabSections.map(section => ({
+            ...section,
+            tab: tabKey as "video" | "quickstart" | "settings" | "strategy",
+            tabLabel: tabKey === "video" ? "Video Tutorials" :
+                tabKey === "quickstart" ? "Quick Start" :
+                    tabKey === "settings" ? "Settings" :
+                        "Strategy"
+        }))
+    );
+
+    const filteredSections = searchQuery
+        ? allSections.filter(section =>
+            section.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            section.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            section.tabLabel.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        : sections[activeTab].map(s => ({ ...s, tab: activeTab, tabLabel: "" }));
+
+    // Group results by tab when searching
+    const groupedResults = searchQuery
+        ? filteredSections.reduce((acc, section) => {
+            if (!acc[section.tab]) acc[section.tab] = [];
+            acc[section.tab].push(section);
+            return acc;
+        }, {} as Record<string, typeof filteredSections>)
+        : null;
+
     return (
         <nav className="max-h-[calc(100vh-300px)] overflow-y-auto space-y-1 pr-2 custom-scrollbar">
-            {sections[activeTab].map((section) => (
-                <button
-                    key={section.id}
-                    onClick={() => scrollToSection(section.id)}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeSection === section.id
-                        ? "bg-[#5e17eb]/20 text-[#5e17eb] border-l-2 border-[#5e17eb]"
-                        : "text-zinc-400 hover:text-white hover:bg-white/5"
-                        }`}
-                >
-                    <span>{section.icon}</span>
-                    <span>{section.title}</span>
-                </button>
-            ))}
+            {searchQuery && groupedResults ? (
+                // Show grouped search results
+                Object.entries(groupedResults).length > 0 ? (
+                    Object.entries(groupedResults).map(([tabKey, tabSections]) => (
+                        <div key={tabKey} className="mb-4">
+                            <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 px-3">
+                                {tabSections[0].tabLabel}
+                            </div>
+                            {tabSections.map((section) => (
+                                <button
+                                    key={section.id}
+                                    onClick={() => {
+                                        setActiveTab(section.tab);
+                                        setTimeout(() => scrollToSection(section.id), 100);
+                                    }}
+                                    className="w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 text-zinc-400 hover:text-white hover:bg-white/5 mb-1"
+                                >
+                                    <span>{section.icon}</span>
+                                    <span>{section.title}</span>
+                                </button>
+                            ))}
+                        </div>
+                    ))
+                ) : (
+                    <div className="text-center py-8 text-zinc-500">
+                        <svg className="h-12 w-12 mx-auto mb-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-sm">No results found</p>
+                        <p className="text-xs mt-1">Try a different search term</p>
+                    </div>
+                )
+            ) : (
+                // Show current tab sections
+                filteredSections.map((section) => (
+                    <button
+                        key={section.id}
+                        onClick={() => scrollToSection(section.id)}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${activeSection === section.id
+                            ? "bg-[#5e17eb]/20 text-[#5e17eb] border-l-2 border-[#5e17eb]"
+                            : "text-zinc-400 hover:text-white hover:bg-white/5"
+                            }`}
+                    >
+                        <span>{section.icon}</span>
+                        <span>{section.title}</span>
+                    </button>
+                ))
+            )}
             <style jsx>{`
                 .custom-scrollbar::-webkit-scrollbar {
                     width: 6px;

@@ -8,7 +8,7 @@ export function TrustBox() {
             href="https://www.trustpilot.com/review/signaltradingbots.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded border border-[#00b67a] bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-transform hover:scale-105"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#00b67a] bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 transition-transform hover:scale-105"
         >
             <span className="font-semibold text-[#1a1a1a]">Review us on</span>
             <div className="flex items-center gap-0.5">
