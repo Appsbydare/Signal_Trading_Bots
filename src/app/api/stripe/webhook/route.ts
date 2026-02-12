@@ -360,7 +360,8 @@ export async function POST(request: NextRequest) {
             subscription_cancel_at_period_end: cancelAtPeriodEnd,
             expires_at: currentPeriodEnd.toISOString(),
             // Ensure we set the normalized plan name if it changed
-            plan: normalizedNew || updatedPlan
+            plan: normalizedNew || updatedPlan,
+            stripe_customer_id: subscription.customer as string // ALWAYS sync customer ID
           };
 
           // Logic for Plan Change badge
@@ -499,7 +500,8 @@ export async function POST(request: NextRequest) {
               subscription_current_period_end: currentPeriodEnd.toISOString(),
               subscription_cancel_at_period_end: cancelAtPeriodEnd,
               expires_at: currentPeriodEnd.toISOString(),
-              plan: normalizePlanName(updatedPlan) || updatedPlan
+              plan: normalizePlanName(updatedPlan) || updatedPlan,
+              stripe_customer_id: subscription.customer as string // ALWAYS sync customer ID when linking
             };
 
             // Update plan if we have it (important for upgrades/downgrades via Stripe Portal)
