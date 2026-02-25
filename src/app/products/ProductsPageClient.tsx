@@ -461,7 +461,7 @@ export function ProductsPageClient() {
                                     ? billingInterval === "monthly"
                                       ? "$29/month"
                                       : "$348/year"
-                                    : "$999 one-time"
+                                    : "$299 one-time"
                               }
                               yearlyNote={
                                 plan.name === "Lifetime"

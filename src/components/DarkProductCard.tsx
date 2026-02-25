@@ -154,7 +154,7 @@ export function DarkProductCard({
               </span>
 
               {/* Discounted price */}
-              <span className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent" style={{ fontFamily: "var(--font-heading)" }}>
+              <span className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent" style={{ fontFamily: "var(--font-heading)", textTransform: "uppercase" }}>
                 {price}
               </span>
             </div>
