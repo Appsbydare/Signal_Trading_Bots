@@ -131,25 +131,26 @@ export function DarkProductCard({
           {yearlyNote}
         </p>
 
-        {/* Price */}
         <div className="mb-4">
-          {(name === "Starter" || name === "Pro") ? (
+          {(name === "Starter" || name === "Pro" || name === "Lifetime") ? (
             <div className="flex items-center gap-2 flex-wrap">
               {/* Strikethrough original price */}
               <span className="text-3xl font-bold text-zinc-600 line-through" style={{ fontFamily: "var(--font-heading)" }}>
-                {name === "Starter"
-                  ? billingInterval === "monthly"
-                    ? "$29"
-                    : "$348"
-                  : billingInterval === "monthly"
-                    ? "$49"
-                    : "$588"
+                {name === "Lifetime"
+                  ? "$999"
+                  : name === "Starter"
+                    ? billingInterval === "monthly"
+                      ? "$29"
+                      : "$348"
+                    : billingInterval === "monthly"
+                      ? "$49"
+                      : "$588"
                 }
               </span>
 
               {/* Kickstart Price label */}
               <span className="text-sm font-medium text-zinc-400">
-                Kickstart Price
+                {name === "Lifetime" ? "70% OFF" : "Kickstart Price"}
               </span>
 
               {/* Discounted price */}

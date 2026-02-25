@@ -34,10 +34,11 @@ export const STRIPE_PRODUCTS = {
         productId: process.env.STRIPE_PRODUCT_LIFETIME!,
         priceId: process.env.STRIPE_PRICE_LIFETIME!,
         name: 'Lifetime',
-        amount: 999,
+        amount: 299,
         interval: null, // One-time payment
     },
 } as const;
+
 
 export type PlanKey = keyof typeof STRIPE_PRODUCTS;
 

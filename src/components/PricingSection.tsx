@@ -173,7 +173,7 @@ export function PricingSection() {
                                                 : "$108/year")
                                             : plan.name === "Pro"
                                                 ? (billingInterval === 'monthly' ? "$29/month" : "$348/year")
-                                                : "$999 one-time"
+                                                : "$299 one-time"
                                     }
                                     yearlyNote={
                                         plan.name === "Lifetime"

@@ -27,7 +27,7 @@ function PaymentForm() {
   const creditAmount = parseFloat(searchParams.get("credit") || "0");
 
   let basePrice = 9;
-  if (isLifetime) basePrice = 999;
+  if (isLifetime) basePrice = 299;
   else if (isPro) basePrice = isYearly ? 348 : 29;
   else basePrice = isYearly ? 108 : 9; // Starter
 
@@ -1248,15 +1248,23 @@ function PaymentForm() {
                   <div className="flex justify-between text-zinc-400">
                     <span>Subtotal</span>
                     <span className="text-white">
-                      ${isLifetime ? finalPrice : basePrice} USD
+                      ${isLifetime ? "999.00" : basePrice.toFixed(2)} USD
                     </span>
                   </div>
+
+                  {/* Lifetime Promotional Discount */}
+                  {isLifetime && (
+                    <div className="flex justify-between text-green-400">
+                      <span>Limited Time Discount (70% OFF)</span>
+                      <span>-$700.00 USD</span>
+                    </div>
+                  )}
 
                   {/* Free Trial Discount - For Card payments OR Starter Monthly trial (ONLY if no active starter) */}
                   {!isLifetime && (selectedPayment === "card" || (!isPro && !isYearly)) && !hasActiveStarter && (
                     <div className="flex justify-between text-green-400">
                       <span>Free Trial Discount</span>
-                      <span>-${basePrice} USD</span>
+                      <span>-${basePrice.toFixed(2)} USD</span>
                     </div>
                   )}
 
@@ -1272,7 +1280,7 @@ function PaymentForm() {
                   {(isLifetime || selectedPayment === "card" || (!isPro && !isYearly)) && (
                     <div className="flex justify-between text-zinc-400">
                       <span>Processing Fee</span>
-                      <span className="text-white">$0 USD</span>
+                      <span className="text-white">$0.00 USD</span>
                     </div>
                   )}
 
@@ -1281,7 +1289,7 @@ function PaymentForm() {
                       <span>Total</span>
                       <span>
                         ${isLifetime
-                          ? finalPrice
+                          ? finalPrice.toFixed(2)
                           : selectedPayment === "crypto"
                             ? (basePrice - basePrice + 1).toFixed(2)
                             : (hasActiveStarter && !isPro && !isYearly)

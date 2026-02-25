@@ -14,7 +14,7 @@ export default function HangTag() {
     return (
         <div className="absolute top-0 right-1/2 translate-x-1/2 pointer-events-none" style={{ zIndex: -1, width: '240px', height: '400px' }}>
             {/* Hang Tag with Animation - positioned so rope starts at button bottom */}
-            <Link href="/payment?plan=starter">
+            <Link href="/payment?plan=lifetime">
                 <div
                     className={`transition-all duration-1000 ease-out ${isVisible ? 'opacity-100' : 'opacity-0'} cursor-pointer hover:scale-105`}
                     style={{

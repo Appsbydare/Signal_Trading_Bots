@@ -211,6 +211,23 @@ export function ProductsPageClient() {
     }
   };
 
+  const handleViewDetails = () => {
+    setShowProductDetails(true);
+    setTimeout(() => {
+      const element = document.getElementById('product-details-content');
+      if (element) {
+        // 80px offset ensures header doesn't obscure content
+        const headerOffset = 80;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.scrollY - headerOffset;
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth",
+        });
+      }
+    }, 100);
+  };
+
   return (
     <div className="w-screen ml-[calc(50%-50vw)] bg-white min-h-screen py-12">
       <div className="max-w-6xl mx-auto px-6 space-y-12">
@@ -295,7 +312,7 @@ export function ProductsPageClient() {
               return (
                 <>
                   {/* Product Details - Collapsible */}
-                  <div className="rounded-xl border border-zinc-700 bg-zinc-800 shadow-lg overflow-hidden">
+                  <div id="product-details-content" className="rounded-xl border border-zinc-700 bg-zinc-800 shadow-lg overflow-hidden">
                     {/* Collapsible Header */}
                     <button
                       onClick={() => setShowProductDetails(!showProductDetails)}
@@ -464,7 +481,7 @@ export function ProductsPageClient() {
                                     }`
                                     : "/payment?plan=lifetime"
                               }
-                              onViewDetailsClick={() => setShowProductDetails(true)}
+                              onViewDetailsClick={handleViewDetails}
                               isCurrentPlan={isCurrentPlan}
                               expiresAt={expiresAt}
                               daysRemaining={daysRemaining}
