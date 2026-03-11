@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { motion, Variants } from "framer-motion";
+import { motion, Variants, AnimatePresence } from "framer-motion";
 import { DarkProductCard } from "./DarkProductCard";
 
 const staggerContainer: Variants = {
@@ -35,6 +35,8 @@ const pricingPlans = [
             "Basic configuration templates",
             "No credit card required",
         ],
+        rating: 4.1,
+        reviewCount: 248,
     },
     {
         name: "Pro",
@@ -45,6 +47,8 @@ const pricingPlans = [
             "Priority support during setup",
             "Best for active signal users",
         ],
+        rating: 4.8,
+        reviewCount: 438,
     },
     {
         name: "Lifetime",
@@ -54,14 +58,51 @@ const pricingPlans = [
             "Access to all future versions and major features",
             "Best for committed, long-term traders",
         ],
+        rating: 4.6,
+        reviewCount: 114,
     },
 ];
+
+const productFeatures = [
+    {
+        title: "24/7 automation",
+        description:
+            "Let the bot watch your Telegram channels and execute MT5 trades around the clock.",
+    },
+    {
+        title: "Multi‑TP & SL logic",
+        description:
+            "Configure multiple take‑profit levels, stop loss, and partial closes based on your strategy.",
+    },
+    {
+        title: "Risk‑based sizing",
+        description:
+            "Control position size by fixed lot or percentage risk per trade on supported MT5 brokers.",
+    },
+    {
+        title: "Flexible mapping",
+        description:
+            "Adapt to different Telegram signal formats with configurable mapping rules.",
+    },
+];
+
+const telegramProduct = {
+    name: "Telegram → MT5 Executor",
+    description: "Our flagship desktop app that turns Telegram signals into fully automated MT5 trades.",
+    bullets: [
+        "Real‑time monitoring of your Telegram signal channels",
+        "Multi‑TP, SL and risk‑based position sizing options",
+        "Strategy‑level controls for prop firm style guardrails",
+        "Ideal for traders who want reliable, low‑maintenance automation",
+    ],
+};
 
 export function PricingSection() {
     const [customerLicenses, setCustomerLicenses] = useState<Array<{ plan: string, expires_at: string }>>([]);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [loadingLicenses, setLoadingLicenses] = useState(true);
-    const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
+    const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("yearly");
+    const [showProductDetails, setShowProductDetails] = useState(false);
 
     // Fetch customer licenses if logged in
     useEffect(() => {
@@ -81,6 +122,22 @@ export function PricingSection() {
             .catch(() => setLoadingLicenses(false));
     }, []);
 
+    const handleViewDetails = () => {
+        setShowProductDetails(true);
+        setTimeout(() => {
+            const element = document.getElementById('product-details-content');
+            if (element) {
+                const headerOffset = 80;
+                const elementPosition = element.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.scrollY - headerOffset;
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: "smooth",
+                });
+            }
+        }, 100);
+    };
+
     return (
         <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-gradient-to-b from-zinc-950 to-black py-16">
             <motion.div
@@ -91,16 +148,16 @@ export function PricingSection() {
                 variants={staggerContainer}
                 className="mx-auto max-w-7xl px-6 space-y-6"
             >
-                <div className="text-center space-y-4">
-                    <h2 className="text-3xl md:text-4xl font-bold text-white uppercase tracking-tight">
-                        SIMPLE PACKAGES FOR EVERY TRADING STAGE
+                <div className="text-center space-y-6">
+                    <h2 className="text-center text-5xl font-bold text-white md:text-6xl lg:text-7xl leading-tight">
+                        Simple Packages For Every Trading Stage
                     </h2>
-                    <p className="text-zinc-400 text-sm">
+                    {/* <p className="text-center text-sm text-zinc-400">
                         include a 10% discount when you choose yearly billing
-                    </p>
+                    </p> */}
 
                     {/* Billing Toggle */}
-                    <div className="flex items-center justify-center gap-3 pt-2">
+                    {/* <div className="flex items-center justify-center gap-3 pt-2">
                         <span className={`text-sm font-medium ${billingInterval === 'monthly' ? 'text-white' : 'text-zinc-500'}`}>
                             Monthly
                         </span>
@@ -119,7 +176,81 @@ export function PricingSection() {
                         <span className={`text-sm font-medium ${billingInterval === 'yearly' ? 'text-white' : 'text-zinc-500'}`}>
                             Yearly <span className="text-[#5e17eb] font-bold text-xs ml-1">(Save 10%)</span>
                         </span>
-                    </div>
+                    </div> */}
+                </div>
+
+                {/* Collapsible Product Details */}
+                <div id="product-details-content" className="max-w-6xl mx-auto mb-8">
+                    <AnimatePresence>
+                        {showProductDetails && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.4, ease: "easeInOut" }}
+                                className="overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-900/50 shadow-2xl"
+                            >
+                                <div className="p-1">
+                                    <div className="flex items-center justify-between bg-zinc-800/50 px-6 py-4">
+                                        <div className="flex items-center gap-4">
+                                            <h3 className="text-xl font-bold text-white">
+                                                {telegramProduct.name}
+                                            </h3>
+                                            <span className="rounded-full bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-400 border border-blue-500/20">
+                                                Current Product
+                                            </span>
+                                        </div>
+                                        <button
+                                            onClick={() => setShowProductDetails(false)}
+                                            className="text-zinc-400 hover:text-white transition-colors"
+                                        >
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M18 6L6 18M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                    <div className="grid gap-8 p-6 lg:grid-cols-2">
+                                        <div className="space-y-6">
+                                            <div>
+                                                <p className="text-zinc-300 leading-relaxed">
+                                                    {telegramProduct.description}
+                                                </p>
+                                            </div>
+                                            <ul className="grid gap-3 sm:grid-cols-1">
+                                                {telegramProduct.bullets.map((bullet, idx) => (
+                                                    <li key={idx} className="flex items-start gap-3 text-sm text-zinc-400">
+                                                        <span className="mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-blue-400">
+                                                            ✓
+                                                        </span>
+                                                        <span>{bullet}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+
+                                        <div className="space-y-6 lg:border-l lg:border-zinc-700 lg:pl-8">
+                                            <h4 className="text-sm font-bold uppercase tracking-widest text-zinc-500">
+                                                Technical Specifications
+                                            </h4>
+                                            <div className="grid gap-4 sm:grid-cols-2">
+                                                {productFeatures.map((feature) => (
+                                                    <div key={feature.title} className="space-y-1">
+                                                        <h5 className="text-sm font-semibold text-white">
+                                                            {feature.title}
+                                                        </h5>
+                                                        <p className="text-xs text-zinc-400 leading-relaxed">
+                                                            {feature.description}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
 
                 <motion.div
@@ -168,20 +299,21 @@ export function PricingSection() {
                                     badge={plan.badge}
                                     price={
                                         plan.name === "Starter"
-                                            ? (billingInterval === 'monthly'
-                                                ? (hasActiveStarter ? "$9/month" : "FREE FOR 30 DAYS")
-                                                : "$108/year")
+                                            ? "$108/YEAR"
                                             : plan.name === "Pro"
-                                                ? (billingInterval === 'monthly' ? "$29/month" : "$348/year")
-                                                : "$299 one-time"
+                                                ? "$188/YEAR"
+                                                : "$299 ONE-TIME"
                                     }
-                                    yearlyNote={
-                                        plan.name === "Lifetime"
-                                            ? "ALL FUTURE VERSIONS AND FEATURES INCLUDED"
-                                            : billingInterval === 'monthly'
-                                                ? "SAVE 10% WITH YEARLY BILLING"
-                                                : "Billed annually (10% discount applied)"
+                                    gradientFrom={
+                                        plan.name === "Starter" ? "#00c6ff" :
+                                            plan.name === "Pro" ? "#0072ff" : "#05036deb"
                                     }
+                                    gradientTo={
+                                        plan.name === "Starter" ? "#ffffff" :
+                                            plan.name === "Pro" ? "#00c6ff" : "#0059ffff"
+                                    }
+                                    featuresColor={plan.name === "Starter" ? "#001e3c" : undefined}
+                                    yearlyNote=""
                                     features={plan.features}
                                     featured={plan.featured}
                                     paymentLink={
@@ -206,7 +338,9 @@ export function PricingSection() {
                                     proratedCredit={proratedCredit}
                                     billingInterval={billingInterval}
                                     onBillingIntervalChange={setBillingInterval}
-                                    showBillingToggle={plan.name !== "Lifetime"}
+                                    onViewDetailsClick={handleViewDetails}
+                                    rating={plan.rating}
+                                    reviewCount={plan.reviewCount}
                                 />
                             </motion.div>
                         );

@@ -72,6 +72,8 @@ const pricingPlans = [
       "Core Telegram → MT5 automation",
       "Basic configuration templates",
     ],
+    rating: 3.9,
+    reviewCount: 248,
   },
   {
     name: "Pro",
@@ -82,6 +84,8 @@ const pricingPlans = [
       "Priority support during setup",
       "Best for active signal users",
     ],
+    rating: 4.8,
+    reviewCount: 438,
   },
   {
     name: "Lifetime",
@@ -91,6 +95,8 @@ const pricingPlans = [
       "Access to future improvements",
       "Designed for committed traders",
     ],
+    rating: 4.6,
+    reviewCount: 114,
   },
 ];
 
@@ -157,7 +163,7 @@ export function ProductsPageClient() {
   const [customerLicenses, setCustomerLicenses] = useState<Array<{ plan: string, expires_at: string }>>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loadingLicenses, setLoadingLicenses] = useState(true);
-  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
+  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("yearly");
   const [showProductDetails, setShowProductDetails] = useState(false);
 
   // Fetch customer licenses if logged in
@@ -400,7 +406,7 @@ export function ProductsPageClient() {
                   {activeProduct === "telegram-mt5" ? (
                     <div>
                       {/* Trial Banner moved here - Only show if user has NO licenses */}
-                      {!loadingLicenses && customerLicenses.length === 0 && <TrialBanner />}
+                      {/* {!loadingLicenses && customerLicenses.length === 0 && <TrialBanner />} */}
 
                       {/* Pricing Cards - Horizontal */}
                       <div className="grid gap-4 md:grid-cols-3">
@@ -454,13 +460,9 @@ export function ProductsPageClient() {
                               badge={plan.badge}
                               price={
                                 plan.name === "Starter"
-                                  ? billingInterval === "monthly"
-                                    ? (hasActiveStarter ? "$9/month" : "Free for 30 days")
-                                    : "$108/year"
+                                  ? "$108/year"
                                   : plan.name === "Pro"
-                                    ? billingInterval === "monthly"
-                                      ? "$29/month"
-                                      : "$348/year"
+                                    ? "$188/year"
                                     : "$299 one-time"
                               }
                               yearlyNote={
@@ -498,7 +500,8 @@ export function ProductsPageClient() {
                               proratedCredit={proratedCredit}
                               billingInterval={billingInterval}
                               onBillingIntervalChange={setBillingInterval}
-                              showBillingToggle={plan.name !== "Lifetime"}
+                              rating={plan.rating}
+                              reviewCount={plan.reviewCount}
                             />
                           );
                         })}

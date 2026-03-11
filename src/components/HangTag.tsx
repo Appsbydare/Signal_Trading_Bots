@@ -12,7 +12,7 @@ export default function HangTag() {
     }, []);
 
     return (
-        <div className="absolute top-0 right-1/2 translate-x-1/2 pointer-events-none" style={{ zIndex: -1, width: '240px', height: '400px' }}>
+        <div className="absolute top-0 right-1/2 translate-x-1/2 pointer-events-none" style={{ zIndex: -1, width: '360px', height: '600px' }}>
             {/* Hang Tag with Animation - positioned so rope starts at button bottom */}
             <Link href="/payment?plan=lifetime">
                 <div
@@ -24,20 +24,20 @@ export default function HangTag() {
                         transform: 'translateX(-50%)',
                         animation: isVisible ? 'swing 3s ease-in-out infinite' : 'none',
                         transformOrigin: 'top center',
-                        width: '192px',
-                        height: '288px',
+                        width: '288px',
+                        height: '432px',
                         pointerEvents: 'auto'
                     }}
                 >
                     <img
                         src="/hang-tag.png"
                         alt="30 Day Free Trial - Click to get started"
-                        width="192"
-                        height="288"
+                        width="288"
+                        height="432"
                         className="drop-shadow-lg transition-all hover:drop-shadow-2xl"
                         style={{
-                            width: '192px',
-                            height: '288px',
+                            width: '288px',
+                            height: '432px',
                             objectFit: 'contain'
                         }}
                     />

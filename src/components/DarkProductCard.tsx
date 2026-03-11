@@ -21,7 +21,11 @@ interface DarkProductCardProps {
   proratedCredit?: number;
   billingInterval?: "monthly" | "yearly";
   onBillingIntervalChange?: (interval: "monthly" | "yearly") => void;
-  showBillingToggle?: boolean;
+  rating?: number;
+  reviewCount?: number;
+  gradientFrom?: string;
+  gradientTo?: string;
+  featuresColor?: string;
 }
 
 export function DarkProductCard({
@@ -44,46 +48,37 @@ export function DarkProductCard({
   proratedCredit,
   billingInterval = "monthly",
   onBillingIntervalChange,
-  showBillingToggle = false,
+  rating,
+  reviewCount,
+  gradientFrom = "#03a9f4",
+  gradientTo = "#ff0058",
+  featuresColor,
 }: DarkProductCardProps) {
   return (
-    <div className="relative group h-full">
-      {/* Starry background effect */}
-      <div
-        className="absolute inset-0 rounded-xl bg-gradient-to-br from-slate-900 via-slate-950 to-black"
+    <div className="group relative w-full h-full transition-all duration-500">
+      {/* Skewed gradient panels from reference */}
+      <span
+        className="absolute top-0 left-[20px] w-1/2 h-full rounded-lg transform skew-x-[15deg] transition-all duration-500 group-hover:skew-x-0 group-hover:left-[10px] group-hover:w-[calc(100%-20px)] z-0"
         style={{
-          backgroundImage: `
-            radial-gradient(2px 2px at 20px 30px, white, rgba(255,255,255,.2)),
-            radial-gradient(2px 2px at 60px 70px, white, rgba(255,255,255,.2)),
-            radial-gradient(1px 1px at 50px 50px, white, rgba(255,255,255,.2)),
-            radial-gradient(1px 1px at 130px 80px, white, rgba(255,255,255,.2)),
-            radial-gradient(2px 2px at 90px 10px, white, rgba(255,255,255,.2)),
-            radial-gradient(1px 1px at 130px 130px, white, rgba(255,255,255,.2))
-          `,
-          backgroundRepeat: "repeat",
-          backgroundSize: "200px 200px",
+          background: `linear-gradient(315deg, ${gradientFrom}, ${gradientTo})`,
+        }}
+      />
+      <span
+        className="absolute top-0 left-[20px] w-1/2 h-full rounded-lg transform skew-x-[15deg] blur-[30px] transition-all duration-500 group-hover:skew-x-0 group-hover:left-[10px] group-hover:w-[calc(100%-20px)] z-0"
+        style={{
+          background: `linear-gradient(315deg, ${gradientFrom}, ${gradientTo})`,
         }}
       />
 
-      {/* Special Offer Tag - Top Left Corner */}
-      {(showPromoOffer || (featured && !isCurrentPlan)) && (
-        <div className="absolute -top-2 -left-2 z-20">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 rounded-full blur-[2px] opacity-40" />
-            <div className="relative bg-gradient-to-br from-slate-900 to-black border-2 border-yellow-400 text-yellow-300 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide shadow-lg shadow-yellow-500/20">
-              ⚡No Credit Card Required
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Animated blurs (Blobs) */}
+      <span className="pointer-events-none absolute inset-0 z-10">
+        <span className="absolute top-0 left-0 w-0 h-0 rounded-lg opacity-0 bg-[rgba(255,255,255,0.1)] backdrop-blur-[10px] shadow-[0_5px_15px_rgba(0,0,0,0.08)] transition-all duration-500 animate-blob group-hover:top-[-30px] group-hover:left-[20px] group-hover:w-[80px] group-hover:h-[80px] group-hover:opacity-100" />
+        <span className="absolute bottom-0 right-0 w-0 h-0 rounded-lg opacity-0 bg-[rgba(255,255,255,0.1)] backdrop-blur-[10px] shadow-[0_5px_15px_rgba(0,0,0,0.08)] transition-all duration-500 animate-blob animation-delay-1000 group-hover:bottom-[-30px] group-hover:right-[20px] group-hover:w-[80px] group-hover:h-[80px] group-hover:opacity-100" />
+      </span>
 
-
-      {/* Card content */}
+      {/* Glass card content */}
       <div
-        className={`relative z-10 flex h-full flex-col rounded-xl border p-6 text-left shadow-lg transition-all duration-200 hover:shadow-xl ${featured
-          ? "border-blue-500 bg-gradient-to-br from-slate-900 to-black"
-          : "border-blue-600/30 bg-gradient-to-br from-slate-900 to-black"
-          }`}
+        className={`relative z-20 h-full flex flex-col rounded-xl p-8 backdrop-blur-[15px] bg-white/5 border border-white/10 shadow-2xl transition-all duration-500 group-hover:left-[-15px] group-hover:p-10 ${featured ? "ring-1 ring-white/20" : ""}`}
       >
         {/* Top badge and Billing Toggle */}
         <div className="mb-4 flex items-center justify-between">
@@ -94,7 +89,7 @@ export function DarkProductCard({
           )}
 
           {/* Billing Toggle (if enabled) */}
-          {showBillingToggle && onBillingIntervalChange && (
+          {/* {showBillingToggle && onBillingIntervalChange && (
             <button
               onClick={() => onBillingIntervalChange(billingInterval === "yearly" ? "monthly" : "yearly")}
               className="flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-800/50 px-2.5 py-1.5 transition-all hover:border-[#5e17eb]/50 hover:bg-zinc-700/50"
@@ -120,60 +115,66 @@ export function DarkProductCard({
                 Yearly <span className="text-[10px] text-purple-400">(Save 10%)</span>
               </span>
             </button>
-          )}
+          )} */}
         </div>
 
         {/* Title */}
-        <h3 className="mb-3 text-xl font-bold text-white">{name}</h3>
+        <h3 className="mb-1 text-4xl font-black text-white uppercase tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" style={{ fontFamily: "var(--font-heading)" }}>
+          {name}
+        </h3>
 
-        {/* Description/Price info */}
-        <p className="text-sm font-medium uppercase tracking-wide text-blue-300 mb-1">
-          {yearlyNote}
-        </p>
-
-        <div className="mb-4">
-          {(name === "Starter" || name === "Pro" || name === "Lifetime") ? (
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Strikethrough original price */}
-              <span className="text-3xl font-bold text-zinc-600 line-through" style={{ fontFamily: "var(--font-heading)" }}>
-                {name === "Lifetime"
-                  ? "$999"
-                  : name === "Starter"
-                    ? billingInterval === "monthly"
-                      ? "$29"
-                      : "$348"
-                    : billingInterval === "monthly"
-                      ? "$49"
-                      : "$588"
-                }
-              </span>
-
-              {/* Kickstart Price label */}
-              <span className="text-sm font-medium text-zinc-400">
-                {name === "Lifetime" ? "70% OFF" : "Kickstart Price"}
-              </span>
-
-              {/* Discounted price */}
-              <span className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent" style={{ fontFamily: "var(--font-heading)", textTransform: "uppercase" }}>
-                {price}
-              </span>
+        {/* Rating */}
+        {rating && reviewCount && (
+          <Link href="/reviews" className="mb-4 flex items-center gap-2 transition hover:opacity-80">
+            <div className="flex items-center gap-0.5">
+              {[...Array(5)].map((_, i) => (
+                <svg
+                  key={i}
+                  className={`h-4 w-4 ${i < Math.floor(rating) ? "text-yellow-400 fill-yellow-400" : "text-zinc-600"
+                    }`}
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              ))}
             </div>
-          ) : (
-            <p className="text-3xl font-bold text-white" style={{ fontFamily: "var(--font-heading)" }}>
-              {price}
-            </p>
-          )}
+            <span className="text-sm font-medium text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+              {rating} <span className="text-white/70">({reviewCount} reviews)</span>
+            </span>
+          </Link>
+        )}
+
+        {/* Description/Price info - REMOVED AS REQUESTED */}
+        {/* <p className="text-sm font-medium uppercase tracking-wide text-blue-300 mb-1">
+          {yearlyNote}
+        </p> */}
+
+        <div className="mb-6 flex items-baseline justify-end gap-1 text-right">
+          {(() => {
+            const parts = price.split(/(\/| )/);
+            const amount = parts[0];
+            const suffix = parts.slice(1).join("");
+
+            return (
+              <>
+                <span className="text-6xl font-black text-white drop-shadow-[0_4px_6px_rgba(0,0,0,0.4)] transform scale-y-110 origin-left" style={{ fontFamily: "var(--font-heading)" }}>
+                  {amount}
+                </span>
+                <span className="text-xl font-black text-white uppercase tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" style={{ fontFamily: "var(--font-heading)" }}>
+                  {suffix}
+                </span>
+              </>
+            );
+          })()}
         </div>
 
         {/* Trial Offer Banner */}
-        {(showPromoOffer || (featured && !isCurrentPlan)) && (
+        {/* {(showPromoOffer || (featured && !isCurrentPlan)) && (
           <div className="mb-4 relative rounded-lg overflow-hidden p-[2px]">
             {showPromoOffer ? (
               <>
-                {/* Yellow/Gold Animated gradient border for Special Offer */}
                 <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 bg-[length:200%_100%] animate-[gradient_3s_linear_infinite]" />
 
-                {/* Inner content with dark background */}
                 <div className="relative rounded-lg bg-gradient-to-br from-slate-900 to-black p-3 text-center">
                   <div className="flex items-center justify-center gap-1.5">
                     <span className="text-xs font-bold uppercase tracking-wider text-yellow-300">
@@ -187,10 +188,8 @@ export function DarkProductCard({
               </>
             ) : (
               <>
-                {/* Yellow/Gold gradient for Most Popular */}
                 <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 bg-[length:200%_100%] animate-[gradient_3s_linear_infinite]" />
 
-                {/* Inner content with dark background */}
                 <div className="relative rounded-lg bg-gradient-to-br from-slate-900 to-black p-3 text-center">
                   <div className="flex items-center justify-center gap-1.5">
                     <span className="text-xs font-bold uppercase tracking-wider text-yellow-300">
@@ -204,16 +203,20 @@ export function DarkProductCard({
               </>
             )}
           </div>
-        )}
+        )} */}
 
         {/* Features list */}
         <ul className="mb-6 flex-grow space-y-2">
           {features.map((feature, idx) => (
             <li
               key={idx}
-              className="flex items-center gap-2 text-sm text-blue-100"
+              className={`flex items-start gap-2 text-lg font-medium drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] ${featuresColor ? '' : 'text-blue-50'}`}
+              style={featuresColor ? { color: featuresColor } : {}}
             >
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-600/30 text-xs text-blue-300">
+              <span
+                className={`inline-flex mt-1 h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600/30 text-[10px] ${featuresColor ? '' : 'text-blue-300'}`}
+                style={featuresColor ? { color: featuresColor } : {}}
+              >
                 ✓
               </span>
               {feature}
@@ -240,14 +243,12 @@ export function DarkProductCard({
 
         {/* Buttons */}
         <div className="mt-auto space-y-2 pt-4">
-          {!isCurrentPlan && (
-            <button
-              onClick={onViewDetailsClick}
-              className="inline-flex w-full items-center justify-center rounded-md bg-[#5e17eb] text-white hover:bg-[#4512c2] px-4 py-2 text-sm font-medium transition"
-            >
-              View details
-            </button>
-          )}
+          <button
+            onClick={onViewDetailsClick}
+            className="inline-flex w-full items-center justify-center rounded-md bg-[#5e17eb] text-white hover:bg-[#4512c2] px-4 py-2 text-sm font-medium transition"
+          >
+            View details
+          </button>
           {canUpgradeToYearly && upgradeYearlyLink ? (
             <>
               <Link
@@ -286,19 +287,29 @@ export function DarkProductCard({
           ) : (
             <Link
               href={paymentLink}
-              className="inline-flex w-full items-center justify-center rounded-md bg-[#5e17eb] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4512c2]"
+              className="inline-flex w-full items-center justify-center rounded-md bg-[#5e17eb] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#4512c2] shadow-xl shadow-purple-900/40 border border-purple-400/20 active:scale-95 duration-200"
             >
-              {isLifetime ? "Start Automation →" : "Start Free"}
+              <span className="drop-shadow-[0_1.5px_1.5px_rgba(0,0,0,0.7)]">Start Automation →</span>
             </Link>
           )}
         </div>
 
         {/* Footer text */}
-        <div className="mt-3 flex items-center justify-center gap-1 text-xs text-blue-300/70">
+        <div className="mt-3 flex items-center justify-center gap-1 text-xs text-amber-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
           <span>🔒</span>
           <span>Secure License</span>
         </div>
       </div>
+
+      {/* Tailwind custom keyframes for glass effect blurs */}
+      <style jsx>{`
+        @keyframes blob {
+          0%, 100% { transform: translateY(10px); }
+          50% { transform: translateY(-10px) translateX(-10px); }
+        }
+        .animate-blob { animation: blob 5s ease-in-out infinite; }
+        .animation-delay-1000 { animation-delay: -2s; }
+      `}</style>
     </div>
   );
 }
