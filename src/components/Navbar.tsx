@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import HangTag from "./HangTag";
 
+
 interface Customer {
     id: number;
     email: string;
@@ -18,6 +19,7 @@ export default function Navbar() {
     const [loading, setLoading] = useState(true);
     const [isVisible, setIsVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
+    const [showHangTag, setShowHangTag] = useState(true);
     const pathname = usePathname();
 
     // Check if customer is logged in
@@ -37,6 +39,7 @@ export default function Navbar() {
     // Close mobile menu when path changes
     useEffect(() => {
         setMobileMenuOpen(false);
+        setShowHangTag(pathname === "/");
     }, [pathname]);
 
     // Handle navbar hide/show on scroll
@@ -59,6 +62,7 @@ export default function Navbar() {
             }
 
             setLastScrollY(currentScrollY);
+            setShowHangTag(currentScrollY < 50 && pathname === "/");
         };
 
         window.addEventListener('scroll', handleScroll, { passive: true });
@@ -177,7 +181,7 @@ export default function Navbar() {
                                 >
                                     Sign in
                                 </Link>
-                                <HangTag />
+                                {showHangTag && <HangTag />}
                             </div>
                         )
                     )}

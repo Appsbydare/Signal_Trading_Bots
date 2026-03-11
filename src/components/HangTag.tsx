@@ -12,14 +12,14 @@ export default function HangTag() {
     }, []);
 
     return (
-        <div className="absolute top-0 right-1/2 translate-x-1/2 pointer-events-none" style={{ zIndex: -1, width: '360px', height: '600px' }}>
+        <div className="absolute top-[25px] left-1/2 -translate-x-1/2 pointer-events-none" style={{ zIndex: -1, width: '360px', height: '600px' }}>
             {/* Hang Tag with Animation - positioned so rope starts at button bottom */}
             <Link href="/payment?plan=lifetime">
                 <div
                     className={`transition-all duration-1000 ease-out ${isVisible ? 'opacity-100' : 'opacity-0'} cursor-pointer hover:scale-105`}
                     style={{
                         position: 'absolute',
-                        top: '10px',
+                        top: '-15px',
                         left: '50%',
                         transform: 'translateX(-50%)',
                         animation: isVisible ? 'swing 3s ease-in-out infinite' : 'none',
