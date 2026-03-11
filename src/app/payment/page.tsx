@@ -29,7 +29,7 @@ function PaymentForm() {
   let basePrice = 9;
   if (isLifetime) basePrice = 299;
   else if (isPro) basePrice = isYearly ? 348 : 29;
-  else basePrice = isYearly ? 108 : 9; // Starter
+  else basePrice = isYearly ? 98 : 9; // Starter
 
   // Apply credit if upgrading
   // price is calculated dynamically in render or derived state now

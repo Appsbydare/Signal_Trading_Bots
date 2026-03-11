@@ -13,7 +13,7 @@ export const STRIPE_PRODUCTS = {
         productId: process.env.STRIPE_PRODUCT_STARTER_YEARLY!,
         priceId: process.env.STRIPE_PRICE_STARTER_YEARLY!,
         name: 'Starter (Yearly)',
-        amount: 108,
+        amount: 98,
         interval: 'year' as const,
     },
     pro_monthly: {

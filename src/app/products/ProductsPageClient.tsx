@@ -460,7 +460,7 @@ export function ProductsPageClient() {
                               badge={plan.badge}
                               price={
                                 plan.name === "Starter"
-                                  ? "$108/year"
+                                  ? "$98/year"
                                   : plan.name === "Pro"
                                     ? "$188/year"
                                     : "$299 one-time"

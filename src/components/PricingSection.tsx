@@ -299,7 +299,7 @@ export function PricingSection() {
                                     badge={plan.badge}
                                     price={
                                         plan.name === "Starter"
-                                            ? "$108/YEAR"
+                                            ? "$98/YEAR"
                                             : plan.name === "Pro"
                                                 ? "$188/YEAR"
                                                 : "$299 ONE-TIME"

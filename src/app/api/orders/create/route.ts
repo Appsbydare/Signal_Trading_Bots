@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
         pro: 29,
         starter: 9,
         pro_yearly: 348,
-        starter_yearly: 108,
+        starter_yearly: 98,
       };
       displayPrice = priceMap[plan as string] || 9;
     }
