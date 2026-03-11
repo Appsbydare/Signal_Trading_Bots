@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence, useInView } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { DarkProductCard } from "@/components/DarkProductCard";
@@ -62,25 +62,41 @@ export default function Home() {
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const { isPreloaderFinished } = usePreloader();
+  const [activeStepIndex, setActiveStepIndex] = useState(-1);
+  const howItWorksRef = useRef<HTMLDivElement>(null);
+  const isHowItWorksInView = useInView(howItWorksRef, { once: false, amount: 0.1 });
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isHowItWorksInView) {
+      setActiveStepIndex(0);
+      interval = setInterval(() => {
+        setActiveStepIndex((prev) => (prev === -1 ? 0 : (prev + 1) % 5));
+      }, 4000);
+    } else {
+      setActiveStepIndex(-1);
+    }
+    return () => clearInterval(interval);
+  }, [isHowItWorksInView]);
 
   // Ref and Scroll Progress for Execution Section
   const executionSectionRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: executionSectionRef,
-    offset: ["start 0.9", "end 0.1"]
+    offset: ["start 0.95", "end 0.05"]
   });
 
-  // Card 1: From Left (progress 0.1 to 0.3)
-  const opacity1 = useTransform(scrollYProgress, [0, 0.1, 0.3], [0, 0, 1]);
-  const x1 = useTransform(scrollYProgress, [0, 0.1, 0.3], [-100, -100, 0]);
+  // Card 1: From Left (progress 0.05 to 0.2)
+  const opacity1 = useTransform(scrollYProgress, [0, 0.05, 0.2], [0, 0, 1]);
+  const x1 = useTransform(scrollYProgress, [0, 0.05, 0.2], [-100, -100, 0]);
 
-  // Card 2: From Top (progress 0.3 to 0.5)
-  const opacity2 = useTransform(scrollYProgress, [0, 0.3, 0.5], [0, 0, 1]);
-  const y2 = useTransform(scrollYProgress, [0, 0.3, 0.5], [-100, -100, 0]);
+  // Card 2: From Top (progress 0.15 to 0.3)
+  const opacity2 = useTransform(scrollYProgress, [0, 0.15, 0.3], [0, 0, 1]);
+  const y2 = useTransform(scrollYProgress, [0, 0.15, 0.3], [-100, -100, 0]);
 
-  // Card 3: From Right (progress 0.5 to 0.7)
-  const opacity3 = useTransform(scrollYProgress, [0, 0.5, 0.7], [0, 0, 1]);
-  const x3 = useTransform(scrollYProgress, [0, 0.5, 0.7], [100, 100, 0]);
+  // Card 3: From Right (progress 0.25 to 0.4)
+  const opacity3 = useTransform(scrollYProgress, [0, 0.25, 0.4], [0, 0, 1]);
+  const x3 = useTransform(scrollYProgress, [0, 0.25, 0.4], [100, 100, 0]);
 
   // Helper function to split text into two lines - balanced split
   const splitIntoTwoLines = (text: string) => {
@@ -1314,10 +1330,10 @@ export default function Home() {
             </svg>
 
             {/* Reordered Step Cards - 2>1, 3>2, 1>3 pattern for first 3 */}
-            <div className="grid gap-6 md:grid-cols-5 relative z-10">
-              {/* Position 1: Step 2 (Configure Strategy) */}
+            <div ref={howItWorksRef} className="grid gap-6 md:grid-cols-5 relative z-10">
+              {/* Reordered Step Cards - 2>1, 3>2, 1>3 pattern for first 3 */}
               {[steps[1], steps[2], steps[0], steps[3], steps[4]].map((step, index) => {
-                const originalIndex = steps.indexOf(step);
+                const isActive = activeStepIndex === index;
                 return (
                   <motion.div
                     key={step.title}
@@ -1325,56 +1341,68 @@ export default function Home() {
                     whileInView={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{
                       duration: 0.6,
-                      delay: index * 0.25,
+                      delay: index * 0.15,
                     }}
                     viewport={{ once: true }}
                     className="flex flex-col h-full"
                   >
                     <div className="relative h-full">
-                      {/* Pulsing Glow Background */}
+                      {/* Pulsing Glow Background for Active Card */}
+                      <AnimatePresence>
+                        {isActive && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{
+                              opacity: [0.3, 0.6, 0.3],
+                              scale: [0.95, 1.05, 0.95],
+                            }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="absolute inset-0 bg-gradient-to-r from-[#8b5cf6]/30 to-[#3b82f6]/30 rounded-lg blur-2xl"
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                            }}
+                          />
+                        )}
+                      </AnimatePresence>
+
+                      {/* Glass Card */}
                       <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-[#3b82f6]/20 to-[#8b5cf6]/20 rounded-lg blur-xl"
                         animate={{
-                          opacity: [0.5, 1, 0.5],
-                          scale: [0.95, 1.05, 0.95],
+                          scale: isActive ? 1.05 : 1,
+                          y: isActive ? -15 : 0,
+                          borderColor: isActive ? "rgba(139, 92, 246, 0.5)" : "rgba(255, 255, 255, 0.1)",
                         }}
-                        transition={{
-                          duration: 3,
-                          delay: index * 0.2,
-                          repeat: Infinity,
-                        }}
-                      />
+                        className={`relative z-10 h-full rounded-xl backdrop-blur-[15px] bg-white/5 border p-5 text-left shadow-2xl transition-shadow duration-500 overflow-hidden flex flex-col ${isActive ? "shadow-[#8b5cf6]/20" : ""}`}
+                      >
+                        {/* Shimmer effect for active card */}
+                        {isActive && (
+                          <motion.div
+                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                            animate={{
+                              x: ["-100%", "100%"],
+                            }}
+                            transition={{
+                              duration: 1.5,
+                              repeat: Infinity,
+                              ease: "linear",
+                            }}
+                          />
+                        )}
 
-                      {/* Card */}
-                      <div className="relative h-full rounded-lg bg-gradient-to-br from-[#3a3a3a] to-[#1f1f1f] p-5 text-left shadow-lg border border-zinc-700/50 hover:border-[#3b82f6]/50 transition-all duration-300 group overflow-hidden flex flex-col">
-                        {/* Animated Border Glow - Left to Right */}
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-[#3b82f6]/0 via-[#3b82f6]/10 to-[#3b82f6]/0 rounded-lg"
-                          animate={{
-                            x: ["-100%", "100%"],
-                          }}
-                          transition={{
-                            duration: 2,
-                            delay: index * 0.15,
-                            repeat: Infinity,
-                          }}
-                        />
-
-                        {/* Content */}
                         <div className="relative z-10 flex flex-col h-full">
                           {/* Step Number with Pulse - Centered */}
                           <div className="flex justify-center mb-3">
                             <motion.div
-                              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] text-sm font-bold text-white shadow-lg"
-                              animate={{
+                              className={`inline-flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br text-sm font-bold text-white shadow-lg ${isActive ? "from-[#8b5cf6] to-[#7c3aed]" : "from-zinc-700 to-zinc-800"}`}
+                              animate={isActive ? {
                                 boxShadow: [
                                   "0 0 0 0 rgba(139, 92, 246, 0.7)",
                                   "0 0 0 10px rgba(139, 92, 246, 0)",
                                 ],
-                              }}
+                              } : {}}
                               transition={{
                                 duration: 2,
-                                delay: index * 0.2,
                                 repeat: Infinity,
                               }}
                             >
@@ -1382,14 +1410,26 @@ export default function Home() {
                             </motion.div>
                           </div>
 
-                          <h3 className="mb-2 text-center text-sm font-bold text-white uppercase tracking-wider leading-tight">
+                          <motion.h3
+                            key={`h3-${index}-${isActive}`}
+                            initial={isActive ? { clipPath: 'inset(0 100% 0 0)' } : { clipPath: 'inset(0 0% 0 0)' }}
+                            animate={{ clipPath: 'inset(0 0% 0 0)' }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                            className={`mb-2 text-center text-sm font-bold uppercase tracking-wider leading-tight transition-colors ${isActive ? "text-blue-300" : "text-zinc-400"}`}
+                          >
                             {step.title}
-                          </h3>
-                          <p className="text-xs text-blue-300 leading-relaxed text-center flex-grow">
+                          </motion.h3>
+                          <motion.p
+                            key={`p-${index}-${isActive}`}
+                            initial={isActive ? { clipPath: 'inset(0 100% 0 0)' } : { clipPath: 'inset(0 0% 0 0)' }}
+                            animate={{ clipPath: 'inset(0 0% 0 0)' }}
+                            transition={{ duration: 1.2, ease: "easeOut", delay: 0.3 }}
+                            className={`text-xs leading-relaxed text-center flex-grow transition-colors ${isActive ? "text-blue-500" : "text-zinc-500"}`}
+                          >
                             {step.description}
-                          </p>
+                          </motion.p>
                         </div>
-                      </div>
+                      </motion.div>
                     </div>
                   </motion.div>
                 );
