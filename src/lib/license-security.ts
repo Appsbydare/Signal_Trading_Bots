@@ -81,6 +81,25 @@ export function verifyRequestSignature(payload: Record<string, unknown>): Securi
   return { ok: true, message: "OK" };
 }
 
+/**
+ * Signs the response data body so the desktop app can verify it wasn't
+ * tampered with or injected by a MITM proxy.
+ *
+ * Uses a SEPARATE secret (APP_RESPONSE_SECRET) from the request signing
+ * secret so that extracting one doesn't compromise both directions.
+ */
+export function signResponseBody(data: Record<string, unknown>): string {
+  const secret = process.env.APP_RESPONSE_SECRET;
+  if (!secret) {
+    throw new Error("APP_RESPONSE_SECRET is not configured");
+  }
+  const canonical = JSON.stringify(data, Object.keys(data).sort());
+  return crypto
+    .createHmac("sha256", secret)
+    .update(canonical, "utf8")
+    .digest("hex");
+}
+
 export function ensureHttps(request: NextRequest): SecurityCheckResult {
   const proto = request.headers.get("x-forwarded-proto") || request.nextUrl.protocol.replace(":", "");
   const host = request.headers.get("host") || "";

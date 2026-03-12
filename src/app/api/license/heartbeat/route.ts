@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { licenseConfig } from "@/lib/license-config";
 import { getSessionById, refreshSession, getLicenseByKey, logValidation } from "@/lib/license-db";
-import { ensureHttps, verifyRequestSignature } from "@/lib/license-security";
+import { ensureHttps, verifyRequestSignature, signResponseBody } from "@/lib/license-security";
 
 function jsonError(status: number, message: string, errorCode: string, data: unknown = {}) {
   return NextResponse.json(
@@ -139,17 +139,30 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // Normalize plan for the desktop app (same logic as validate endpoint)
+  const rawPlan = (license?.plan ?? "").toLowerCase();
+  const normalizedPlan: "basic" | "pro" =
+    rawPlan === "pro_yearly" || rawPlan === "pro" || rawPlan === "lifetime"
+      ? "pro"
+      : "basic";
+
+  const responseData = {
+    lastSeenAt: new Date().toISOString(),
+    sessionActive: true,
+    graceAllowed: (license as any)?.grace_period_allowed ?? true,
+    plan: normalizedPlan,
+    loginRequest,
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL,
+    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    channelName: `license:${licenseKey}`
+  };
+
   return NextResponse.json({
     success: true,
     message: "Heartbeat received",
     data: {
-      lastSeenAt: new Date().toISOString(),
-      sessionActive: true,
-      graceAllowed: (license as any)?.grace_period_allowed ?? true,  // Include grace status
-      loginRequest, // Include login request if any
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL,
-      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      channelName: `license:${licenseKey}`
+      ...responseData,
+      _sig: signResponseBody(responseData),
     },
   });
 }

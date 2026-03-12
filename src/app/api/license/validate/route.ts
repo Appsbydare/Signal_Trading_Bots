@@ -9,7 +9,7 @@ import {
   logValidation,
   broadcastLicenseEvent,
 } from "@/lib/license-db";
-import { ensureHttps, verifyRequestSignature } from "@/lib/license-security";
+import { ensureHttps, verifyRequestSignature, signResponseBody } from "@/lib/license-security";
 import { getSupabaseClient } from "@/lib/supabase-storage";
 import { sendNewDeviceEmail, sendDuplicateDetectedEmail } from "@/lib/email";
 
@@ -272,6 +272,15 @@ export async function POST(request: NextRequest) {
     Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
   );
 
+  // Normalize plan name for the desktop app.
+  // DB stores "starter_yearly", "pro_yearly", "lifetime" etc.
+  // App only understands "basic" | "pro".
+  const rawPlan = (license.plan ?? "").toLowerCase();
+  const normalizedPlan: "basic" | "pro" =
+    rawPlan === "pro_yearly" || rawPlan === "pro" || rawPlan === "lifetime"
+      ? "pro"
+      : "basic";
+
   // Log successful validation
   await logValidation({
     licenseKey,
@@ -295,24 +304,30 @@ export async function POST(request: NextRequest) {
   console.log('[Validate] Supabase Key exists:', !!supabaseKey);
   console.log('[Validate] Channel Name:', channelName);
 
+  const responseData = {
+    licenseKey: license.license_key,
+    sessionId: session.session_id,
+    deviceId: session.device_id,
+    status: license.status,
+    plan: normalizedPlan,
+    rawPlan: license.plan,
+    expiresAt: license.expires_at,
+    daysRemaining,
+    email: license.email,
+    createdAt: license.created_at,
+    lastSeenAt: session.last_seen_at ?? nowIso,
+    graceAllowed: (license as any).grace_period_allowed ?? true,
+    supabaseUrl,
+    supabaseKey,
+    channelName
+  };
+
   return NextResponse.json({
     success: true,
     message: "License validated successfully",
     data: {
-      licenseKey: license.license_key,
-      sessionId: session.session_id,
-      deviceId: session.device_id,
-      status: license.status,
-      plan: license.plan,
-      expiresAt: license.expires_at,
-      daysRemaining,
-      email: license.email,
-      createdAt: license.created_at,
-      lastSeenAt: session.last_seen_at ?? nowIso,
-      graceAllowed: (license as any).grace_period_allowed ?? true,
-      supabaseUrl,
-      supabaseKey,
-      channelName
+      ...responseData,
+      _sig: signResponseBody(responseData),
     },
   });
 }
