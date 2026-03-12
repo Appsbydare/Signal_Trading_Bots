@@ -91,7 +91,10 @@ export function verifyRequestSignature(payload: Record<string, unknown>): Securi
 export function signResponseBody(data: Record<string, unknown>): string {
   const secret = process.env.APP_RESPONSE_SECRET;
   if (!secret) {
-    throw new Error("APP_RESPONSE_SECRET is not configured");
+    // Secret not yet configured in this environment — return empty string.
+    // The desktop app will reject the response as untrusted, which is the
+    // safe fallback. Add APP_RESPONSE_SECRET to Vercel env vars to enable.
+    return "";
   }
   const canonical = JSON.stringify(data, Object.keys(data).sort());
   return crypto
