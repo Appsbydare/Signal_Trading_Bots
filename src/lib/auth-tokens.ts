@@ -17,8 +17,10 @@ if (!AUTH_JWT_SECRET) {
 
 const AUTH_SECRET_KEY = new TextEncoder().encode(AUTH_JWT_SECRET);
 
-// 7 days by default
-const AUTH_TOKEN_TTL_SECONDS = Number(process.env.AUTH_TOKEN_TTL_SECONDS ?? 60 * 60 * 24 * 7);
+// Default 24 h. Set AUTH_TOKEN_TTL_SECONDS in env to override.
+// NOTE: For production, use a short-lived access token (≤1 h) + refresh token rotation.
+// The 24 h default is a pragmatic middle-ground without a refresh mechanism in place.
+const AUTH_TOKEN_TTL_SECONDS = Number(process.env.AUTH_TOKEN_TTL_SECONDS ?? 60 * 60 * 24);
 
 export const CUSTOMER_COOKIE_NAME = "stb_session";
 export const ADMIN_COOKIE_NAME = "stb_admin_session";

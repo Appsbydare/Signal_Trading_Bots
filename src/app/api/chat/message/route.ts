@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getCurrentCustomer } from "@/lib/auth-server";
+import { sanitizeForLlm } from "@/lib/rate-limit";
 import {
   appendMessage,
   findBestFaqMatch,
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
   }
 
   const conversationId = body.conversationId;
-  const text = (body.message || "").trim();
+  const text = sanitizeForLlm((body.message || "").trim());
 
   if (!conversationId || !text) {
     return jsonError(400, "conversationId and message are required");

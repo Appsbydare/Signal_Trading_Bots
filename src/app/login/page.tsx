@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,7 +15,9 @@ export default function LoginPage() {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [magicLinkEmail, setMagicLinkEmail] = useState("");
   const [showMagicLinkForm, setShowMagicLinkForm] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | undefined>();
 
+  const captchaRef = useRef<TurnstileInstance>(null);
   const supabase = createClient();
 
   async function handleEmailLogin(event: FormEvent) {
@@ -22,13 +25,18 @@ export default function LoginPage() {
     setSubmitting(true);
     setError(null);
 
-    try {
-      const { parse: parseUrl } = await import("url"); // Dynamic import if needed, or just use strings
+    if (!captchaToken) {
+      setError("Please complete the CAPTCHA verification.");
+      setSubmitting(false);
+      return;
+    }
 
+    try {
       // 1. Supabase Auth Login
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: { captchaToken },
       });
 
       if (authError) {
@@ -52,7 +60,8 @@ export default function LoginPage() {
       router.push("/portal");
       router.refresh();
     } catch (err) {
-      console.error("Login failed", err);
+      captchaRef.current?.reset();
+      setCaptchaToken(undefined);
       setError("Something went wrong. Please try again.");
       setSubmitting(false);
     }
@@ -82,13 +91,19 @@ export default function LoginPage() {
     setError(null);
     setMagicLinkSent(false);
 
+    if (!captchaToken) {
+      setError("Please complete the CAPTCHA verification.");
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const response = await fetch("/api/auth/request-magic-link", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email: magicLinkEmail }),
+        body: JSON.stringify({ email: magicLinkEmail, captchaToken }),
       });
 
       const data = await response.json();
@@ -99,10 +114,13 @@ export default function LoginPage() {
         return;
       }
 
+      captchaRef.current?.reset();
+      setCaptchaToken(undefined);
       setMagicLinkSent(true);
       setSubmitting(false);
     } catch (err) {
-      console.error("Magic link request failed", err);
+      captchaRef.current?.reset();
+      setCaptchaToken(undefined);
       setError("Something went wrong. Please try again.");
       setSubmitting(false);
     }
@@ -126,11 +144,24 @@ export default function LoginPage() {
 
         {error && (
           <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200 animate-in fade-in slide-in-from-top-2">
-            <div className="flex items-start gap-2">
-              <svg className="h-5 w-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>{error}</span>
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-start gap-2">
+                <svg className="h-5 w-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{error}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setError(null);
+                  captchaRef.current?.reset();
+                  setCaptchaToken(undefined);
+                }}
+                className="ml-2 flex-shrink-0 rounded-md border border-red-400/40 bg-red-500/20 px-2.5 py-1 text-xs font-medium text-red-200 transition-colors hover:bg-red-500/30 active:scale-95"
+              >
+                Try again
+              </button>
             </div>
           </div>
         )}
@@ -217,7 +248,7 @@ export default function LoginPage() {
                 </div>
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || !captchaToken}
                   className="w-full rounded-lg bg-zinc-700 px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-zinc-600 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {submitting ? (
@@ -244,6 +275,14 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleEmailLogin} className="space-y-4">
+          <Turnstile
+            ref={captchaRef}
+            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+            onSuccess={(token) => setCaptchaToken(token)}
+            onExpire={() => { captchaRef.current?.reset(); setCaptchaToken(undefined); }}
+            options={{ theme: "dark", size: "flexible" }}
+          />
+
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-zinc-400 ml-1">Email</label>
             <input
@@ -270,7 +309,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !captchaToken}
             className="w-full rounded-lg bg-[#5e17eb] px-4 py-3 text-sm font-semibold text-white shadow-[0_0_20px_-5px_#5e17eb] transition-all hover:bg-[#4d12c2] hover:shadow-[0_0_25px_-5px_#5e17eb] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed mt-2"
           >
             {submitting ? (

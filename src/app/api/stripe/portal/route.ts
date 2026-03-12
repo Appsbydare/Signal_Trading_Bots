@@ -10,7 +10,27 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { stripeCustomerId, subscriptionId, flow } = body;
+        const { subscriptionId, flow } = body;
+        let { stripeCustomerId } = body;
+
+        // If stripeCustomerId is missing but we have a subscriptionId, look it up from Stripe
+        if (!stripeCustomerId && subscriptionId && stripe) {
+            try {
+                const sub = await stripe.subscriptions.retrieve(subscriptionId);
+                stripeCustomerId = typeof sub.customer === 'string' ? sub.customer : sub.customer?.id;
+
+                // Persist it back to the DB so future calls work
+                if (stripeCustomerId) {
+                    const { getSupabaseClient } = await import('@/lib/supabase-storage');
+                    const client = getSupabaseClient();
+                    await client.from('licenses')
+                        .update({ stripe_customer_id: stripeCustomerId })
+                        .eq('subscription_id', subscriptionId);
+                }
+            } catch (err: any) {
+                console.error('Failed to retrieve subscription for customer lookup:', err.message);
+            }
+        }
 
         if (!stripeCustomerId) {
             return NextResponse.json(
@@ -39,7 +59,7 @@ export async function POST(request: NextRequest) {
                     subscription: subscriptionId,
                 },
             };
-            sessionConfig.return_url = `${process.env.NEXT_PUBLIC_APP_URL}/portal?updated=true`;
+            sessionConfig.return_url = `${process.env.NEXT_PUBLIC_APP_URL}/portal?from=stripe`;
         }
 
         // Create a Stripe Customer Portal session

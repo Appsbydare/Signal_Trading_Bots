@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCustomerByEmail } from "@/lib/auth-users";
 import { createMagicLinkToken } from "@/lib/auth-tokens";
 import { sendMagicLinkEmail } from "@/lib/email";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
+  // 5 magic links per IP per 10 minutes — prevents email bombing
+  if (!checkRateLimit(`magic:${getClientIp(request)}`, { limit: 5, windowSeconds: 600 })) {
+    return NextResponse.json({ success: false, message: "Too many requests. Please try again later." }, { status: 429 });
+  }
   try {
     const body = await request.json();
     const { email } = body;

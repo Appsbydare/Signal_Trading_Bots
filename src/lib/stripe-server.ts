@@ -2,11 +2,9 @@ import Stripe from 'stripe';
 
 // Plan Ranking and Normalization
 export const PLAN_RANK: Record<string, number> = {
-  'starter_monthly': 1,
-  'starter_yearly': 2,
-  'pro_monthly': 3,
-  'pro_yearly': 4,
-  'lifetime': 5
+  'starter_yearly': 1,
+  'pro_yearly': 2,
+  'lifetime': 3,
 };
 
 export const normalizePlanName = (p: string | undefined | null): string => {
@@ -14,14 +12,9 @@ export const normalizePlanName = (p: string | undefined | null): string => {
 
   const lower = p.toLowerCase();
 
-  if (lower.includes('pro') && lower.includes('monthly')) return 'pro_monthly';
-  if (lower.includes('pro') && lower.includes('yearly')) return 'pro_yearly';
-  if (lower.includes('starter') && lower.includes('monthly')) return 'starter_monthly';
-  if (lower.includes('starter') && lower.includes('yearly')) return 'starter_yearly';
+  if (lower.includes('pro')) return 'pro_yearly';
+  if (lower.includes('starter')) return 'starter_yearly';
   if (lower.includes('lifetime')) return 'lifetime';
-
-  if (p === 'pro') return 'pro_monthly';
-  if (p === 'starter') return 'starter_monthly';
 
   return p;
 };
@@ -30,16 +23,21 @@ export const normalizePlanName = (p: string | undefined | null): string => {
 export function getPlanFromPrice(price: Stripe.Price | null | undefined, fallbackPlan?: string): string | undefined {
   if (!price) return fallbackPlan;
 
+  // First: match by known Price ID from env (most reliable — survives price amount changes)
+  const priceId = price.id;
+  if (priceId) {
+    if (priceId === process.env.STRIPE_PRICE_PRO_YEARLY) return 'pro_yearly';
+    if (priceId === process.env.STRIPE_PRICE_STARTER_YEARLY) return 'starter_yearly';
+    if (priceId === process.env.STRIPE_PRICE_LIFETIME) return 'lifetime';
+  }
+
+  // Fallback: match by amount + interval
   const amount = price.unit_amount || 0;
   const interval = price.recurring?.interval;
 
-  // Map price amounts to plan names
   if (interval === 'year') {
-    if (amount === 52900) return 'pro_yearly';
-    if (amount === 31300) return 'starter_yearly';
-  } else if (interval === 'month') {
-    if (amount === 4900) return 'pro_monthly';
-    if (amount === 2900) return 'starter_monthly';
+    if (amount === 18800) return 'pro_yearly';
+    if (amount === 9800) return 'starter_yearly';
   }
 
   return fallbackPlan;

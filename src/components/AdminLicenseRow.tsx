@@ -266,17 +266,20 @@ export function AdminLicenseRow({ license, plans }: AdminLicenseRowProps) {
                             </span>
                         )}
 
-                        {isSubscription && license.subscription_status && license.subscription_status !== 'trialing' && (
-                            <span className={`text-[10px] flex items-center gap-1 ${license.subscription_cancel_at_period_end ? 'text-amber-500' : 'text-zinc-500'}`}>
-                                {license.subscription_cancel_at_period_end ? 'Activates Cancel' : 'Auto-renewing'}
+                        {isSubscription && license.subscription_cancel_at_period_end && (
+                            <span className="inline-flex w-fit items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400">
+                                ⏳ Pending Cancellation
                             </span>
+                        )}
+                        {isSubscription && !license.subscription_cancel_at_period_end && license.subscription_status === 'active' && (
+                            <span className="text-[10px] text-zinc-500">Auto-renewing</span>
                         )}
                     </div>
                 </td>
                 <td className="px-4 py-3 text-sm text-zinc-300">
                     <div>{isLifetime ? "Never" : format(expiresAt, "MMM d, yyyy")}</div>
-                    <div className={`text-xs ${isExpired ? "text-red-400" : "text-zinc-500"}`}>
-                        {isLifetime ? "Lifetime" : (isExpired ? "Expired" : `${daysUntilExpiry} days`)}
+                    <div className={`text-xs ${isExpired ? "text-red-400" : license.subscription_cancel_at_period_end ? "text-amber-400" : "text-zinc-500"}`}>
+                        {isLifetime ? "Lifetime" : isExpired ? "Expired" : license.subscription_cancel_at_period_end ? "Last access date" : `${daysUntilExpiry} days`}
                     </div>
                 </td>
                 <td className="px-4 py-3">

@@ -3,8 +3,13 @@ import { createCustomer, getCustomerByEmail } from "@/lib/auth-users";
 import { createMagicLinkToken } from "@/lib/auth-tokens";
 import { sendMagicLinkEmail } from "@/lib/email";
 import { getSupabaseClient } from "@/lib/supabase-storage";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
+  // 5 registrations per IP per hour
+  if (!checkRateLimit(`register:${getClientIp(request)}`, { limit: 5, windowSeconds: 3600 })) {
+    return NextResponse.json({ success: false, message: "Too many requests. Please try again later." }, { status: 429 });
+  }
   let body: { fullName?: string; email?: string; country?: string };
 
   try {

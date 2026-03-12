@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { CUSTOMER_COOKIE_NAME, createAuthToken } from "@/lib/auth-tokens";
 import { getCustomerByEmail, verifyPassword } from "@/lib/auth-users";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
+  // 10 attempts per IP per 15 minutes
+  if (!checkRateLimit(`login:${getClientIp(request)}`, { limit: 10, windowSeconds: 900 })) {
+    return NextResponse.json({ success: false, message: "Too many login attempts. Please try again later." }, { status: 429 });
+  }
   let body: { email?: string; password?: string };
 
   try {

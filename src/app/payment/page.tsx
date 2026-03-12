@@ -15,29 +15,19 @@ const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 
 function PaymentForm() {
   const searchParams = useSearchParams();
-  const plan = searchParams.get("plan") || "starter";
-  const isYearly = plan.endsWith("_yearly");
-  const basePlan = isYearly ? plan.replace("_yearly", "") : plan;
-
-  const isPro = basePlan === "pro";
+  const plan = searchParams.get("plan") || "starter_yearly";
   const isLifetime = plan === "lifetime";
+  const isPro = plan.includes("pro");
+  const isYearly = true; // Only yearly plans are supported
 
-  // Check if this is an upgrade from monthly to yearly
   const isUpgrade = searchParams.get("upgrade") === "true";
   const creditAmount = parseFloat(searchParams.get("credit") || "0");
 
-  let basePrice = 9;
+  let basePrice = 98;
   if (isLifetime) basePrice = 299;
-  else if (isPro) basePrice = isYearly ? 348 : 29;
-  else basePrice = isYearly ? 98 : 9; // Starter
+  else if (isPro) basePrice = 188;
 
-  // Apply credit if upgrading
-  // price is calculated dynamically in render or derived state now
-  // const price = isUpgrade && creditAmount > 0 ? Math.max(0, basePrice - creditAmount) : basePrice;
-
-  const planName = isLifetime
-    ? "Lifetime"
-    : `${isPro ? "Pro" : "Starter"}${isYearly ? " (Yearly)" : ""}`;
+  const planName = isLifetime ? "Lifetime" : isPro ? "Pro (Yearly)" : "Starter (Yearly)";
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -152,32 +142,12 @@ function PaymentForm() {
     }
   }, [selectedLicenseToUpgrade, licenses, isUpgrade]);
 
-  // Check if user already has an active Starter license (to prevent double free trial)
-  // Check if user already has an active Starter license (to prevent double free trial)
-  const hasActiveStarter = licenses.some((l: any) => {
-    const isStarter = l.plan.toLowerCase().includes('starter');
-    const isActiveStatus = l.status?.toLowerCase() === 'active';
-    const isNotExpired = l.expires_at ? new Date(l.expires_at) > new Date() : false;
-    return isStarter && (isActiveStatus || isNotExpired);
-  });
-
-  // Calculate final price based on payment method
+  // For yearly/lifetime plans, always charge full price
   const getFinalPrice = () => {
     if (isLifetime) {
       return isUpgrade ? Math.max(0, basePrice - dynamicCredit) : basePrice;
     }
-    // For starter/pro plans
-    if (selectedPayment === "crypto") {
-      return 1; // $1 for crypto payments
-    }
-
-    // For Card Payments:
-    // If it's Starter plan AND they already have an active Starter license -> Charge Full Price ($9)
-    if (!isPro && !isYearly && hasActiveStarter) {
-      return 9;
-    }
-
-    return 0; // $0 for card payments (free trial)
+    return basePrice;
   };
 
   const finalPrice = getFinalPrice();
@@ -305,7 +275,6 @@ function PaymentForm() {
           email: formData.email,
           fullName: formData.fullName,
           country: formData.country,
-          skip_trial: hasActiveStarter,
         }),
       });
 
@@ -809,6 +778,10 @@ function PaymentForm() {
                 </p>
                 <button
                   onClick={async () => {
+                    // Save current plan so portal can detect a real upgrade on return
+                    if (selectedLicenseObj?.plan) {
+                      sessionStorage.setItem("preUpgradePlan", selectedLicenseObj.plan);
+                    }
                     try {
                       const response = await fetch('/api/stripe/portal', {
                         method: 'POST',
@@ -836,88 +809,7 @@ function PaymentForm() {
             {/* Payment Methods */}
             {!isSubscriptionDetailsUpgrade && (
               <section className={`rounded-lg border border-zinc-800 bg-zinc-900/50 p-6 ${!emailVerified ? 'opacity-50 pointer-events-none' : ''}`}>
-                {!isPro && !isLifetime && !isYearly && !hasActiveStarter ? (
-                  // Starter Plan - Direct Trial Flow
-                  <div>
-                    <div className="mb-6 flex items-center justify-between">
-                      <h2 className="text-lg font-semibold text-white">Start Your Free Trial</h2>
-                    </div>
-
-                    <div className="mb-6 rounded-lg border border-blue-500/30 bg-blue-500/10 p-5">
-                      <div className="flex items-start gap-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/20">
-                          <svg className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-blue-300">30-Day Free Access</h3>
-                          <p className="mt-1 text-sm text-blue-200/80">
-                            Get full access to the Starter plan for 30 days. No credit card required today.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {!formData.fullName || !formData.country ? (
-                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 mb-4">
-                        <div className="flex items-start gap-3">
-                          <svg className="h-5 w-5 flex-shrink-0 text-amber-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                          </svg>
-                          <div>
-                            <p className="text-sm font-medium text-amber-300">Complete Customer Information</p>
-                            <p className="mt-1 text-sm text-amber-200/80">
-                              Please fill in your Full Name and Country in the section above to start your trial.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="mb-6">
-                          <div className="flex items-start gap-2">
-                            <input
-                              type="checkbox"
-                              id="terms-trial"
-                              required
-                              checked={agreedToTerms}
-                              onChange={(e) => setAgreedToTerms(e.target.checked)}
-                              className="mt-1 h-4 w-4 rounded border-zinc-700 bg-zinc-800 text-blue-500 focus:ring-blue-500"
-                            />
-                            <label htmlFor="terms-trial" className="text-sm text-zinc-300">
-                              I agree to the <Link href="/terms" className="text-blue-400 hover:text-blue-300">Terms of Service</Link> and <Link href="/privacy" className="text-blue-400 hover:text-blue-300">Privacy Policy</Link>.
-                            </label>
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={handleSubscriptionCheckout}
-                          disabled={loadingStripe || !agreedToTerms}
-                          className="w-full rounded-lg bg-[#5e17eb] p-4 text-center font-semibold text-white transition-all hover:bg-[#4a11c0] shadow-lg shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {loadingStripe ? (
-                            <span className="flex items-center justify-center gap-2">
-                              <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                              </svg>
-                              Starting Trial...
-                            </span>
-                          ) : (
-                            "Start 30-Day Free Trial"
-                          )}
-                        </button>
-
-                        <p className="mt-4 text-center text-xs text-zinc-500">
-                          By starting the trial, you agree to receive account-related emails.
-                        </p>
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  // Original Payment Method Selection for Pro/Lifetime
-                  <>
+                <>
                     <div className="mb-4 flex items-center justify-between">
                       <h2 className="text-lg font-semibold text-white">Select Payment Method</h2>
                       {!emailVerified && (
@@ -1007,8 +899,7 @@ function PaymentForm() {
                         </div>
                       </button>
                     </div>
-                  </>
-                )}
+                </>
               </section>
             )}
 
@@ -1247,76 +1138,15 @@ function PaymentForm() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-zinc-400">
                     <span>Subtotal</span>
-                    <span className="text-white">
-                      ${isLifetime ? "999.00" : basePrice.toFixed(2)} USD
-                    </span>
+                    <span className="text-white">${basePrice.toFixed(2)} USD</span>
                   </div>
-
-                  {/* Lifetime Promotional Discount */}
-                  {isLifetime && (
-                    <div className="flex justify-between text-green-400">
-                      <span>Limited Time Discount (70% OFF)</span>
-                      <span>-$700.00 USD</span>
-                    </div>
-                  )}
-
-                  {/* Free Trial Discount - For Card payments OR Starter Monthly trial (ONLY if no active starter) */}
-                  {!isLifetime && (selectedPayment === "card" || (!isPro && !isYearly)) && !hasActiveStarter && (
-                    <div className="flex justify-between text-green-400">
-                      <span>Free Trial Discount</span>
-                      <span>-${basePrice.toFixed(2)} USD</span>
-                    </div>
-                  )}
-
-                  {/* Crypto Processing Fee - Only for crypto payments on non-lifetime plans */}
-                  {!isLifetime && selectedPayment === "crypto" && (
-                    <div className="flex justify-between text-zinc-400">
-                      <span>Crypto Processing Fee</span>
-                      <span className="text-white">$1.00 USD</span>
-                    </div>
-                  )}
-
-                  {/* Processing Fee for card/lifetime/starter-trial */}
-                  {(isLifetime || selectedPayment === "card" || (!isPro && !isYearly)) && (
-                    <div className="flex justify-between text-zinc-400">
-                      <span>Processing Fee</span>
-                      <span className="text-white">$0.00 USD</span>
-                    </div>
-                  )}
 
                   <div className="border-t border-zinc-700 pt-2">
                     <div className="flex justify-between text-lg font-semibold text-white">
                       <span>Total</span>
-                      <span>
-                        ${isLifetime
-                          ? finalPrice.toFixed(2)
-                          : selectedPayment === "crypto"
-                            ? (basePrice - basePrice + 1).toFixed(2)
-                            : (hasActiveStarter && !isPro && !isYearly)
-                              ? '9.00'
-                              : '0.00'
-                        } USD
-                      </span>
+                      <span>${finalPrice.toFixed(2)} USD</span>
                     </div>
                   </div>
-
-                  {/* Crypto Payment Notice - Only for crypto on non-lifetime plans */}
-                  {!isLifetime && selectedPayment === "crypto" && (
-                    <div className="mt-4 rounded-md bg-amber-500/10 border border-amber-500/30 p-4">
-                      <p className="text-xs text-amber-200 leading-relaxed">
-                        <strong>Note:</strong> 30-day free trial is available only for Card Payments. For Crypto Payments you will need to pay a $1.00 processing fee.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Trial End Message - For Card payments OR Starter Monthly trial (ONLY if no active starter) */}
-                  {!isLifetime && (selectedPayment === "card" || (!isPro && !isYearly)) && !hasActiveStarter && (
-                    <div className="mt-4 rounded-md bg-blue-500/10 border border-blue-500/30 p-4">
-                      <p className="text-xs text-blue-200 leading-relaxed">
-                        Your trial will end on <span className="font-semibold">{new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span> (30 days from purchase date) and start the subscription. You can cancel the subscription any time before that.
-                      </p>
-                    </div>
-                  )}
                 </div>
               </section>
             )}

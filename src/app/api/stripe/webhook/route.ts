@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyWebhookSignature, stripe, getPlanFromPrice, normalizePlanName, PLAN_RANK } from '@/lib/stripe-server';
 import { generateLicenseKey } from '@/lib/license-keys';
-import { sendStripeLicenseEmail, sendAdminNotificationEmail } from '@/lib/email-stripe';
+import { sendStripeLicenseEmail, sendAdminNotificationEmail, sendTrialEndingEmail } from '@/lib/email-stripe';
 import { sendTelegramAdminNotification } from '@/lib/telegram';
 import { getStripeOrderByPaymentIntent, updateStripeOrderByPaymentIntent } from '@/lib/orders-supabase';
 import { createLicense, getLicensesForEmail, upgradeLicense, getLicenseByKey } from '@/lib/license-db';
@@ -173,40 +173,68 @@ export async function POST(request: NextRequest) {
             }
           }
 
-          // 1. Create License Record
-          const expiresAt = new Date();
-          expiresAt.setDate(expiresAt.getDate() + 30); // Default validity, will be updated by subscription sync
+          // 1. Fetch the real subscription to get accurate period dates
+          let subPeriodEnd = new Date();
+          let subPeriodStart = new Date();
+          let subStatus = 'active';
+          if (stripe) {
+            try {
+              const sub = await stripe.subscriptions.retrieve(subscriptionId);
+              subPeriodStart = new Date((sub as any).current_period_start * 1000);
+              subPeriodEnd = new Date((sub as any).current_period_end * 1000);
+              subStatus = sub.status;
+            } catch (err) {
+              // Fallback: yearly plan gets +1 year
+              console.warn('Could not fetch subscription for date sync, using fallback');
+              subPeriodEnd.setFullYear(subPeriodEnd.getFullYear() + 1);
+            }
+          } else {
+            subPeriodEnd.setFullYear(subPeriodEnd.getFullYear() + 1);
+          }
 
+          // 2. Create License Record
           try {
             await createLicense({
               licenseKey,
               email,
               plan,
-              expiresAt,
-              paymentId: subscriptionId, // Use sub ID as payment ref
+              expiresAt: subPeriodEnd,
+              paymentId: subscriptionId,
               amount: session.amount_total ? session.amount_total / 100 : 0,
               currency: session.currency || 'usd',
               subscription_id: subscriptionId,
               stripe_customer_id: customerId,
               payment_type: 'subscription',
-              subscription_status: 'active'
+              subscription_status: subStatus,
             });
           } catch (err: any) {
             if (err.code === '23505' || err.message?.includes('duplicate key')) {
-              console.log(`License ${licenseKey} already exists (Race condition in checkout session). Proceeding...`);
+              console.log(`License ${licenseKey} already exists (race condition). Proceeding to email...`);
             } else {
               console.error('Failed to create license in checkout session:', err);
-              throw err; // Re-throw real errors, but safe to ignore duplicate if we want to proceed to email
+              throw err;
             }
           }
 
-          // 2. Create Subscription Record
-          // We need to fetch the actual subscription object to get dates
-          // For now, we can create with basic data or wait for 'customer.subscription.created'
-          // However, 'checkout.session.completed' ensures we have all the metadata
-
-          // It's often better to let 'customer.subscription.updated' handle the details sync,
-          // but we want to send the email immediately.
+          // 3. Create Subscription Record (so portal shows it immediately)
+          try {
+            await createSubscription({
+              stripeSubscriptionId: subscriptionId,
+              stripeCustomerId: customerId,
+              licenseKey,
+              email,
+              planId: plan,
+              status: subStatus,
+              currentPeriodStart: subPeriodStart,
+              currentPeriodEnd: subPeriodEnd,
+            });
+          } catch (err: any) {
+            if (err.code === '23505' || err.message?.includes('duplicate key')) {
+              console.log('Subscription record already exists, skipping create.');
+            } else {
+              console.error('Failed to create subscription record in checkout session:', err);
+            }
+          }
 
           await handlePostPurchase(
             email,
@@ -313,7 +341,9 @@ export async function POST(request: NextRequest) {
           if (!['active', 'trialing'].includes(status)) currentPeriodEnd = new Date();
         }
 
-        const cancelAtPeriodEnd = subscription.cancel_at_period_end;
+        // cancel_at_period_end OR cancel_at both mean "pending cancellation"
+        const cancelAt = (subscription as any).cancel_at;
+        const cancelAtPeriodEnd = subscription.cancel_at_period_end || (cancelAt != null);
         const canceledAt = subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null;
         const endedAt = subscription.ended_at ? new Date(subscription.ended_at * 1000) : null;
 
@@ -333,20 +363,7 @@ export async function POST(request: NextRequest) {
         if (licenseBySub) {
           console.log(`Updating license ${licenseBySub.license_key} for subscription ${subscriptionId} (Status: ${status})`);
 
-          const normalizePlanName = (p: string | undefined | null) => {
-            if (!p) return '';
-            if (p === 'pro') return 'pro_monthly';
-            if (p === 'starter') return 'starter_monthly';
-            return p;
-          };
-
-          const PLAN_RANK: Record<string, number> = {
-            'starter_monthly': 1,
-            'starter_yearly': 2,
-            'pro_monthly': 3,
-            'pro_yearly': 4,
-            'lifetime': 5
-          };
+          // Use the imported normalizePlanName and PLAN_RANK from stripe-server
 
           const updatedPlan = finalPlan;
           const oldPlan = licenseBySub.plan;
@@ -365,25 +382,18 @@ export async function POST(request: NextRequest) {
           };
 
           // Logic for Plan Change badge
-          if (normalizedNew !== normalizedOld) {
+          if (normalizedNew && normalizedOld && normalizedNew !== normalizedOld) {
             console.log(`Plan change detected: ${normalizedOld} -> ${normalizedNew}`);
             updateData.upgraded_from = normalizedOld;
-          } else {
-            // Same plan (normalized). E.g. pro -> pro_monthly
-            // Ensure existing upgraded_from is NOT touched?
-            // Actually, if we are normalizing, we might want to clear it if it was erroneously set?
-            // If a user refreshes "pro_monthly", it shouldn't say "Upgraded from pro".
-            if (oldPlan === 'pro' && updatedPlan === 'pro_monthly') {
-              updateData.upgraded_from = null;
-            }
           }
 
 
-          if (updatedPlan) {
-            // Also update Stripe subscription metadata for future webhooks
+          // Only sync metadata to Stripe when the plan name actually changed AND
+          // cancel_at_period_end is false (avoid triggering a second webhook that
+          // could overwrite the cancel flag we just saved)
+          if (updatedPlan && !cancelAtPeriodEnd && normalizedNew && normalizedOld && normalizedNew !== normalizedOld) {
             if (stripe && updatedPlan !== subscription.metadata?.plan) {
               try {
-                // Sync metadata to NEW plan name
                 await stripe.subscriptions.update(subscriptionId, {
                   metadata: {
                     ...subscription.metadata,
@@ -395,6 +405,12 @@ export async function POST(request: NextRequest) {
                 console.error('Failed to update Stripe subscription metadata:', err);
               }
             }
+          }
+
+          // If Stripe marks the subscription as canceled, expire the license immediately
+          if (status === 'canceled') {
+            updateData.status = 'expired';
+            updateData.subscription_cancel_at_period_end = false;
           }
 
           await client.from('licenses').update(updateData).eq('id', licenseBySub.id);
@@ -422,7 +438,7 @@ export async function POST(request: NextRequest) {
               await createLicense({
                 licenseKey,
                 email: email || '',
-                plan: finalPlan || 'pro_monthly',
+                plan: finalPlan || 'pro_yearly',
                 expiresAt: currentPeriodEnd,
                 paymentId: typeof subscription.latest_invoice === 'string' ? subscription.latest_invoice : subscription.latest_invoice?.id || 'SUB-INV',
                 amount: amountDollars,
@@ -536,6 +552,12 @@ export async function POST(request: NextRequest) {
               }
             }
 
+            // Also expire license if Stripe marks subscription as canceled
+            if (status === 'canceled') {
+              updateData.status = 'expired';
+              updateData.subscription_cancel_at_period_end = false;
+            }
+
             await client.from('licenses').update(updateData).eq('license_key', licenseKey);
           }
         }
@@ -589,7 +611,7 @@ export async function POST(request: NextRequest) {
       }
 
       // ----------------------------------------------------------------------
-      // NEW: Subscription Deleted (Immediately ended)
+      // Subscription Deleted (immediately ended / period-end cancellation completed)
       // ----------------------------------------------------------------------
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
@@ -599,50 +621,124 @@ export async function POST(request: NextRequest) {
           ? new Date(subscription.ended_at * 1000)
           : new Date();
 
+        const canceledAt = subscription.canceled_at
+          ? new Date(subscription.canceled_at * 1000)
+          : endedAt;
+
         await updateSubscriptionStatus(subscription.id, {
           status: subscription.status,
-          endedAt: endedAt
+          endedAt,
+          canceledAt,
+          cancelAtPeriodEnd: false,
         });
 
-        // Update License to reflect cancellation/expiration
+        // Mark license as expired — both status and subscription_status
         const client = (await import('@/lib/supabase-storage')).getSupabaseClient();
         await client.from('licenses')
           .update({
+            status: 'expired',
             subscription_status: subscription.status,
-            expires_at: endedAt.toISOString()
+            subscription_cancel_at_period_end: false,
+            expires_at: endedAt.toISOString(),
           })
           .eq('subscription_id', subscription.id);
 
-        console.log(`Marked license for subscription ${subscription.id} as ${subscription.status} (Ended: ${endedAt.toISOString()})`);
+        console.log(`License expired for subscription ${subscription.id} (Ended: ${endedAt.toISOString()})`);
         break;
       }
 
       // ----------------------------------------------------------------------
-      // NEW: Invoice Payment Succeeded (Renewal)
+      // Invoice Payment Succeeded (Renewal) — sync expires_at on annual renewal
       // ----------------------------------------------------------------------
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice;
-        if (invoice.billing_reason === 'subscription_cycle') {
-          console.log('Subscription renewal success:', (invoice as any).subscription);
-          // 'customer.subscription.updated' usually fires too and handles dates,
-          // but we can send a renewal receipt email here if we want.
+        const subId = (invoice as any).subscription as string | undefined;
+
+        if (invoice.billing_reason === 'subscription_cycle' && subId) {
+          console.log('Subscription renewal payment succeeded:', subId);
+
+          // Fetch the subscription to get the updated period end
+          if (stripe) {
+            try {
+              const sub = await stripe.subscriptions.retrieve(subId);
+              const newPeriodEnd = new Date((sub as any).current_period_end * 1000);
+
+              const client = (await import('@/lib/supabase-storage')).getSupabaseClient();
+              await client.from('licenses')
+                .update({
+                  expires_at: newPeriodEnd.toISOString(),
+                  subscription_status: 'active',
+                  subscription_current_period_end: newPeriodEnd.toISOString(),
+                })
+                .eq('subscription_id', subId);
+
+              await updateSubscriptionStatus(subId, {
+                status: 'active',
+                currentPeriodEnd: newPeriodEnd,
+                cancelAtPeriodEnd: sub.cancel_at_period_end,
+              });
+
+              console.log(`License renewed. New expiry: ${newPeriodEnd.toISOString()}`);
+            } catch (err) {
+              console.error('Failed to sync renewal dates:', err);
+            }
+          }
         }
         break;
       }
 
       // ----------------------------------------------------------------------
-      // NEW: Invoice Payment Failed
+      // Invoice Payment Failed — mark license as past_due
       // ----------------------------------------------------------------------
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
-        if ((invoice as any).subscription) {
-          console.warn('Subscription payment failed:', (invoice as any).subscription);
-          // Could trigger an email to user warning them
+        const subId = (invoice as any).subscription as string | undefined;
+        if (subId) {
+          console.warn('Subscription payment failed:', subId);
           const client = (await import('@/lib/supabase-storage')).getSupabaseClient();
           await client.from('licenses')
             .update({ subscription_status: 'past_due' })
-            .eq('subscription_id', (invoice as any).subscription);
+            .eq('subscription_id', subId);
+          await updateSubscriptionStatus(subId, { status: 'past_due' });
         }
+        break;
+      }
+
+      // ----------------------------------------------------------------------
+      // Trial Ending Soon (fires 3 days before trial ends)
+      // ----------------------------------------------------------------------
+      case 'customer.subscription.trial_will_end': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const email = subscription.metadata?.email;
+        const plan = subscription.metadata?.plan;
+        const fullName = subscription.metadata?.fullName || 'Valued Customer';
+
+        if (email && subscription.trial_end) {
+          const trialEndDate = new Date(subscription.trial_end * 1000);
+          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.signaltradingbots.com';
+          try {
+            await sendTrialEndingEmail({
+              to: email,
+              fullName,
+              plan: plan || 'starter_yearly',
+              trialEndDate,
+              portalUrl: `${appUrl}/portal`,
+            });
+            console.log(`Trial ending email sent to ${email}`);
+          } catch (err) {
+            console.error('Failed to send trial ending email:', err);
+          }
+        }
+        break;
+      }
+
+      // ----------------------------------------------------------------------
+      // Acknowledged — no action needed
+      // ----------------------------------------------------------------------
+      case 'invoice.finalized':
+      case 'charge.succeeded':
+      case 'charge.failed': {
+        console.log(`Acknowledged event: ${event.type}`);
         break;
       }
 
@@ -673,32 +769,33 @@ export async function POST(request: NextRequest) {
         let licenseKey = "";
 
         if (isUpgrade) {
-          // ... (Existing Upgrade Logic for One-Time payments) ...
+          // Upgrade an existing active (non-lifetime) license to the new plan
           const licenses = await getLicensesForEmail(order.email);
-          let activeMonthly: any = null;
+          let existingLicense: any = null;
+
+          // Prefer the specific license key passed in metadata
           if (metaUpgradeLicenseKey) {
-            activeMonthly = licenses.find(l => l.license_key === metaUpgradeLicenseKey);
+            existingLicense = licenses.find(l => l.license_key === metaUpgradeLicenseKey);
           }
-          if (!activeMonthly) {
-            activeMonthly = licenses.find(l =>
-              l.status === 'active' &&
-              !l.plan.toLowerCase().includes('yearly') &&
-              l.plan.toLowerCase() !== 'lifetime'
+          // Fall back to any active non-lifetime license
+          if (!existingLicense) {
+            existingLicense = licenses.find(l =>
+              l.status === 'active' && l.plan.toLowerCase() !== 'lifetime'
             );
           }
 
-          if (activeMonthly) {
-            licenseKey = activeMonthly.license_key;
+          if (existingLicense) {
+            licenseKey = existingLicense.license_key;
             const expiresAt = new Date();
             expiresAt.setFullYear(expiresAt.getFullYear() + 1);
 
             await upgradeLicense({
-              licenseId: activeMonthly.id,
+              licenseId: existingLicense.id,
               newPlan: order.plan,
               newExpiresAt: expiresAt,
               paymentId: paymentIntent.id,
               amount: order.display_price,
-              oldPlan: activeMonthly.plan
+              oldPlan: existingLicense.plan,
             });
           }
         }

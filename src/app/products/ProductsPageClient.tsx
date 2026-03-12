@@ -68,11 +68,14 @@ const pricingPlans = [
     name: "Starter",
     badge: "Basic plan",
     features: [
-      "Ideal for demo and small live accounts",
-      "Core Telegram → MT5 automation",
-      "Basic configuration templates",
+      "MT5 Auto-Execution",
+      "Telegram Signal Parsing",
+      "Single Take Profit",
+      "Fixed Lot Sizing",
+      "Auto Stop Loss",
+      "Activity Logs",
     ],
-    rating: 3.9,
+    rating: 4.1,
     reviewCount: 248,
   },
   {
@@ -80,20 +83,24 @@ const pricingPlans = [
     badge: "Most popular",
     featured: true,
     features: [
-      "Full configuration flexibility",
-      "Priority support during setup",
-      "Best for active signal users",
+      "Everything in Starter",
+      "Multi-TP Splitting",
+      "Dynamic Trailing Stop",
+      "Auto Break-Even",
+      "Daily Profit Target",
+      "Max Daily Loss Limit",
     ],
     rating: 4.8,
     reviewCount: 438,
   },
   {
     name: "Lifetime",
-    badge: "One‑time payment",
+    badge: "One-time payment",
     features: [
-      "One license, long‑term usage",
-      "Access to future improvements",
-      "Designed for committed traders",
+      "Everything in Pro",
+      "All Future Updates",
+      "Priority Support",
+      "No Recurring Fees",
     ],
     rating: 4.6,
     reviewCount: 114,
@@ -235,7 +242,7 @@ export function ProductsPageClient() {
   };
 
   return (
-    <div className="w-screen ml-[calc(50%-50vw)] bg-white min-h-screen py-12">
+    <div className="w-screen ml-[calc(50%-50vw)] bg-zinc-950 min-h-screen py-12">
       <div className="max-w-6xl mx-auto px-6 space-y-12">
         <motion.section
           initial="hidden"
@@ -243,18 +250,18 @@ export function ProductsPageClient() {
           variants={staggerContainer}
           className="space-y-2"
         >
-          <motion.h1 id="choose-bot" variants={fadeInUp} className="text-4xl font-extrabold uppercase tracking-tight text-zinc-900">
+          <motion.h1 id="choose-bot" variants={fadeInUp} className="text-4xl font-extrabold uppercase tracking-tight text-white">
             Products
           </motion.h1>
           <motion.div variants={fadeInUp} className="flex items-center justify-between gap-4">
-            <p className="text-sm text-zinc-600 flex-1">
+            <p className="text-sm text-zinc-400 flex-1">
               Automate MT5 trades from Telegram signals today, and explore upcoming bots
               for WhatsApp and rule‑based MT5/MT4 strategies. Choose the automation that
               best fits your trading workflow.
             </p>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-xs font-medium text-zinc-500">Compatible with:</span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 border-2 border-[#5e17eb] shadow-md p-1.5 overflow-hidden transition hover:scale-110">
+              <span className="text-xs font-medium text-zinc-400">Compatible with:</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 border-2 border-[#5e17eb] shadow-md p-1.5 overflow-hidden transition hover:scale-110">
                 <Image
                   src={TelegramLogo}
                   alt="Telegram Compatible"
@@ -289,7 +296,7 @@ export function ProductsPageClient() {
             variants={staggerContainer}
             className="space-y-2"
           >
-            <motion.h2 variants={fadeInUp} className="text-sm font-semibold text-zinc-500">
+            <motion.h2 variants={fadeInUp} className="text-sm font-semibold text-zinc-400">
               Choose your bot
             </motion.h2>
             <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
@@ -458,12 +465,20 @@ export function ProductsPageClient() {
                               key={plan.name}
                               name={plan.name}
                               badge={plan.badge}
+                              gradientFrom={
+                                plan.name === "Starter" ? "#0a1628" :
+                                  plan.name === "Pro" ? "#0072ff" : "#05036deb"
+                              }
+                              gradientTo={
+                                plan.name === "Starter" ? "#1e40af" :
+                                  plan.name === "Pro" ? "#00c6ff" : "#0059ffff"
+                              }
                               price={
                                 plan.name === "Starter"
-                                  ? "$98/year"
+                                  ? "$98/YEAR"
                                   : plan.name === "Pro"
-                                    ? "$188/year"
-                                    : "$299 one-time"
+                                    ? "$188/YEAR"
+                                    : "$299 ONE-TIME"
                               }
                               yearlyNote={
                                 plan.name === "Lifetime"
@@ -508,9 +523,9 @@ export function ProductsPageClient() {
                       </div>
 
                       {/* Help text */}
-                      <div className="text-center text-sm text-zinc-600">
+                      <div className="text-center text-sm text-zinc-400">
                         Have questions?{" "}
-                        <Link href="/contact" className="font-medium text-[#5e17eb] hover:text-[#4512c2]">
+                        <Link href="/contact" className="font-medium text-[#7c3aed] hover:text-[#6d28d9]">
                           Contact us
                         </Link>
                       </div>
@@ -536,10 +551,10 @@ export function ProductsPageClient() {
           className="py-16"
         >
           <motion.div variants={fadeInUp} className="text-center mb-12">
-            <h2 className="text-2xl font-bold text-zinc-900 mb-3">
+            <h2 className="text-2xl font-bold text-white mb-3">
               BUILT FOR REAL TELEGRAM SIGNAL WORKFLOWS
             </h2>
-            <p className="text-sm text-zinc-600 max-w-3xl mx-auto">
+            <p className="text-sm text-zinc-400 max-w-3xl mx-auto">
               Simple to configure, but powerful enough to handle multiple take-profits, risk-based sizing, and
               different signal formats.
             </p>

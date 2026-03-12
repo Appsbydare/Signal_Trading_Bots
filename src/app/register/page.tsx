@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type FormEvent, useState, useMemo } from "react";
+import { type FormEvent, useState, useMemo, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { CountrySelect } from "@/components/CountrySelect";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 
 interface PasswordRequirement {
   label: string;
@@ -21,7 +22,9 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [socialLoading, setSocialLoading] = useState<"google" | "github" | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | undefined>();
 
+  const captchaRef = useRef<TurnstileInstance>(null);
   const supabase = createClient();
 
   // Password validation requirements
@@ -56,11 +59,18 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!captchaToken) {
+      setError("Please complete the CAPTCHA verification.");
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          captchaToken,
           data: {
             full_name: fullName,
             country: country,
@@ -76,9 +86,9 @@ export default function RegisterPage() {
       }
 
       setSuccess(true);
-      // Optional: if auto-confirm is enabled, we could try to log in, but standard is verify email.
     } catch (err) {
-      console.error("Registration failed", err);
+      captchaRef.current?.reset();
+      setCaptchaToken(undefined);
       setError("Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
@@ -121,11 +131,24 @@ export default function RegisterPage() {
 
         {error && (
           <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200 animate-in fade-in slide-in-from-top-2">
-            <div className="flex items-start gap-2">
-              <svg className="h-5 w-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>{error}</span>
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-start gap-2">
+                <svg className="h-5 w-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{error}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setError(null);
+                  captchaRef.current?.reset();
+                  setCaptchaToken(undefined);
+                }}
+                className="ml-2 flex-shrink-0 rounded-md border border-red-400/40 bg-red-500/20 px-2.5 py-1 text-xs font-medium text-red-200 transition-colors hover:bg-red-500/30 active:scale-95"
+              >
+                Try again
+              </button>
             </div>
           </div>
         )}
@@ -288,9 +311,17 @@ export default function RegisterPage() {
                 />
               </div>
 
+              <Turnstile
+                ref={captchaRef}
+                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                onSuccess={(token) => setCaptchaToken(token)}
+                onExpire={() => { captchaRef.current?.reset(); setCaptchaToken(undefined); }}
+                options={{ theme: "dark", size: "flexible" }}
+              />
+
               <button
                 type="submit"
-                disabled={submitting || !isPasswordValid || !passwordsMatch}
+                disabled={submitting || !isPasswordValid || !passwordsMatch || !captchaToken}
                 className="w-full rounded-lg bg-[#5e17eb] px-4 py-3 text-sm font-semibold text-white shadow-[0_0_20px_-5px_#5e17eb] transition-all hover:bg-[#4d12c2] hover:shadow-[0_0_25px_-5px_#5e17eb] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed mt-2"
               >
                 {submitting ? (

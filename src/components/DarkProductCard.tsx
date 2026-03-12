@@ -205,24 +205,28 @@ export function DarkProductCard({
           </div>
         )} */}
 
-        {/* Features list */}
-        <ul className="mb-6 flex-grow space-y-2">
-          {features.map((feature, idx) => (
-            <li
-              key={idx}
-              className={`flex items-start gap-2 text-lg font-medium drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] ${featuresColor ? '' : 'text-blue-50'}`}
-              style={featuresColor ? { color: featuresColor } : {}}
-            >
+        {/* Features — glass pill bubbles */}
+        <div className="mb-6 flex-grow flex flex-wrap gap-2 content-start">
+          {features.map((feature, idx) => {
+            const isIncluded = feature.startsWith("Everything in");
+            return (
               <span
-                className={`inline-flex mt-1 h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600/30 text-[10px] ${featuresColor ? '' : 'text-blue-300'}`}
-                style={featuresColor ? { color: featuresColor } : {}}
+                key={idx}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.72rem] font-semibold backdrop-blur-sm border transition-all
+                  ${isIncluded
+                    ? "border-white/20 bg-white/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]"
+                    : "border-white/10 bg-white/5 text-white/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                  }`}
               >
-                ✓
+                <span className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[8px] font-bold
+                  ${isIncluded ? "bg-white/30 text-white" : "bg-white/15 text-white/70"}`}>
+                  ✓
+                </span>
+                {feature}
               </span>
-              {feature}
-            </li>
-          ))}
-        </ul>
+            );
+          })}
+        </div>
 
         {/* Current Plan Badge or Expiration Info */}
         {isCurrentPlan && (

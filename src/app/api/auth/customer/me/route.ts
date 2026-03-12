@@ -22,6 +22,9 @@ export async function GET() {
       .eq("id", customer.id)
       .single();
 
+    // Auto-expire any overdue licenses before fetching (self-healing)
+    await supabase.rpc("expire_overdue_licenses");
+
     // Fetch customer licenses
     const { data: licenses } = await supabase
       .from("licenses")
@@ -35,13 +38,14 @@ export async function GET() {
       const { stripe, getPlanFromPrice, normalizePlanName, PLAN_RANK } = await import("@/lib/stripe-server");
       if (stripe) {
         await Promise.all(licenses.map(async (lic: any) => {
-          if (lic.subscription_id && lic.payment_type === 'subscription' && lic.status !== 'revoked' && lic.stripe_customer_id) {
+          if (lic.subscription_id && lic.payment_type === 'subscription' && lic.status !== 'revoked') {
             try {
               const sub = await stripe.subscriptions.retrieve(lic.subscription_id, {
                 expand: ['items.data.price.product']
               });
 
-              const isCanceling = (sub as any).cancel_at_period_end;
+              // cancel_at_period_end OR cancel_at both mean "pending cancellation"
+              const isCanceling = (sub as any).cancel_at_period_end || ((sub as any).cancel_at != null);
               const status = sub.status;
 
               // Intelligent Date Logic (Fallbacks)
@@ -103,9 +107,7 @@ export async function GET() {
                     // Always store previous plan for UI to decide Upgrade/Downgrade
                     updateData.upgraded_from = normalizedOld;
                   } else if (normalizedNew === normalizedOld && lic.upgraded_from) {
-                    if (lic.plan === 'pro' && remotePlanName === 'pro_monthly') {
-                      updateData.upgraded_from = null;
-                    }
+                    updateData.upgraded_from = null;
                   }
 
                   // Update DB

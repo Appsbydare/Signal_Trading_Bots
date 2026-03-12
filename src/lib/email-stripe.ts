@@ -120,26 +120,18 @@ export async function sendStripeLicenseEmail(params: {
   }
 
   const planNames: Record<string, string> = {
-    starter: "Starter Plan ($9/month)",
-    starter_yearly: "Starter Plan ($108/year)",
-    pro: "Pro Plan ($29/month)",
-    pro_yearly: "Pro Plan ($348/year)",
-    lifetime: "Lifetime License ($999)",
+    starter_yearly: "Starter Plan ($98/year)",
+    pro_yearly: "Pro Plan ($188/year)",
+    lifetime: "Lifetime License ($299)",
   };
 
   const planName = planNames[params.plan.toLowerCase()] || params.plan;
-  const isTrial = params.plan.toLowerCase().includes('starter');
+  const isLifetimePlan = params.plan.toLowerCase() === 'lifetime';
 
-  const expiryDate = params.plan.toLowerCase() === 'lifetime'
-    ? 'Never (Lifetime Access)'
-    : params.plan.toLowerCase().includes('yearly')
-      ? 'Renews annually'
-      : 'Renews monthly';
+  const expiryDate = isLifetimePlan ? 'Never (Lifetime Access)' : 'Renews annually';
 
-  const headline = isTrial ? "Trial Activated" : "Payment Successful";
-  const bodyText = isTrial
-    ? "Thank you for signing up! Your 30-day free trial has started and your trading bot license is ready to use."
-    : "Thank you for your purchase! Your payment has been processed successfully and your trading bot license is ready to use.";
+  const headline = "Payment Successful";
+  const bodyText = "Thank you for your purchase! Your payment has been processed successfully and your trading bot license is ready to use.";
 
   const html = `
 <!DOCTYPE html>
@@ -213,8 +205,8 @@ export async function sendStripeLicenseEmail(params: {
             <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; color: #1f2937; font-weight: 600;">${planName}</td>
           </tr>
           <tr>
-            <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">${isTrial ? 'Trial Period' : 'Amount Paid'}</td>
-            <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; color: #1f2937; font-weight: 600;">${isTrial ? '30 Days Free' : `$${params.amount} USD`}</td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">Amount Paid</td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; text-align: right; color: #1f2937; font-weight: 600;">$${params.amount} USD</td>
           </tr>
           <tr>
             <td style="padding: 10px 0; color: #6b7280; font-size: 14px;">License Status</td>
@@ -284,7 +276,7 @@ export async function sendStripeLicenseEmail(params: {
     body: JSON.stringify({
       from: FROM_EMAIL,
       to: params.to,
-      subject: isTrial ? `Your ${planName} Trial - Signal Trading Bots` : `Your ${planName} License Key - Signal Trading Bots`,
+      subject: `Your ${planName} License Key - Signal Trading Bots`,
       html: html,
     }),
   });
@@ -293,5 +285,76 @@ export async function sendStripeLicenseEmail(params: {
     const errorText = await response.text();
     console.error("Failed to send Stripe license email", errorText);
     throw new Error(`Failed to send license email: ${errorText}`);
+  }
+}
+
+/**
+ * Send trial ending soon warning email (fires 3 days before trial ends)
+ */
+export async function sendTrialEndingEmail(params: {
+  to: string;
+  fullName: string;
+  plan: string;
+  trialEndDate: Date;
+  portalUrl: string;
+}): Promise<void> {
+  if (!RESEND_API_KEY || !FROM_EMAIL) return;
+
+  const planNames: Record<string, string> = {
+    starter_yearly: "Starter Plan ($98/year)",
+    pro_yearly: "Pro Plan ($188/year)",
+  };
+  const planName = planNames[params.plan.toLowerCase()] || params.plan;
+  const endDateStr = params.trialEndDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 0; background-color: #f9fafb;">
+  <div style="background: #ffffff; margin: 40px 20px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <div style="background: #f59e0b; padding: 40px 30px; text-align: center;">
+      <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Your Trial Ends in 3 Days</h1>
+    </div>
+    <div style="padding: 40px 30px;">
+      <p style="font-size: 16px; color: #374151;">Hi ${params.fullName},</p>
+      <p style="font-size: 15px; color: #374151;">
+        Your <strong>${planName}</strong> trial is ending on <strong>${endDateStr}</strong>.
+        After that, your subscription will automatically start and you'll be charged the annual fee.
+      </p>
+      <p style="font-size: 15px; color: #374151;">
+        If you'd like to cancel before being charged, you can do so from your customer portal:
+      </p>
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${params.portalUrl}" style="background-color: #1f2937; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 15px;">
+          Manage Subscription
+        </a>
+      </div>
+      <p style="font-size: 13px; color: #6b7280;">
+        Questions? Reply to this email or contact us at <a href="mailto:${FROM_EMAIL}" style="color: #1f2937;">${FROM_EMAIL}</a>
+      </p>
+    </div>
+    <div style="background: #f9fafb; padding: 20px 30px; border-top: 1px solid #e5e7eb;">
+      <p style="font-size: 12px; color: #6b7280; text-align: center; margin: 0;">
+        SignalTradingBots | <a href="https://www.signaltradingbots.com" style="color: #1f2937;">www.signaltradingbots.com</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: FROM_EMAIL,
+      to: params.to,
+      subject: `Your ${planName} trial ends on ${endDateStr} - Signal Trading Bots`,
+      html,
+    }),
+  });
+
+  if (!response.ok) {
+    console.error("Failed to send trial ending email:", await response.text());
   }
 }

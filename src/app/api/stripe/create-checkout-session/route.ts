@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe-server";
+import { getPlanConfig } from "@/lib/stripe-products";
 
 export async function POST(req: NextRequest) {
     try {
-        const { plan, email, fullName, country, skip_trial } = await req.json();
+        const { plan, email, fullName, country } = await req.json();
 
         if (!plan || !email || !fullName || !country) {
             return NextResponse.json(
@@ -12,29 +13,27 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Determine if this is a subscription plan
-        const isLifetime = plan === "lifetime";
-        if (isLifetime) {
+        if (plan === "lifetime") {
             return NextResponse.json(
                 { error: "Lifetime plans should use embedded form" },
                 { status: 400 }
             );
         }
 
-        // Parse plan details
-        const isYearly = plan.endsWith("_yearly");
-        const basePlan = isYearly ? plan.replace("_yearly", "") : plan;
-        const isPro = basePlan === "pro";
-
-        // Calculate price
-        let price = 9;
-        if (isPro) {
-            price = isYearly ? 348 : 29;
-        } else {
-            price = isYearly ? 108 : 9;
+        if (!stripe) {
+            throw new Error("Stripe is not configured");
         }
 
-        const priceInCents = price * 100;
+        // Normalize to yearly plan key — only starter_yearly and pro_yearly are supported
+        const planKey = plan.includes("pro") ? "pro_yearly" : "starter_yearly";
+        const planConfig = getPlanConfig(planKey);
+
+        if (!planConfig?.priceId) {
+            return NextResponse.json(
+                { error: `Plan configuration not found for: ${planKey}` },
+                { status: 400 }
+            );
+        }
 
         // Generate license key
         const generateLicenseKey = () => {
@@ -48,29 +47,12 @@ export async function POST(req: NextRequest) {
 
         const licenseKey = generateLicenseKey();
 
-        if (!stripe) {
-            throw new Error("Stripe is not configured");
-        }
-
-        const shouldHaveTrial = (isPro || !isYearly) && !skip_trial;
-
-        // Create Stripe Checkout Session
         const session = await stripe.checkout.sessions.create({
             mode: "subscription",
-            payment_method_collection: (shouldHaveTrial && !isPro) ? "if_required" : "always",
+            payment_method_collection: "always",
             line_items: [
                 {
-                    price_data: {
-                        currency: "usd",
-                        product_data: {
-                            name: `Signal Trading Bot - ${isPro ? "Pro" : "Starter"} ${isYearly ? "Yearly" : "Monthly"}`,
-                            description: "Telegram Trading Bot License",
-                        },
-                        recurring: {
-                            interval: isYearly ? "year" : "month",
-                        },
-                        unit_amount: priceInCents,
-                    },
+                    price: planConfig.priceId,
                     quantity: 1,
                 },
             ],
@@ -79,17 +61,15 @@ export async function POST(req: NextRequest) {
                 metadata: {
                     licenseKey,
                     email,
-                    plan,
+                    plan: planKey,
                     fullName,
                     country,
-                    is_trial_conversion: (shouldHaveTrial && !isPro) ? "true" : "false"
                 },
-                trial_period_days: shouldHaveTrial ? 30 : undefined,
             },
             metadata: {
                 licenseKey,
                 email,
-                plan,
+                plan: planKey,
                 fullName,
                 country,
             },

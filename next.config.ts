@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  compiler: {
+    // Strip all console.* calls in production builds to prevent data leakage
+    removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error"] } : false,
+  },
   /* config options here */
   // Increase body size limit for image uploads (5MB)
   experimental: {

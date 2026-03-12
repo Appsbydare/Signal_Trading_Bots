@@ -30,10 +30,12 @@ const pricingPlans = [
         name: "Starter",
         badge: "Basic plan",
         features: [
-            "Ideal for demo and small live accounts",
-            "Core Telegram → MT5 automation",
-            "Basic configuration templates",
-            "No credit card required",
+            "MT5 Auto-Execution",
+            "Telegram Signal Parsing",
+            "Single Take Profit",
+            "Fixed Lot Sizing",
+            "Auto Stop Loss",
+            "Activity Logs",
         ],
         rating: 4.1,
         reviewCount: 248,
@@ -43,20 +45,24 @@ const pricingPlans = [
         badge: "Most popular",
         featured: true,
         features: [
-            "Full configuration flexibility",
-            "Priority support during setup",
-            "Best for active signal users",
+            "Everything in Starter",
+            "Multi-TP Splitting",
+            "Dynamic Trailing Stop",
+            "Auto Break-Even",
+            "Daily Profit Target",
+            "Max Daily Loss Limit",
         ],
         rating: 4.8,
         reviewCount: 438,
     },
     {
         name: "Lifetime",
-        badge: "New · One-time payment",
+        badge: "One-time payment",
         features: [
-            "Single payment, long-term usage",
-            "Access to all future versions and major features",
-            "Best for committed, long-term traders",
+            "Everything in Pro",
+            "All Future Updates",
+            "Priority Support",
+            "No Recurring Fees",
         ],
         rating: 4.6,
         reviewCount: 114,
@@ -101,7 +107,7 @@ export function PricingSection() {
     const [customerLicenses, setCustomerLicenses] = useState<Array<{ plan: string, expires_at: string }>>([]);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [loadingLicenses, setLoadingLicenses] = useState(true);
-    const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("yearly");
+    const billingInterval = "yearly" as const;
     const [showProductDetails, setShowProductDetails] = useState(false);
 
     // Fetch customer licenses if logged in
@@ -262,12 +268,7 @@ export function PricingSection() {
                         const license = customerLicenses.find((l: any) => l.plan.toLowerCase().startsWith(planKey));
                         const isCurrentPlan = !!license;
                         const expiresAt = license?.expires_at;
-
-                        // Check if user has ANY active starter license (to determine price display)
-                        const hasActiveStarter = customerLicenses.some((l: any) =>
-                            l.status === 'active' &&
-                            (l.plan.toLowerCase() === 'starter' || l.plan.toLowerCase().includes('starter'))
-                        );
+                        const isLifetime = plan.name === "Lifetime";
 
                         const daysRemaining = expiresAt
                             ? Math.max(
@@ -279,18 +280,6 @@ export function PricingSection() {
                             : undefined;
 
                         const showPromoOffer = plan.name === "Starter" && customerLicenses.length === 0;
-                        const isLifetime = plan.name === "Lifetime";
-
-                        const hasMonthlyPlan = license && !license.plan.toLowerCase().includes('yearly') && !isLifetime;
-                        const isViewingYearly = billingInterval === 'yearly' && !isLifetime;
-                        const canUpgradeToYearly = hasMonthlyPlan && isViewingYearly;
-
-                        let proratedCredit = 0;
-                        if (canUpgradeToYearly && daysRemaining) {
-                            const monthlyPrice = plan.name === "Pro" ? 29 : 9;
-                            const dailyRate = monthlyPrice / 30;
-                            proratedCredit = Math.min(dailyRate * Math.max(0, daysRemaining - 1), monthlyPrice);
-                        }
 
                         return (
                             <motion.div key={plan.name} variants={cardVariants} className="h-full">
@@ -305,22 +294,22 @@ export function PricingSection() {
                                                 : "$299 ONE-TIME"
                                     }
                                     gradientFrom={
-                                        plan.name === "Starter" ? "#00c6ff" :
+                                        plan.name === "Starter" ? "#0a1628" :
                                             plan.name === "Pro" ? "#0072ff" : "#05036deb"
                                     }
                                     gradientTo={
-                                        plan.name === "Starter" ? "#ffffff" :
+                                        plan.name === "Starter" ? "#1e40af" :
                                             plan.name === "Pro" ? "#00c6ff" : "#0059ffff"
                                     }
-                                    featuresColor={plan.name === "Starter" ? "#001e3c" : undefined}
+                                    featuresColor={undefined}
                                     yearlyNote=""
                                     features={plan.features}
                                     featured={plan.featured}
                                     paymentLink={
                                         plan.name === "Starter"
-                                            ? `/payment?plan=${billingInterval === 'monthly' ? 'starter' : 'starter_yearly'}`
+                                            ? "/payment?plan=starter_yearly"
                                             : plan.name === "Pro"
-                                                ? `/payment?plan=${billingInterval === 'monthly' ? 'pro' : 'pro_yearly'}`
+                                                ? "/payment?plan=pro_yearly"
                                                 : "/payment?plan=lifetime"
                                     }
                                     viewDetailsHref="/products"
@@ -329,15 +318,11 @@ export function PricingSection() {
                                     daysRemaining={daysRemaining}
                                     showPromoOffer={showPromoOffer}
                                     isLifetime={isLifetime}
-                                    canUpgradeToYearly={canUpgradeToYearly}
-                                    upgradeYearlyLink={
-                                        canUpgradeToYearly
-                                            ? `/payment?plan=${plan.name.toLowerCase()}_yearly&upgrade=true&credit=${proratedCredit.toFixed(2)}`
-                                            : undefined
-                                    }
-                                    proratedCredit={proratedCredit}
+                                    canUpgradeToYearly={false}
+                                    upgradeYearlyLink={undefined}
+                                    proratedCredit={0}
                                     billingInterval={billingInterval}
-                                    onBillingIntervalChange={setBillingInterval}
+                                    onBillingIntervalChange={() => {}}
                                     onViewDetailsClick={handleViewDetails}
                                     rating={plan.rating}
                                     reviewCount={plan.reviewCount}

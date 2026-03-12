@@ -118,8 +118,9 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
                     <div className="font-medium capitalize">{lic.plan}</div>
                     {lic.upgraded_from && (() => {
                       const PLAN_RANK: Record<string, number> = {
-                        'starter': 1, 'starter_monthly': 1, 'starter_yearly': 2,
-                        'pro': 3, 'pro_monthly': 3, 'pro_yearly': 4, 'lifetime': 5
+                        'starter_yearly': 1,
+                        'pro_yearly': 2,
+                        'lifetime': 3,
                       };
                       const rankCurrent = PLAN_RANK[lic.plan] || 0;
                       const rankPrev = PLAN_RANK[lic.upgraded_from] || 0;
@@ -175,8 +176,13 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-xs text-zinc-300">
                   <div className="flex flex-col gap-1">
-                    <span className="inline-flex w-fit rounded-full bg-zinc-800 px-2 py-1 text-[0.7rem] capitalize text-zinc-300">
-                      {lic.status}
+                    <span className={`inline-flex w-fit rounded-full px-2 py-1 text-[0.7rem] font-semibold capitalize ${
+                      lic.status === 'active'   ? 'bg-emerald-500/20 text-emerald-400' :
+                      lic.status === 'expired'  ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                      lic.status === 'revoked'  ? 'bg-red-700/30 text-red-300 border border-red-600/40' :
+                                                  'bg-zinc-800 text-zinc-400'
+                    }`}>
+                      {lic.status === 'revoked' ? '🚫 Revoked' : lic.status === 'expired' ? '✕ Expired' : lic.status}
                     </span>
                     {lic.subscription_status === 'trialing' && (
                       <span className="inline-flex w-fit rounded-full px-2 py-0.5 text-[0.65rem] font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
@@ -202,6 +208,9 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
                         day: '2-digit'
                       })}
                     </span>
+                    {isSubscription && lic.subscription_cancel_at_period_end && (
+                      <span className="text-[0.65rem] text-amber-400">Last access date</span>
+                    )}
                     {isSubscription && !lic.subscription_cancel_at_period_end && lic.subscription_status === 'active' && (
                       <span className="text-[0.65rem] text-zinc-500">Auto-renews</span>
                     )}
@@ -242,18 +251,13 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
                       </button>
                     )}
 
-                    {/* Subscription: Upgrade Button (Only Monthly) */}
-                    {isSubscription && lic.subscription_id && !lic.plan.toLowerCase().includes('yearly') && (
+                    {/* Subscription: Upgrade to Pro (only show for Starter yearly) */}
+                    {isSubscription && lic.subscription_id && lic.plan.toLowerCase() === 'starter_yearly' && (
                       <Link
-                        href={(() => {
-                          const planName = lic.plan.toLowerCase();
-                          // Determine base plan (starter or pro) to target the Yearly version
-                          const targetPlan = planName.includes('pro') ? 'pro_yearly' : 'starter_yearly';
-                          return `/payment?plan=${targetPlan}&upgrade=true&license_key=${lic.license_key}&lock=true`;
-                        })()}
+                        href={`/payment?plan=pro_yearly&upgrade=true&license_key=${lic.license_key}&lock=true`}
                         className="rounded-md bg-[#5e17eb] px-2 py-1 text-[0.7rem] font-medium text-white hover:bg-[#4512c2]"
                       >
-                        Upgrade
+                        Upgrade to Pro
                       </Link>
                     )}
 

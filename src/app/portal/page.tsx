@@ -6,6 +6,7 @@ import { getLicensesForEmail, getSessionsForLicense, getSessionHistoryForLicense
 import { getPromotionalImage } from "@/lib/promotional-image";
 import { listTicketsForCustomer } from "@/lib/tickets-db";
 import { LicenseTable } from "@/components/LicenseTable";
+import { UpdatedBanner } from "@/components/UpdatedBanner";
 import { RequestDownloadSection } from "@/components/RequestDownloadSection";
 import { CustomerSessionList } from "@/components/CustomerSessionList";
 import { RealtimeLicenseTracker } from "@/components/RealtimeLicenseTracker";
@@ -18,18 +19,11 @@ export const metadata = {
   title: "Customer Portal | signaltradingbots",
 };
 
-export default async function PortalPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
+export default async function PortalPage() {
   const customer = await getCurrentCustomer();
   if (!customer) {
     redirect("/login?next=/portal");
   }
-
-  const { updated } = await searchParams;
-  const showUpdatedBanner = updated === "true";
 
   const [licenses, promo, tickets] = await Promise.all([
     getLicensesForEmail(customer.email),
@@ -58,23 +52,8 @@ export default async function PortalPage({
     <div className="space-y-6">
       <RealtimeLicenseTracker />
 
-      {showUpdatedBanner && (
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/20">
-              <svg className="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-base font-semibold text-emerald-300">Subscription Updated</h3>
-              <p className="text-sm text-emerald-200/80">
-                Your plan has been successfully updated. Your new features are now active.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      <UpdatedBanner currentPlans={licenses.map((l) => l.plan)} />
+
       {/* Header */}
       <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
         <div>
