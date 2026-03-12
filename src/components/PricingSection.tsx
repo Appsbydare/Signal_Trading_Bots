@@ -312,6 +312,7 @@ export function PricingSection() {
                                                 ? "/payment?plan=pro_yearly"
                                                 : "/payment?plan=lifetime"
                                     }
+                                    offerBadge={plan.name === "Lifetime" ? "70% OFF" : undefined}
                                     viewDetailsHref="/products"
                                     isCurrentPlan={isCurrentPlan}
                                     expiresAt={expiresAt}

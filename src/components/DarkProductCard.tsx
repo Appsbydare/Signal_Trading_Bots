@@ -26,6 +26,7 @@ interface DarkProductCardProps {
   gradientFrom?: string;
   gradientTo?: string;
   featuresColor?: string;
+  offerBadge?: string;
 }
 
 export function DarkProductCard({
@@ -53,9 +54,10 @@ export function DarkProductCard({
   gradientFrom = "#03a9f4",
   gradientTo = "#ff0058",
   featuresColor,
+  offerBadge,
 }: DarkProductCardProps) {
   return (
-    <div className="group relative w-full h-full transition-all duration-500">
+    <div className={`group relative w-full h-full transition-all duration-500 ${offerBadge ? "mt-3" : ""}`}>
       {/* Skewed gradient panels from reference */}
       <span
         className="absolute top-0 left-[20px] w-1/2 h-full rounded-lg transform skew-x-[15deg] transition-all duration-500 group-hover:skew-x-0 group-hover:left-[10px] group-hover:w-[calc(100%-20px)] z-0"
@@ -80,6 +82,20 @@ export function DarkProductCard({
       <div
         className={`relative z-20 h-full flex flex-col rounded-xl p-8 backdrop-blur-[15px] bg-white/5 border border-white/10 shadow-2xl transition-all duration-500 group-hover:left-[-15px] group-hover:p-10 ${featured ? "ring-1 ring-white/20" : ""}`}
       >
+        {/* Offer tag — pill badge top-right, no clipping */}
+        {offerBadge && (
+          <div className="absolute -top-3 right-4 z-30 pointer-events-none">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full blur-sm bg-orange-500/50" />
+              <div className="relative inline-flex items-center rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-1 shadow-lg shadow-orange-500/30 ring-1 ring-white/25">
+                <span className="text-[11px] font-black tracking-wider text-white uppercase whitespace-nowrap">
+                  {offerBadge}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Top badge and Billing Toggle */}
         <div className="mb-4 flex items-center justify-between">
           {badge && (

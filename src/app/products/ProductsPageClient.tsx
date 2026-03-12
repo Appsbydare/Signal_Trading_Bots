@@ -465,6 +465,7 @@ export function ProductsPageClient() {
                               key={plan.name}
                               name={plan.name}
                               badge={plan.badge}
+                              offerBadge={plan.name === "Lifetime" ? "70% OFF" : undefined}
                               gradientFrom={
                                 plan.name === "Starter" ? "#0a1628" :
                                   plan.name === "Pro" ? "#0072ff" : "#05036deb"
