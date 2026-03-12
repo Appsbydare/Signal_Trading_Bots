@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
         // Broadcast realtime event to connected clients
         await broadcastLicenseEvent(licenseKey, 'revocation', {
             type: "license_revoked",
+            source: "admin",
             message: "Your license has been revoked by an administrator.",
             timestamp: new Date().toISOString(),
         });

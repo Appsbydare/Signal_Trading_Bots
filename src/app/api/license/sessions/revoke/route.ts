@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        await revokeSession(sessionId);
+        await revokeSession(sessionId, admin ? 'admin' : 'customer');
 
         return NextResponse.json({ success: true, message: "Session revoked successfully" });
 

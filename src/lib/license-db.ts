@@ -214,7 +214,7 @@ export async function refreshSession(sessionId: string, sessionSerial?: string, 
   }
 }
 
-export async function deactivateSession(sessionId: string, notify: boolean = true): Promise<void> {
+export async function deactivateSession(sessionId: string, notify: boolean = true, source: 'customer' | 'admin' | 'system' = 'customer'): Promise<void> {
   const client = getSupabaseClient();
 
   // 1. Get session details FIRST to know license key for broadcast
@@ -226,11 +226,15 @@ export async function deactivateSession(sessionId: string, notify: boolean = tru
   }
 
   // 2. Broadcast revocation if valid session found and notify is true
+  // 'source' tells the app whether to allow auto-reconnect:
+  //   - 'customer' / 'admin' = intentional revocation → no reconnect
+  //   - 'system'             = internal rotation     → reconnect allowed (but notify=false for those)
   if (notify && session) {
     try {
       await broadcastLicenseEvent(session.license_key, 'revocation', {
         sessionId: sessionId,
-        licenseKey: session.license_key
+        licenseKey: session.license_key,
+        source,
       });
     } catch (e) {
       console.error("Failed to broadcast revocation:", e);
@@ -581,8 +585,8 @@ export async function isDeviceBanned(deviceId: string): Promise<{ banned: boolea
   return { banned: !!data, reason: data?.reason };
 }
 
-export async function revokeSession(sessionId: string): Promise<void> {
-  return deactivateSession(sessionId);
+export async function revokeSession(sessionId: string, source: 'customer' | 'admin' = 'customer'): Promise<void> {
+  return deactivateSession(sessionId, true, source);
 }
 
 export async function getSessionsForLicense(licenseKey: string): Promise<LicenseSessionRow[]> {
