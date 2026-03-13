@@ -1096,6 +1096,8 @@ function PaymentForm() {
                         console.error("Payment error:", error);
                       }}
                       isUpgrade={isUpgrade}
+                      showDiscount={isLifetime}
+                      originalPrice={997}
                     />
                   </Elements>
                 ) : null}
@@ -1137,14 +1139,19 @@ function PaymentForm() {
               <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-zinc-400">
-                    <span>Subtotal</span>
-                    <span className="text-white">${basePrice.toFixed(2)} USD</span>
+                    <span>{isLifetime ? "Amount" : "Subtotal"}</span>
+                    <span className="text-white">{isLifetime ? "997 usd" : `${basePrice.toFixed(2)} usd`}</span>
                   </div>
-
+                  {isLifetime && (
+                    <div className="flex justify-between text-zinc-400">
+                      <span>Discount (70% OFF)</span>
+                      <span className="text-amber-400 font-medium">-${997 - finalPrice} usd</span>
+                    </div>
+                  )}
                   <div className="border-t border-zinc-700 pt-2">
                     <div className="flex justify-between text-lg font-semibold text-white">
                       <span>Total</span>
-                      <span>${finalPrice.toFixed(2)} USD</span>
+                      <span>{finalPrice} usd</span>
                     </div>
                   </div>
                 </div>

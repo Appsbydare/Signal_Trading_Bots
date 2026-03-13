@@ -27,6 +27,7 @@ interface DarkProductCardProps {
   gradientTo?: string;
   featuresColor?: string;
   offerBadge?: string;
+  originalPrice?: string;
 }
 
 export function DarkProductCard({
@@ -55,9 +56,10 @@ export function DarkProductCard({
   gradientTo = "#ff0058",
   featuresColor,
   offerBadge,
+  originalPrice,
 }: DarkProductCardProps) {
   return (
-    <div className={`group relative w-full h-full transition-all duration-500 ${offerBadge ? "mt-3" : ""}`}>
+    <div className="group relative w-full h-full flex flex-col transition-all duration-500">
       {/* Skewed gradient panels from reference */}
       <span
         className="absolute top-0 left-[20px] w-1/2 h-full rounded-lg transform skew-x-[15deg] transition-all duration-500 group-hover:skew-x-0 group-hover:left-[10px] group-hover:w-[calc(100%-20px)] z-0"
@@ -80,19 +82,14 @@ export function DarkProductCard({
 
       {/* Glass card content */}
       <div
-        className={`relative z-20 h-full flex flex-col rounded-xl p-8 backdrop-blur-[15px] bg-white/5 border border-white/10 shadow-2xl transition-all duration-500 group-hover:left-[-15px] group-hover:p-10 ${featured ? "ring-1 ring-white/20" : ""}`}
+        className={`relative z-20 flex-1 flex flex-col rounded-xl p-8 backdrop-blur-[15px] bg-white/5 border border-white/10 shadow-2xl transition-all duration-500 group-hover:left-[-15px] ${featured ? "ring-1 ring-white/20" : ""}`}
       >
-        {/* Offer tag — pill badge top-right, no clipping */}
+        {/* Offer tag */}
         {offerBadge && (
           <div className="absolute -top-3 right-4 z-30 pointer-events-none">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full blur-sm bg-orange-500/50" />
-              <div className="relative inline-flex items-center rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-1 shadow-lg shadow-orange-500/30 ring-1 ring-white/25">
-                <span className="text-[11px] font-black tracking-wider text-white uppercase whitespace-nowrap">
-                  {offerBadge}
-                </span>
-              </div>
-            </div>
+            <span className="inline-flex rounded-full bg-yellow-400/20 border border-yellow-400/50 px-3 py-1 text-xs font-semibold text-yellow-400 whitespace-nowrap">
+              {offerBadge}
+            </span>
           </div>
         )}
 
@@ -165,12 +162,25 @@ export function DarkProductCard({
           {yearlyNote}
         </p> */}
 
-        <div className="mb-6 flex items-baseline justify-end gap-1 text-right">
+        <div className="mb-6 flex items-baseline justify-end gap-2 text-right">
           {(() => {
+            if (offerBadge && originalPrice) {
+              const dealAmount = price.replace(/\D/g, "") || "299";
+              return (
+                <>
+                  <span className="text-3xl font-bold text-zinc-400 line-through">{originalPrice}</span>
+                  <span className="text-6xl font-black text-white drop-shadow-[0_4px_6px_rgba(0,0,0,0.4)] transform scale-y-110 origin-left" style={{ fontFamily: "var(--font-heading)" }}>
+                    {dealAmount}
+                  </span>
+                  <span className="text-xl font-black text-white uppercase tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" style={{ fontFamily: "var(--font-heading)" }}>
+                    usd
+                  </span>
+                </>
+              );
+            }
             const parts = price.split(/(\/| )/);
             const amount = parts[0];
             const suffix = parts.slice(1).join("");
-
             return (
               <>
                 <span className="text-6xl font-black text-white drop-shadow-[0_4px_6px_rgba(0,0,0,0.4)] transform scale-y-110 origin-left" style={{ fontFamily: "var(--font-heading)" }}>

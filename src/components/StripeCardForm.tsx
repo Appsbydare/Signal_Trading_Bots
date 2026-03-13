@@ -15,6 +15,8 @@ interface StripeCardFormProps {
   onSuccess: () => void;
   onError: (error: string) => void;
   isUpgrade?: boolean;
+  showDiscount?: boolean;
+  originalPrice?: number;
 }
 
 export function StripeCardForm({
@@ -25,6 +27,8 @@ export function StripeCardForm({
   onSuccess,
   onError,
   isUpgrade,
+  showDiscount,
+  originalPrice = 997,
 }: StripeCardFormProps) {
   const stripe = useStripe();
   const elements = useElements();
@@ -167,12 +171,18 @@ export function StripeCardForm({
           </div>
           <div className="flex justify-between text-zinc-400">
             <span>Amount</span>
-            <span className="text-white">${amount} USD</span>
+            <span className="text-white">{showDiscount ? `${originalPrice} usd` : `${amount} usd`}</span>
           </div>
+          {showDiscount && (
+            <div className="flex justify-between text-zinc-400">
+              <span>Discount (70% OFF)</span>
+              <span className="text-amber-400 font-medium">-${originalPrice - amount} usd</span>
+            </div>
+          )}
           <div className="border-t border-zinc-700 pt-2">
             <div className="flex justify-between text-lg font-semibold text-white">
               <span>Total</span>
-              <span>${amount} USD</span>
+              <span>{amount} usd</span>
             </div>
           </div>
         </div>
@@ -237,7 +247,7 @@ export function StripeCardForm({
         ) : !agreedToTerms ? (
           "Agree to Terms Below to Pay"
         ) : (
-          `Pay $${amount} USD`
+          `Pay ${amount} usd`
         )}
       </button>
 

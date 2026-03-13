@@ -466,6 +466,7 @@ export function ProductsPageClient() {
                               name={plan.name}
                               badge={plan.badge}
                               offerBadge={plan.name === "Lifetime" ? "70% OFF" : undefined}
+                              originalPrice={plan.name === "Lifetime" ? "$997" : undefined}
                               gradientFrom={
                                 plan.name === "Starter" ? "#0a1628" :
                                   plan.name === "Pro" ? "#0072ff" : "#05036deb"
@@ -524,7 +525,7 @@ export function ProductsPageClient() {
                       </div>
 
                       {/* Help text */}
-                      <div className="text-center text-sm text-zinc-400">
+                      <div className="mt-8 text-center text-sm text-zinc-400">
                         Have questions?{" "}
                         <Link href="/contact" className="font-medium text-[#7c3aed] hover:text-[#6d28d9]">
                           Contact us

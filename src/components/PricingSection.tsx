@@ -145,7 +145,7 @@ export function PricingSection() {
     };
 
     return (
-        <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-gradient-to-b from-zinc-950 to-black py-16">
+        <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-gradient-to-b from-zinc-950 to-black pt-16 pb-32">
             <motion.div
                 id="plans"
                 initial="hidden"
@@ -260,7 +260,7 @@ export function PricingSection() {
                 </div>
 
                 <motion.div
-                    className="grid gap-6 md:grid-cols-3 max-w-6xl mx-auto"
+                    className="grid gap-6 md:grid-cols-3 max-w-6xl mx-auto items-stretch"
                     variants={staggerContainer}
                 >
                     {pricingPlans.map((plan) => {
@@ -313,6 +313,7 @@ export function PricingSection() {
                                                 : "/payment?plan=lifetime"
                                     }
                                     offerBadge={plan.name === "Lifetime" ? "70% OFF" : undefined}
+                                    originalPrice={plan.name === "Lifetime" ? "$997" : undefined}
                                     viewDetailsHref="/products"
                                     isCurrentPlan={isCurrentPlan}
                                     expiresAt={expiresAt}
