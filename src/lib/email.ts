@@ -3,6 +3,21 @@ import "server-only";
 const FROM_EMAIL = process.env.SUPPORT_FROM_EMAIL;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
+/**
+ * Escape user-supplied content before embedding in HTML emails.
+ * Converts the 5 dangerous HTML characters to their entity equivalents
+ * and converts newlines to <br> tags for display.
+ */
+export function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;")
+    .replace(/\n/g, "<br>");
+}
+
 export async function sendVerificationCodeEmail(params: {
   to: string;
   code: string;

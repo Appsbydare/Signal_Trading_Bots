@@ -29,10 +29,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Construct valid plan key for API
+    // Normalize to canonical plan key — monthly variants are not supported
     let apiPlanKey = plan;
-    if (plan === "starter" || plan === "pro") {
-      apiPlanKey = `${plan}_monthly`;
+    if (plan === "starter" || plan === "starter_monthly") {
+      apiPlanKey = "starter_yearly";
+    } else if (plan === "pro" || plan === "pro_monthly") {
+      apiPlanKey = "pro_yearly";
     }
 
     const planConfig = getPlanConfig(apiPlanKey);

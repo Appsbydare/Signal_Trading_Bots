@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentCustomer } from "@/lib/auth-server";
 import { getCustomerById } from "@/lib/auth-users";
 import { getTicketById, listTicketReplies, addTicketReply, listTicketsForCustomer } from "@/lib/tickets-db";
-import { sendTicketEmail } from "@/lib/email";
+import { sendTicketEmail, escapeHtml } from "@/lib/email";
 
 function jsonError(status: number, message: string) {
   return NextResponse.json({ success: false, message }, { status });
@@ -116,10 +116,10 @@ export async function POST(
   const companyEmail = process.env.COMPANY_SUPPORT_EMAIL || "support@signaltradingbots.com";
   const companyHtml = `
     <h2>New Reply on Ticket #${ticket.id}</h2>
-    <p><strong>From:</strong> ${customerName}</p>
-    <p><strong>Subject:</strong> ${ticket.subject}</p>
+    <p><strong>From:</strong> ${escapeHtml(customerName)}</p>
+    <p><strong>Subject:</strong> ${escapeHtml(ticket.subject)}</p>
     <p><strong>Reply:</strong></p>
-    <p>${message.replace(/\n/g, "<br>")}</p>
+    <p>${escapeHtml(message)}</p>
     <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "https://signaltradingbots.com"}/admin/tickets">View in Admin Panel</a></p>
   `;
 

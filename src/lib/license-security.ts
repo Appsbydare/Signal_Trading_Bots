@@ -60,14 +60,14 @@ export function verifyRequestSignature(payload: Record<string, unknown>): Securi
     .update(message, "utf8")
     .digest("hex");
 
-  console.log('[Validate] Signature Debug:', {
-    timestamp,
-    sortedJson,
-    message: message.substring(0, 100) + '...',
-    expected: expected.substring(0, 20) + '...',
-    received: signature.substring(0, 20) + '...',
-    apiSecret: licenseConfig.apiSecret.substring(0, 10) + '...'
-  });
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[Validate] Signature Debug:', {
+      timestamp,
+      sortedJson,
+      expected: expected.substring(0, 8) + '...',
+      received: signature.substring(0, 8) + '...',
+    });
+  }
 
   const valid = crypto.timingSafeEqual(
     Buffer.from(expected, "utf8"),

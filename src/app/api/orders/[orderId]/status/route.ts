@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCryptoOrder, getStripeOrder } from "@/lib/orders-supabase";
 import { getDownloadTokensByEmail } from "@/lib/download-tokens";
+import { getCurrentCustomer } from "@/lib/auth-server";
 
 export async function GET(
   request: NextRequest,
@@ -62,6 +63,16 @@ export async function GET(
         { error: "Order not found", orderId },
         { status: 404 }
       );
+    }
+
+    // Verify the caller owns this order — authenticated customers must match
+    // the order email; unauthenticated callers are rejected.
+    const caller = await getCurrentCustomer();
+    if (!caller) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (caller.email.toLowerCase() !== (order as any).email?.toLowerCase()) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Get download tokens for this order's email

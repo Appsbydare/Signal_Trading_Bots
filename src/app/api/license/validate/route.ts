@@ -295,14 +295,7 @@ export async function POST(request: NextRequest) {
   const { cleanupOldSessions } = await import("@/lib/license-db");
   await cleanupOldSessions(license.license_key);
 
-  // Debug logging for Supabase credentials
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const channelName = `license:${license.license_key}`;
-
-  console.log('[Validate] Supabase URL:', supabaseUrl);
-  console.log('[Validate] Supabase Key exists:', !!supabaseKey);
-  console.log('[Validate] Channel Name:', channelName);
 
   const responseData = {
     licenseKey: license.license_key,
@@ -317,9 +310,7 @@ export async function POST(request: NextRequest) {
     createdAt: license.created_at,
     lastSeenAt: session.last_seen_at ?? nowIso,
     graceAllowed: (license as any).grace_period_allowed ?? true,
-    supabaseUrl,
-    supabaseKey,
-    channelName
+    channelName,
   };
 
   return NextResponse.json({

@@ -1,19 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createDownloadToken, getExeFileName } from "@/lib/download-tokens";
 import { getLicenseByKey } from "@/lib/license-db";
-import { getCustomerByEmail } from "@/lib/auth-users";
 import { isR2Enabled } from "@/lib/r2-client";
+import { getCurrentCustomer } from "@/lib/auth-server";
 
 /**
  * POST /api/download/generate
- * Generate a secure download link for the installer
- * 
+ * Generate a secure download link for the installer.
+ * Requires an authenticated session — the caller must be logged in and the
+ * requested email must match their account.
+ *
  * Request body:
- * - licenseKey (optional): License key to validate
- * - email (required): User's email address
+ * - licenseKey (required): License key to validate and bind the download to
+ * - email (required): Must match the authenticated customer's email
  */
 export async function POST(request: NextRequest) {
     try {
+        // Require authentication — email alone is not a sufficient credential
+        const caller = await getCurrentCustomer();
+        if (!caller) {
+            return NextResponse.json(
+                { error: "Authentication required" },
+                { status: 401 }
+            );
+        }
+
         // Check if R2 is configured
         if (!isR2Enabled()) {
             return NextResponse.json(
@@ -26,58 +37,55 @@ export async function POST(request: NextRequest) {
         const { licenseKey, email } = body;
 
         // Validate required fields
-        if (!email) {
+        if (!email || !licenseKey) {
             return NextResponse.json(
-                { error: "Email is required" },
+                { error: "Email and license key are required" },
                 { status: 400 }
             );
         }
 
-        // If license key is provided, validate it
-        if (licenseKey) {
-            const license = await getLicenseByKey(licenseKey);
+        // Ensure the authenticated user is requesting their own download
+        if (caller.email.toLowerCase() !== email.toLowerCase()) {
+            return NextResponse.json(
+                { error: "Forbidden" },
+                { status: 403 }
+            );
+        }
 
-            if (!license) {
-                return NextResponse.json(
-                    { error: "Invalid license key" },
-                    { status: 404 }
-                );
-            }
+        // Validate license key
+        const license = await getLicenseByKey(licenseKey);
 
-            // Check if license belongs to the email
-            if (license.email.toLowerCase() !== email.toLowerCase()) {
-                return NextResponse.json(
-                    { error: "License key does not match email" },
-                    { status: 403 }
-                );
-            }
+        if (!license) {
+            return NextResponse.json(
+                { error: "Invalid license key" },
+                { status: 404 }
+            );
+        }
 
-            // Check if license is active
-            if (license.status !== "active") {
-                return NextResponse.json(
-                    { error: `License is ${license.status}. Please contact support.` },
-                    { status: 403 }
-                );
-            }
+        // Check if license belongs to the email
+        if (license.email.toLowerCase() !== email.toLowerCase()) {
+            return NextResponse.json(
+                { error: "License key does not match email" },
+                { status: 403 }
+            );
+        }
 
-            // Check if license is expired
-            const now = new Date();
-            const expiresAt = new Date(license.expires_at);
-            if (now > expiresAt) {
-                return NextResponse.json(
-                    { error: "License has expired" },
-                    { status: 403 }
-                );
-            }
-        } else {
-            // If no license key, check if customer exists
-            const customer = await getCustomerByEmail(email);
-            if (!customer) {
-                return NextResponse.json(
-                    { error: "Customer not found. Please complete your purchase first." },
-                    { status: 404 }
-                );
-            }
+        // Check if license is active
+        if (license.status !== "active") {
+            return NextResponse.json(
+                { error: `License is ${license.status}. Please contact support.` },
+                { status: 403 }
+            );
+        }
+
+        // Check if license is expired
+        const now = new Date();
+        const expiresAt = new Date(license.expires_at);
+        if (now > expiresAt) {
+            return NextResponse.json(
+                { error: "License has expired" },
+                { status: 403 }
+            );
         }
 
         // Get client IP and user agent for audit trail

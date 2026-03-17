@@ -20,38 +20,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if customer exists
+    // Always return the same success response regardless of whether the email
+    // exists — prevents account enumeration by timing or response content.
     const customer = await getCustomerByEmail(email);
 
-    if (!customer) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No account found with this email address. Please check your email or contact support if you believe this is an error."
-        },
-        { status: 404 }
-      );
-    }
+    if (customer) {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://signaltradingbots.com";
+      const token = await createMagicLinkToken(email);
+      const magicLinkUrl = `${baseUrl}/api/auth/magic-login?token=${token}`;
 
-    // Generate magic link with production URL
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://signaltradingbots.com";
-    const token = await createMagicLinkToken(email);
-    const magicLinkUrl = `${baseUrl}/api/auth/magic-login?token=${token}`;
-
-    // Send email
-    try {
-      await sendMagicLinkEmail({
-        to: email,
-        magicLinkUrl,
-      });
-    } catch (emailError) {
-      console.error("Failed to send magic link email:", emailError);
-      // Don't reveal email sending failure to user
+      try {
+        await sendMagicLinkEmail({ to: email, magicLinkUrl });
+      } catch (emailError) {
+        console.error("Failed to send magic link email:", emailError);
+      }
     }
 
     return NextResponse.json({
       success: true,
-      message: "Magic link sent! Check your email inbox for a secure login link.",
+      message: "If an account exists for this email, a magic link has been sent.",
     });
   } catch (error) {
     console.error("Magic link request error:", error);

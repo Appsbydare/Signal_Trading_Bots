@@ -12,19 +12,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Use finalPrice if provided (for upgrades with proration), otherwise use priceMap
-    let displayPrice: number;
-    if (finalPrice !== undefined && finalPrice !== null) {
-      displayPrice = finalPrice;
-    } else {
-      const priceMap: Record<string, number> = {
-        lifetime: 999,
-        pro: 29,
-        starter: 9,
-        pro_yearly: 348,
-        starter_yearly: 98,
-      };
-      displayPrice = priceMap[plan as string] || 9;
+    const priceMap: Record<string, number> = {
+      lifetime: 299,
+      pro_yearly: 188,
+      starter_yearly: 98,
+      pro: 29,
+      starter: 9,
+    };
+
+    if (!priceMap[plan as string]) {
+      return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
+    }
+
+    // Always derive the base price server-side — never trust client-supplied price
+    const basePrice = priceMap[plan as string];
+
+    // Proration credit for upgrades: clamp between 0 and the base price
+    let displayPrice: number = basePrice;
+    if (isUpgrade && creditAmount !== undefined && creditAmount !== null) {
+      const credit = Math.max(0, Math.min(Number(creditAmount), basePrice - 0.5));
+      displayPrice = Math.max(0.5, basePrice - credit);
     }
 
     const selectedCoinNetwork = coinNetwork || "USDT-TRC20"; // Default to USDT-TRC20 if not provided

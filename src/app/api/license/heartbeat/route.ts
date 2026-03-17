@@ -152,9 +152,7 @@ export async function POST(request: NextRequest) {
     graceAllowed: (license as any)?.grace_period_allowed ?? true,
     plan: normalizedPlan,
     loginRequest,
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL,
-    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    channelName: `license:${licenseKey}`
+    channelName: `license:${licenseKey}`,
   };
 
   return NextResponse.json({

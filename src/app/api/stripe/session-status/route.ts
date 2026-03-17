@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe-server";
 import { getLicenseByKey } from "@/lib/license-db";
+import { getCurrentCustomer } from "@/lib/auth-server";
 
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
@@ -23,6 +24,15 @@ export async function GET(req: NextRequest) {
         const plan = metadata.plan;
         const email = metadata.email;
         const isUpgrade = metadata.isUpgrade === "true";
+
+        // Ensure the requesting user owns this session — prevent session ID enumeration
+        // attacks where an unauthenticated caller harvests license keys and emails.
+        // Allow unauthenticated access only for the magic-link post-purchase flow where
+        // the customer may not yet have a session cookie (within 15 min of checkout).
+        const caller = await getCurrentCustomer();
+        if (caller && email && caller.email.toLowerCase() !== email.toLowerCase()) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
 
         // Check payment status
         if (session.payment_status === "paid") {

@@ -3,9 +3,15 @@ import { getCryptoOrder, updateCryptoOrderStatus } from "@/lib/orders-supabase";
 import { generateLicenseKey } from "@/lib/license-keys";
 import { createLicense } from "@/lib/license-db";
 import { sendLicenseEmail } from "@/lib/email";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 // Verify transaction by TX hash
 export async function POST(request: NextRequest) {
+  // 5 verification attempts per IP per 10 minutes — prevents brute-force txHash guessing
+  if (!checkRateLimit(`verify-tx:${getClientIp(request)}`, { limit: 5, windowSeconds: 600 })) {
+    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+  }
+
   try {
     const body = await request.json();
     const { orderId, txHash } = body;
@@ -14,9 +20,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing orderId or txHash" }, { status: 400 });
     }
 
+    // Basic txHash format sanity check — TRC20 hashes are 64 hex chars
+    if (!/^[a-fA-F0-9]{64}$/.test(txHash)) {
+      return NextResponse.json({ error: "Invalid transaction hash format" }, { status: 400 });
+    }
+
     const order = await getCryptoOrder(orderId);
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    // Idempotency guard — if already paid, return existing license key without re-processing
+    if (order.status === "paid") {
+      return NextResponse.json({
+        success: true,
+        status: "paid",
+        licenseKey: order.license_key,
+      });
+    }
+
+    // Reject expired orders outright
+    if (order.status === "expired" || (order.expires_at && new Date(order.expires_at) < new Date())) {
+      return NextResponse.json({ error: "Order has expired" }, { status: 400 });
     }
 
     // Verify TX hash via blockchain API

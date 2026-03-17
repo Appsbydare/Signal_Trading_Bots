@@ -2,12 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStripeOrder } from "@/lib/orders-supabase";
 import { sendStripeLicenseEmail } from "@/lib/email-stripe";
 import { createMagicLinkToken } from "@/lib/auth-tokens";
+import { getCurrentCustomer } from "@/lib/auth-server";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ orderId: string }> }
 ) {
   try {
+    // Must be authenticated
+    const caller = await getCurrentCustomer();
+    if (!caller) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // 3 resend attempts per customer per hour
+    if (!checkRateLimit(`resend-email:${caller.email}`, { limit: 3, windowSeconds: 3600 })) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    }
+
     const { orderId } = await params;
 
     if (!orderId) {
@@ -22,6 +35,11 @@ export async function POST(
         { error: "Order not found", orderId },
         { status: 404 }
       );
+    }
+
+    // Verify the authenticated customer owns this order
+    if (caller.email.toLowerCase() !== order.email?.toLowerCase()) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     if (!order.license_key) {

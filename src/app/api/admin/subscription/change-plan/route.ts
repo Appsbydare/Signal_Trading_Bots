@@ -1,20 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { changeSubscriptionPlan } from "@/lib/stripe-server";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentAdmin } from "@/lib/auth-server";
 
 export async function POST(req: NextRequest) {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
+        const admin = await getCurrentAdmin();
+        if (!admin) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-
-        // Verify admin role (assuming you have an admin check, or just rely on RLS/middleware)
-        // ideally: 
-        // const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-        // if (profile?.role !== 'admin') ...
 
         const body = await req.json();
         const { subscriptionId, newPriceId } = body;

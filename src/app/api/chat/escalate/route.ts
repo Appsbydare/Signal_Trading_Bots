@@ -4,7 +4,7 @@ import { getCurrentCustomer } from "@/lib/auth-server";
 import { getConversationById } from "@/lib/chat-db";
 import { getCustomerById } from "@/lib/auth-users";
 import { addTicketEvent, createTicket, listTicketsForCustomer } from "@/lib/tickets-db";
-import { sendTicketEmail } from "@/lib/email";
+import { sendTicketEmail, escapeHtml } from "@/lib/email";
 
 function jsonError(status: number, message: string) {
   return NextResponse.json({ success: false, message }, { status });
@@ -85,10 +85,10 @@ export async function POST(request: NextRequest) {
   const companyEmail = process.env.COMPANY_SUPPORT_EMAIL || "support@signaltradingbots.com";
   const companyHtml = `
     <h2>New Support Ticket #${ticket.id}</h2>
-    <p><strong>From:</strong> ${customerName || email || "Guest"} ${email ? `(${email})` : ""}</p>
-    <p><strong>Subject:</strong> ${subject}</p>
+    <p><strong>From:</strong> ${escapeHtml(customerName || email || "Guest")} ${email ? `(${escapeHtml(email)})` : ""}</p>
+    <p><strong>Subject:</strong> ${escapeHtml(subject)}</p>
     <p><strong>Description:</strong></p>
-    <p>${description.replace(/\n/g, "<br>")}</p>
+    <p>${escapeHtml(description)}</p>
     <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "https://signaltradingbots.com"}/admin/tickets">View in Admin Panel</a></p>
   `;
   
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
   const customerHtml = `
     <p>Your support ticket has been created successfully.</p>
     <p><strong>Ticket #${ticket.id}</strong></p>
-    <p><strong>Subject:</strong> ${subject}</p>
+    <p><strong>Subject:</strong> ${escapeHtml(subject)}</p>
     <p>Our team will review your request and respond as soon as possible.</p>
     <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "https://signaltradingbots.com"}/portal/tickets/${ticket.id}">View Ticket</a></p>
   `;
