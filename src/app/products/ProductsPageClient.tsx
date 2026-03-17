@@ -193,20 +193,26 @@ export function ProductsPageClient() {
 
   // Auto-scroll to plans section if hash is present
   useEffect(() => {
-    if (window.location.hash === '#plans') {
-      setTimeout(() => {
-        const element = document.getElementById('plans');
-        if (element) {
-          const headerOffset = 20; // Reduced offset for better positioning
-          const elementPosition = element.getBoundingClientRect().top;
-          const offsetPosition = elementPosition + window.scrollY - headerOffset;
-          window.scrollTo({
-            top: offsetPosition,
-            behavior: "smooth",
-          });
-        }
-      }, 300);
-    }
+    if (typeof window === "undefined") return;
+    if (window.location.hash !== "#plans") return;
+
+    let attempts = 0;
+    const tryScroll = () => {
+      const element = document.getElementById("plans");
+      if (element) {
+        const headerOffset = 20;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.scrollY - headerOffset;
+        window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+      } else if (attempts < 5) {
+        attempts++;
+        setTimeout(tryScroll, 200);
+      }
+    };
+
+    // Wait for layout to settle before measuring
+    const timer = setTimeout(tryScroll, 300);
+    return () => clearTimeout(timer);
   }, []);
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {

@@ -2,6 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe-server";
 import { getPlanConfig } from "@/lib/stripe-products";
 
+const VALID_PLAN_KEYS = new Set(["starter_yearly", "pro_yearly", "starter", "pro"]);
+
+const PLAN_KEY_MAP: Record<string, "starter_yearly" | "pro_yearly"> = {
+    starter: "starter_yearly",
+    starter_yearly: "starter_yearly",
+    pro: "pro_yearly",
+    pro_yearly: "pro_yearly",
+};
+
+function generateLicenseKey(): string {
+    const ts = Date.now().toString(36).toUpperCase();
+    const segments: string[] = [ts.slice(-4)];
+    for (let i = 0; i < 4; i++) {
+        segments.push(Math.random().toString(36).substring(2, 6).toUpperCase());
+    }
+    return `STB${segments.join("-")}`;
+}
+
 export async function POST(req: NextRequest) {
     try {
         const { plan, email, fullName, country } = await req.json();
@@ -20,12 +38,18 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        if (!VALID_PLAN_KEYS.has(plan)) {
+            return NextResponse.json(
+                { error: `Invalid plan: ${plan}` },
+                { status: 400 }
+            );
+        }
+
         if (!stripe) {
             throw new Error("Stripe is not configured");
         }
 
-        // Normalize to yearly plan key — only starter_yearly and pro_yearly are supported
-        const planKey = plan.includes("pro") ? "pro_yearly" : "starter_yearly";
+        const planKey = PLAN_KEY_MAP[plan];
         const planConfig = getPlanConfig(planKey);
 
         if (!planConfig?.priceId) {
@@ -34,16 +58,6 @@ export async function POST(req: NextRequest) {
                 { status: 400 }
             );
         }
-
-        // Generate license key
-        const generateLicenseKey = () => {
-            const segments = [];
-            for (let i = 0; i < 5; i++) {
-                const segment = Math.random().toString(36).substring(2, 6).toUpperCase();
-                segments.push(segment);
-            }
-            return `STB${segments.join("-")}`;
-        };
 
         const licenseKey = generateLicenseKey();
 
