@@ -2,8 +2,14 @@ import { NextResponse } from "next/server";
 import { getSupabaseClient } from "@/lib/supabase-storage";
 import { resourceArticles } from "@/data/resources";
 import { resourceArticlesContent } from "@/data/resource-articles-content";
+import { getCurrentAdmin } from "@/lib/auth-server";
 
 export async function GET() {
+    const admin = await getCurrentAdmin();
+    if (!admin) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     try {
         const client = getSupabaseClient();
         const results = [];

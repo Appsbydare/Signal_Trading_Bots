@@ -1,10 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-if (!process.env.GOOGLE_GEMINI_API_KEY) {
-  throw new Error("GOOGLE_GEMINI_API_KEY environment variable is not set");
-}
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY);
+// Defer the hard failure to call-time so a missing key doesn't crash the server
+// on import. Routes that use the AI check isAiAgentEnabled() before calling here.
+const genAI = process.env.GOOGLE_GEMINI_API_KEY
+  ? new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY)
+  : null;
 
 const DEFAULT_MODEL = "gemini-2.0-flash-exp";
 const DEFAULT_MAX_TOKENS = 1024;
@@ -57,6 +57,10 @@ export async function generateResponse(
   config?: GeminiGenerationConfig,
 ): Promise<GeminiResponse> {
   try {
+    if (!genAI) {
+      throw new Error("GOOGLE_GEMINI_API_KEY is not configured.");
+    }
+
     // Check rate limit before making request
     if (!checkRateLimit()) {
       throw new Error("Rate limit exceeded. Please wait before making more requests.");
@@ -107,6 +111,10 @@ export async function* generateStreamingResponse(
   config?: GeminiGenerationConfig,
 ): AsyncGenerator<string, void, unknown> {
   try {
+    if (!genAI) {
+      throw new Error("GOOGLE_GEMINI_API_KEY is not configured.");
+    }
+
     const modelName = config?.model || process.env.GEMINI_MODEL || DEFAULT_MODEL;
     const model = genAI.getGenerativeModel({
       model: modelName,

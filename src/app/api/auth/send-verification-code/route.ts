@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendVerificationCodeEmail } from "@/lib/email";
 import { getSupabaseClient } from "@/lib/supabase-storage";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    // 5 OTP requests per IP per hour to prevent flooding
+    if (!checkRateLimit(`send-otp:${getClientIp(request)}`, { limit: 5, windowSeconds: 3600 })) {
+      return NextResponse.json(
+        { success: false, message: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const { email } = body;
 
@@ -23,15 +32,12 @@ export async function POST(request: NextRequest) {
       .eq("email", email.toLowerCase())
       .single();
 
+    // Return the same generic response regardless — prevents account enumeration
     if (existingCustomer) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "An account with this email already exists. Please log in instead.",
-          userExists: true
-        },
-        { status: 409 } // 409 Conflict
-      );
+      return NextResponse.json({
+        success: true,
+        message: "If this email is not yet registered, a verification code has been sent.",
+      });
     }
 
     // Generate 6-digit code

@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { sendTelegramAdminNotification } from "@/lib/telegram";
 
 export async function GET() {
+    if (process.env.NODE_ENV === "production") {
+        return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
     const token = process.env.TELEGRAM_BOT_TOKEN;
     const channelId = process.env.TELEGRAM_ADMIN_CHANNEL_ID;
 

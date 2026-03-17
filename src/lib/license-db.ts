@@ -252,9 +252,6 @@ export async function deactivateSession(sessionId: string, notify: boolean = tru
   if (error) {
     throw error;
   }
-  if (error) {
-    throw error;
-  }
 }
 
 /**
@@ -623,7 +620,7 @@ export async function getSession(sessionId: string): Promise<LicenseSessionRow |
   const { data, error } = await client
     .from("license_sessions")
     .select("*")
-    .eq("id", sessionId)
+    .eq("session_id", sessionId)
     .maybeSingle();
 
   if (error) {

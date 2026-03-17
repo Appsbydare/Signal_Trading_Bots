@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseClient } from "@/lib/supabase-storage";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    // 10 attempts per IP per 15 minutes — prevents brute-forcing 6-digit OTP
+    if (!checkRateLimit(`verify-otp:${getClientIp(request)}`, { limit: 10, windowSeconds: 900 })) {
+      return NextResponse.json(
+        { success: false, message: "Too many attempts. Please request a new code." },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const { email, code } = body;
 

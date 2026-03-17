@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getCurrentCustomer } from "@/lib/auth-server";
-import { sanitizeForLlm } from "@/lib/rate-limit";
+import { sanitizeForLlm, checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import {
   appendMessage,
   findBestFaqMatch,
@@ -36,7 +36,19 @@ export async function POST(request: NextRequest) {
     return jsonError(400, "conversationId and message are required");
   }
 
+  // Rate limit: 20 messages per minute per IP, tighter 60/hour per authenticated customer
   const customer = await getCurrentCustomer();
+  const rateLimitKey = customer
+    ? `chat-msg:customer:${customer.id}`
+    : `chat-msg:ip:${getClientIp(request)}`;
+  const rateLimit = customer
+    ? { limit: 60, windowSeconds: 3600 }
+    : { limit: 20, windowSeconds: 60 };
+
+  if (!checkRateLimit(rateLimitKey, rateLimit)) {
+    return jsonError(429, "Too many messages. Please slow down.");
+  }
+
   const conversation = await getConversationById(conversationId);
 
   if (!conversation) {

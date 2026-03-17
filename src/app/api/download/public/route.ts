@@ -1,9 +1,30 @@
 import { NextResponse } from "next/server";
 import { generateInstallerDownloadUrl, isR2Enabled } from "@/lib/r2-client";
+import { getCurrentCustomer } from "@/lib/auth-server";
+import { getSupabaseClient } from "@/lib/supabase-storage";
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+    const customer = await getCurrentCustomer();
+    if (!customer) {
+        return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
+    // Verify the customer holds at least one active (non-revoked) license
+    const supabase = getSupabaseClient();
+    const { data: license } = await supabase
+        .from("licenses")
+        .select("id")
+        .eq("email", customer.email)
+        .in("status", ["active", "trial"])
+        .limit(1)
+        .maybeSingle();
+
+    if (!license) {
+        return NextResponse.json({ error: "No active license found" }, { status: 403 });
+    }
+
     try {
         if (!isR2Enabled()) {
             return NextResponse.json(

@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getSupabaseClient } from "@/lib/supabase-storage";
+import { getCurrentAdmin } from "@/lib/auth-server";
 
 function jsonError(status: number, message: string) {
   return NextResponse.json({ success: false, message }, { status });
 }
 
 export async function GET(request: NextRequest) {
+  if (!await getCurrentAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const client = getSupabaseClient();
   const search = request.nextUrl.searchParams.get("search") || "";
 
@@ -27,6 +29,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!await getCurrentAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   let body: {
     id?: number;
     question?: string;
@@ -72,6 +75,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  if (!await getCurrentAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const idParam = request.nextUrl.searchParams.get("id");
   const id = idParam ? Number(idParam) : NaN;
   if (!idParam || Number.isNaN(id)) {

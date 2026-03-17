@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { addTicketEvent, listTickets, updateTicket } from "@/lib/tickets-db";
-import { sendTicketEmail } from "@/lib/email";
+import { sendTicketEmail, escapeHtml } from "@/lib/email";
+import { getCurrentAdmin } from "@/lib/auth-server";
 
 function jsonError(status: number, message: string) {
   return NextResponse.json({ success: false, message }, { status });
 }
 
 export async function GET(request: NextRequest) {
+  if (!await getCurrentAdmin()) return jsonError(401, "Unauthorized");
   const status = request.nextUrl.searchParams.get("status") || undefined;
 
   try {
@@ -20,6 +22,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!await getCurrentAdmin()) return jsonError(401, "Unauthorized");
   let body: {
     id?: number;
     status?: string;
@@ -53,7 +56,7 @@ export async function POST(request: NextRequest) {
 
       if (body.notifyCustomer && (body.email || updated.email)) {
         const to = body.email || updated.email!;
-        const html = `<p>There is an update on your support ticket <strong>#${updated.id}</strong>.</p><p>${body.note}</p>`;
+        const html = `<p>There is an update on your support ticket <strong>#${updated.id}</strong>.</p><p>${escapeHtml(body.note)}</p>`;
         await sendTicketEmail({
           to,
           subject: `Update on your SignalTradingBots ticket #${updated.id}`,

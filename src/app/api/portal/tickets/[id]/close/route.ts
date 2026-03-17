@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getCurrentCustomer } from "@/lib/auth-server";
 import { getTicketById, updateTicket, addTicketEvent } from "@/lib/tickets-db";
-import { sendTicketEmail } from "@/lib/email";
+import { sendTicketEmail, escapeHtml } from "@/lib/email";
 
 function jsonError(status: number, message: string) {
   return NextResponse.json({ success: false, message }, { status });
@@ -62,7 +62,7 @@ export async function POST(
   const companyEmail = process.env.COMPANY_SUPPORT_EMAIL || "support@signaltradingbots.com";
   const companyHtml = `
     <h2>Ticket #${ticket.id} Closed by Customer</h2>
-    <p><strong>Subject:</strong> ${ticket.subject}</p>
+    <p><strong>Subject:</strong> ${escapeHtml(ticket.subject)}</p>
     <p>The customer has marked this ticket as resolved.</p>
     <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "https://signaltradingbots.com"}/admin/tickets">View in Admin Panel</a></p>
   `;

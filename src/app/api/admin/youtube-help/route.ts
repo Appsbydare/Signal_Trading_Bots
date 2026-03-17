@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getYouTubeHelpItems, updateYouTubeHelpItems } from "@/lib/admin-content-db";
+import { getCurrentAdmin } from "@/lib/auth-server";
 
 // GET - Retrieve YouTube help data (admin)
 export async function GET(request: NextRequest) {
+  if (!await getCurrentAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const items = await getYouTubeHelpItems();
     // Convert to format expected by frontend
@@ -21,6 +23,7 @@ export async function GET(request: NextRequest) {
 
 // POST - Update YouTube help data (admin)
 export async function POST(request: NextRequest) {
+  if (!await getCurrentAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const body = await request.json();
     const { items } = body;

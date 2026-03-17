@@ -2,8 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { ADMIN_COOKIE_NAME, createAuthToken } from "@/lib/auth-tokens";
 import { getAdminByEmail, verifyPassword } from "@/lib/auth-users";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
+  // 5 attempts per IP per 15 minutes — stricter than customer login
+  if (!checkRateLimit(`admin-login:${getClientIp(request)}`, { limit: 5, windowSeconds: 900 })) {
+    return NextResponse.json(
+      { success: false, message: "Too many login attempts. Please try again later." },
+      { status: 429 },
+    );
+  }
+
   let body: { email?: string; password?: string };
 
   try {

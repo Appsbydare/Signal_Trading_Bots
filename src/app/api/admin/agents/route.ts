@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getSupabaseClient } from "@/lib/supabase-storage";
+import { getCurrentAdmin } from "@/lib/auth-server";
 
 function jsonError(status: number, message: string) {
   return NextResponse.json({ success: false, message }, { status });
 }
 
 export async function GET() {
+  if (!await getCurrentAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const client = getSupabaseClient();
   const { data, error } = await client
     .from("agents")
@@ -22,6 +24,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  if (!await getCurrentAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   let body: { agents?: any[] } = {};
   try {
     body = await request.json();

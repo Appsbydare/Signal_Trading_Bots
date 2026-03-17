@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { MANUAL_CONTENT } from "@/data/manual-content";
+import { getCurrentAdmin } from "@/lib/auth-server";
 
 // Admin-only route to seed the manual content
 export async function GET(request: NextRequest) {
-    // Simple security check (replace with actual admin auth in production)
-    // For now, checks for a secret query param if needed, or relies on being an admin route
-    // const secret = request.nextUrl.searchParams.get("secret");
-    // if (secret !== process.env.ADMIN_SECRET) {
-    //   return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
-    // }
+    const admin = await getCurrentAdmin();
+    if (!admin) {
+        return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
 
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
         return NextResponse.json(

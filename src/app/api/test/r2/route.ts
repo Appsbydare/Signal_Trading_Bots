@@ -7,6 +7,10 @@ import { S3Client, HeadObjectCommand } from "@aws-sdk/client-s3";
  * Test R2 configuration and file existence
  */
 export async function GET() {
+    if (process.env.NODE_ENV === "production") {
+        return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
     try {
         if (!isR2Enabled()) {
             return NextResponse.json({

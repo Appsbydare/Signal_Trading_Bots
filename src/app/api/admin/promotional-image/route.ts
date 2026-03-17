@@ -5,9 +5,11 @@ import {
   clearPromotionalImage,
   updatePromotionalImageUrl,
 } from "@/lib/promotional-image";
+import { getCurrentAdmin } from "@/lib/auth-server";
 
 // GET - Get current promotional image info
 export async function GET(request: NextRequest) {
+  if (!await getCurrentAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const image = await getPromotionalImage(true);
     return NextResponse.json({
@@ -26,6 +28,7 @@ export async function GET(request: NextRequest) {
 
 // POST - Upload promotional image
 export async function POST(request: NextRequest) {
+  if (!await getCurrentAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const formData = await request.formData();
     const file = formData.get("image") as File | null;
@@ -94,6 +97,7 @@ export async function POST(request: NextRequest) {
 
 // PATCH - Update redirect URL only
 export async function PATCH(request: NextRequest) {
+  if (!await getCurrentAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const body = await request.json();
     const { url } = body;
@@ -118,6 +122,7 @@ export async function PATCH(request: NextRequest) {
 
 // DELETE - Remove promotional image
 export async function DELETE(request: NextRequest) {
+  if (!await getCurrentAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     await clearPromotionalImage();
     return NextResponse.json({ success: true, message: "Image deleted successfully" });
