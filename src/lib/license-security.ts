@@ -3,7 +3,8 @@ import "server-only";
 import crypto from "crypto";
 import type { NextRequest } from "next/server";
 
-import { licenseConfig } from "./license-config";
+import { getLicenseConfigForProduct } from "./license-config";
+import type { LicenseProductId } from "./license-products";
 
 export interface SecurityCheckResult {
   ok: boolean;
@@ -11,11 +12,19 @@ export interface SecurityCheckResult {
 }
 
 export function verifyRequestSignature(payload: Record<string, unknown>): SecurityCheckResult {
+  return verifyRequestSignatureForProduct(payload, "SIGNAL_TRADING_BOTS");
+}
+
+export function verifyRequestSignatureForProduct(
+  payload: Record<string, unknown>,
+  productId: LicenseProductId,
+): SecurityCheckResult {
+  const productConfig = getLicenseConfigForProduct(productId);
   const timestamp = payload.timestamp as string | undefined;
   const apiKey = payload.apiKey as string | undefined;
   const signature = payload.signature as string | undefined;
 
-  if (!apiKey || apiKey !== licenseConfig.apiKeyPublic) {
+  if (!apiKey || apiKey !== productConfig.apiKeyPublic) {
     return { ok: false, message: "Invalid API key" };
   }
 
@@ -36,7 +45,7 @@ export function verifyRequestSignature(payload: Record<string, unknown>): Securi
 
     const now = new Date();
     const ageSeconds = Math.abs(now.getTime() - requestTime.getTime()) / 1000;
-    if (ageSeconds > licenseConfig.heartbeatGraceSeconds) {
+    if (ageSeconds > productConfig.heartbeatGraceSeconds) {
       return { ok: false, message: "Request timestamp expired" };
     }
   } catch {
@@ -56,7 +65,7 @@ export function verifyRequestSignature(payload: Record<string, unknown>): Securi
   const message = `${timestamp}${sortedJson}`;
 
   const expected = crypto
-    .createHmac("sha256", licenseConfig.apiSecret)
+    .createHmac("sha256", productConfig.apiSecret)
     .update(message, "utf8")
     .digest("hex");
 

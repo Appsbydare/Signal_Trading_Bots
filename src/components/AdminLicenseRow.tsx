@@ -27,6 +27,7 @@ interface EnrichedLicense {
     status: string;
     created_at: string;
     expires_at: string;
+    product_id?: string | null;
     upgraded_from?: string | null;
     duplicate_detected: boolean;
     grace_period_allowed: boolean;
@@ -221,6 +222,11 @@ export function AdminLicenseRow({ license, plans }: AdminLicenseRowProps) {
                 <td className="px-4 py-3 text-sm text-zinc-300">{license.email}</td>
                 <td className="px-4 py-3">
                     <div className="flex flex-col gap-1 items-start">
+                        {license.product_id && (
+                            <span className="text-[10px] font-medium text-zinc-400">
+                                {license.product_id === 'ORB_BOT' ? 'ORB Bot' : 'STB'}
+                            </span>
+                        )}
                         <div className="flex items-center gap-1.5">
                             <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getPlanBadgeStyle(license.plan)}`}>
                                 {currentPlanName}

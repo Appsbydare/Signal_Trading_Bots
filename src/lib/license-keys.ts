@@ -1,6 +1,7 @@
 import "server-only";
 
 import crypto from "crypto";
+import { getProduct, type LicenseProductId } from "./license-products";
 
 /**
  * Generate an STB-style license key
@@ -9,6 +10,11 @@ import crypto from "crypto";
  * @returns A randomly generated license key
  */
 export function generateLicenseKey(): string {
+  return generateLicenseKeyForProduct("SIGNAL_TRADING_BOTS");
+}
+
+export function generateLicenseKeyForProduct(productId: LicenseProductId): string {
+  const product = getProduct(productId);
   // Generate random digit 0-9 for the 4th character
   const digit = Math.floor(Math.random() * 10);
   
@@ -17,6 +23,6 @@ export function generateLicenseKey(): string {
     crypto.randomBytes(2).toString("hex").toUpperCase()
   );
   
-  return `STB${digit}-${parts.join("-")}`;
+  return `${product.keyPrefix}${digit}-${parts.join("-")}`;
 }
 

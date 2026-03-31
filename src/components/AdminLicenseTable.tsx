@@ -22,6 +22,7 @@ interface EnrichedLicense {
     status: string;
     created_at: string;
     expires_at: string;
+    product_id?: string | null;
     upgraded_from?: string | null;
     duplicate_detected: boolean;
     grace_period_allowed: boolean;
@@ -49,6 +50,7 @@ interface AdminLicenseTableProps {
 
 export function AdminLicenseTable({ licenses, plans }: AdminLicenseTableProps) {
     const [filterStatus, setFilterStatus] = useState<string>("all");
+    const [filterProduct, setFilterProduct] = useState<string>("all");
     const [searchTerm, setSearchTerm] = useState("");
 
     const filteredAndSortedLicenses = useMemo(() => {
@@ -57,6 +59,12 @@ export function AdminLicenseTable({ licenses, plans }: AdminLicenseTableProps) {
         // 1. Filter
         if (filterStatus !== "all") {
             result = result.filter(l => l.status === filterStatus);
+        }
+
+        if (filterProduct !== "all") {
+            // Null or missing product_id is historically signal_trading_bots
+            const pId = filterProduct;
+            result = result.filter(l => (l.product_id || "SIGNAL_TRADING_BOTS") === pId);
         }
 
         if (searchTerm) {
@@ -110,6 +118,16 @@ export function AdminLicenseTable({ licenses, plans }: AdminLicenseTableProps) {
                     />
 
                     <select
+                        value={filterProduct}
+                        onChange={(e) => setFilterProduct(e.target.value)}
+                        className="rounded-md border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-sm text-white focus:border-blue-500 focus:outline-none"
+                    >
+                        <option value="all">All Products</option>
+                        <option value="SIGNAL_TRADING_BOTS">Signal Trading Bots</option>
+                        <option value="ORB_BOT">ORB Bot</option>
+                    </select>
+
+                    <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
                         className="rounded-md border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-sm text-white focus:border-blue-500 focus:outline-none"
@@ -133,7 +151,7 @@ export function AdminLicenseTable({ licenses, plans }: AdminLicenseTableProps) {
                                 Email
                             </th>
                             <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                Plan
+                                Product & Plan
                             </th>
                             <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                                 Status

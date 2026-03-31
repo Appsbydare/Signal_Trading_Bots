@@ -3,11 +3,16 @@ import "server-only";
 
 import { licenseConfig } from "./license-config";
 import { getSupabaseClient } from "./supabase-storage";
+import { normalizeProductId, type LicenseProductId } from "./license-products";
 
 export type LicenseStatus = "active" | "expired" | "revoked";
 
 // Helper to broadcast events
-export async function broadcastLicenseEvent(licenseKey: string, eventType: string, payload: any = {}): Promise<void> {
+export async function broadcastLicenseEvent(
+  licenseKey: string,
+  eventType: string,
+  payload: Record<string, unknown> = {},
+): Promise<void> {
   const client = getSupabaseClient();
   const channel = client.channel(`license:${licenseKey}`);
 
@@ -75,6 +80,7 @@ export interface LicenseRow {
   payment_type?: string | null;
   subscription_status?: string | null;
   subscription_cancel_at_period_end?: boolean | null;
+  product_id: LicenseProductId;
 }
 
 export interface LicenseSessionRow {
@@ -88,14 +94,19 @@ export interface LicenseSessionRow {
   created_at: string;
   last_seen_at: string;
   active: boolean;
+  product_id: LicenseProductId;
 }
 
-export async function getLicensesForEmail(email: string): Promise<LicenseRow[]> {
+export async function getLicensesForEmail(
+  email: string,
+  productId: LicenseProductId = "SIGNAL_TRADING_BOTS",
+): Promise<LicenseRow[]> {
   const client = getSupabaseClient();
   const { data, error } = await client
     .from("licenses")
     .select("*")
     .eq("email", email.toLowerCase())
+    .eq("product_id", productId)
     .neq("status", "revoked") // Exclude revoked licenses
     .order("created_at", { ascending: false })
     .returns<LicenseRow[]>();
@@ -107,13 +118,21 @@ export async function getLicensesForEmail(email: string): Promise<LicenseRow[]> 
   return data ?? [];
 }
 
-export async function getLicenseByKey(licenseKey: string): Promise<LicenseRow | null> {
+export async function getLicenseByKey(
+  licenseKey: string,
+  productId?: LicenseProductId,
+): Promise<LicenseRow | null> {
   const client = getSupabaseClient();
-  const { data, error } = await client
+  let query = client
     .from("licenses")
     .select("*")
-    .eq("license_key", licenseKey)
-    .maybeSingle<LicenseRow>();
+    .eq("license_key", licenseKey);
+
+  if (productId) {
+    query = query.eq("product_id", productId);
+  }
+
+  const { data, error } = await query.maybeSingle<LicenseRow>();
 
   if (error) {
     throw error;
@@ -122,16 +141,24 @@ export async function getLicenseByKey(licenseKey: string): Promise<LicenseRow | 
   return data ?? null;
 }
 
-export async function getActiveSessionForLicense(licenseKey: string): Promise<LicenseSessionRow | null> {
+export async function getActiveSessionForLicense(
+  licenseKey: string,
+  productId?: LicenseProductId,
+): Promise<LicenseSessionRow | null> {
   const client = getSupabaseClient();
-  const { data, error } = await client
+  let query = client
     .from("license_sessions")
     .select("*")
     .eq("license_key", licenseKey)
     .eq("active", true)
     .order("last_seen_at", { ascending: false })
-    .limit(1)
-    .maybeSingle<LicenseSessionRow>();
+    .limit(1);
+
+  if (productId) {
+    query = query.eq("product_id", productId);
+  }
+
+  const { data, error } = await query.maybeSingle<LicenseSessionRow>();
 
   if (error) {
     throw error;
@@ -157,6 +184,7 @@ export async function getSessionById(sessionId: string): Promise<LicenseSessionR
 
 export interface CreateSessionArgs {
   licenseKey: string;
+  productId?: LicenseProductId;
   deviceId: string;
   deviceName?: string;
   deviceMac?: string;
@@ -166,10 +194,12 @@ export interface CreateSessionArgs {
 
 export async function createSession(args: CreateSessionArgs): Promise<LicenseSessionRow> {
   const client = getSupabaseClient();
+  const normalizedProduct = normalizeProductId(args.productId);
   const { data, error } = await client
     .from("license_sessions")
     .insert({
       license_key: args.licenseKey,
+      product_id: normalizedProduct,
       device_id: args.deviceId,
       session_id: args.sessionId,
       device_name: args.deviceName ?? null,
@@ -191,7 +221,12 @@ export async function createSession(args: CreateSessionArgs): Promise<LicenseSes
 
 export async function refreshSession(sessionId: string, sessionSerial?: string, deviceName?: string): Promise<void> {
   const client = getSupabaseClient();
-  const gatheredUpdates: any = {
+  const gatheredUpdates: {
+    last_seen_at: string;
+    active: boolean;
+    session_serial?: string;
+    device_name?: string;
+  } = {
     last_seen_at: new Date().toISOString(),
     active: true
   };
@@ -331,6 +366,7 @@ export async function cleanupOldSessions(licenseKey: string): Promise<void> {
 
 export interface LogValidationArgs {
   licenseKey: string;
+  productId?: LicenseProductId;
   deviceId?: string;
   deviceName?: string;
   eventType: 'validation' | 'duplicate_detected' | 'deactivation' | 'failed' | 'heartbeat_failed' | 'login_requested';
@@ -338,15 +374,17 @@ export interface LogValidationArgs {
   errorCode?: string;
   ipAddress?: string;
   userAgent?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export async function logValidation(args: LogValidationArgs): Promise<void> {
   const client = getSupabaseClient();
+  const normalizedProduct = normalizeProductId(args.productId);
 
   try {
     await client.from("license_validation_log").insert({
       license_key: args.licenseKey,
+      product_id: normalizedProduct,
       device_id: args.deviceId ?? null,
       device_name: args.deviceName ?? null,
       event_type: args.eventType,
@@ -364,6 +402,7 @@ export async function logValidation(args: LogValidationArgs): Promise<void> {
 
 export interface CreateLicenseArgs {
   licenseKey: string;
+  productId?: LicenseProductId;
   email: string;
   plan: string;
   expiresAt: Date;
@@ -378,10 +417,12 @@ export interface CreateLicenseArgs {
 
 export async function createLicense(args: CreateLicenseArgs): Promise<LicenseRow> {
   const client = getSupabaseClient();
+  const normalizedProduct = normalizeProductId(args.productId);
   const { data, error } = await client
     .from("licenses")
     .insert({
       license_key: args.licenseKey,
+      product_id: normalizedProduct,
       email: args.email.toLowerCase(),
       plan: args.plan,
       status: "active",
@@ -586,28 +627,47 @@ export async function revokeSession(sessionId: string, source: 'customer' | 'adm
   return deactivateSession(sessionId, true, source);
 }
 
-export async function getSessionsForLicense(licenseKey: string): Promise<LicenseSessionRow[]> {
+export async function getSessionsForLicense(
+  licenseKey: string,
+  productId?: LicenseProductId,
+): Promise<LicenseSessionRow[]> {
   const client = getSupabaseClient();
-  const { data, error } = await client
+  let query = client
     .from("license_sessions")
     .select("*")
     .eq("license_key", licenseKey)
     .eq("active", true)
     .order("last_seen_at", { ascending: false });
 
+  if (productId) {
+    query = query.eq("product_id", productId);
+  }
+
+  const { data, error } = await query;
+
   if (error) throw error;
   return data ?? [];
 }
 
-export async function getSessionHistoryForLicense(licenseKey: string, limit = 10): Promise<LicenseSessionRow[]> {
+export async function getSessionHistoryForLicense(
+  licenseKey: string,
+  limit = 10,
+  productId?: LicenseProductId,
+): Promise<LicenseSessionRow[]> {
   const client = getSupabaseClient();
-  const { data, error } = await client
+  let query = client
     .from("license_sessions")
     .select("*")
     .eq("license_key", licenseKey)
     .eq("active", false)
     .order("last_seen_at", { ascending: false })
     .limit(limit);
+
+  if (productId) {
+    query = query.eq("product_id", productId);
+  }
+
+  const { data, error } = await query;
 
   if (error) throw error;
   return data ?? [];
@@ -630,13 +690,21 @@ export async function getSession(sessionId: string): Promise<LicenseSessionRow |
   return data;
 }
 
-export async function getLicense(licenseKey: string): Promise<LicenseRow | null> {
+export async function getLicense(
+  licenseKey: string,
+  productId?: LicenseProductId,
+): Promise<LicenseRow | null> {
   const client = getSupabaseClient();
-  const { data, error } = await client
+  let query = client
     .from("licenses")
     .select("*")
-    .eq("license_key", licenseKey)
-    .maybeSingle();
+    .eq("license_key", licenseKey);
+
+  if (productId) {
+    query = query.eq("product_id", productId);
+  }
+
+  const { data, error } = await query.maybeSingle();
 
   if (error) {
     throw error;

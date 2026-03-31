@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/auth-server";
 import { getSupabaseClient } from "@/lib/supabase-storage";
+import { normalizeProductId } from "@/lib/license-products";
 
 export async function GET(request: NextRequest) {
   // Verify admin authentication
@@ -13,11 +14,12 @@ export async function GET(request: NextRequest) {
   const email = searchParams.get("email");
   const licenseKey = searchParams.get("key");
   const status = searchParams.get("status");
+  const productId = normalizeProductId(searchParams.get("product") ?? undefined);
 
   const client = getSupabaseClient();
 
   try {
-    let query = client.from("licenses").select("*");
+    let query = client.from("licenses").select("*").eq("product_id", productId);
 
     // Apply filters
     if (email) {
@@ -41,10 +43,11 @@ export async function GET(request: NextRequest) {
     // For each license, count active sessions
     const licensesWithSessions = await Promise.all(
       (data || []).map(async (license) => {
-        const { data: sessions, error: sessionError } = await client
+        const { data: sessions } = await client
           .from("license_sessions")
           .select("*")
           .eq("license_key", license.license_key)
+          .eq("product_id", productId)
           .eq("active", true);
 
         return {

@@ -1,10 +1,10 @@
 import "server-only";
+import { getProduct, type LicenseProductId } from "./license-products";
 
 // Centralised configuration for the licensing backend.
 // All secrets must be provided via environment variables at deploy/runtime.
 
-const API_SECRET = process.env.API_SECRET;
-const API_KEY_PUBLIC = process.env.API_KEY_PUBLIC ?? "DBOT-API-KEY-V8";
+const stbProduct = getProduct("SIGNAL_TRADING_BOTS");
 
 // Heartbeat / session settings (in seconds)
 const HEARTBEAT_INTERVAL_SECONDS = Number(
@@ -14,18 +14,20 @@ const HEARTBEAT_GRACE_SECONDS = Number(
   process.env.LICENSE_HEARTBEAT_GRACE_SECONDS ?? "300",
 );
 
-if (!API_SECRET) {
-  // Fail fast on misconfiguration so we don't accidentally accept unsigned traffic.
-  throw new Error(
-    "API_SECRET is not configured. Set API_SECRET in the environment to enable licensing endpoints.",
-  );
-}
-
 export const licenseConfig = {
-  apiSecret: API_SECRET,
-  apiKeyPublic: API_KEY_PUBLIC,
+  apiSecret: stbProduct.security.apiSecret,
+  apiKeyPublic: stbProduct.security.apiKeyPublic,
   heartbeatIntervalSeconds: HEARTBEAT_INTERVAL_SECONDS,
   heartbeatGraceSeconds: HEARTBEAT_GRACE_SECONDS,
 };
+
+export function getLicenseConfigForProduct(productId: LicenseProductId) {
+  const product = getProduct(productId);
+  return {
+    ...licenseConfig,
+    apiSecret: product.security.apiSecret,
+    apiKeyPublic: product.security.apiKeyPublic,
+  };
+}
 
 
