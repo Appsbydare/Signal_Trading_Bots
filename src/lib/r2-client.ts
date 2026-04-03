@@ -2,6 +2,7 @@ import "server-only";
 
 import { S3Client, GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import type { LicenseProductId } from "./license-products";
 
 // Cloudflare R2 Configuration
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
@@ -10,6 +11,8 @@ const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
 const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || "release";
 const R2_ENDPOINT = process.env.R2_ENDPOINT;
 const R2_EXE_FILE_NAME = process.env.R2_EXE_FILE_NAME || "TelegramSignalBot Installer.exe";
+const R2_ORB_EXE_FILE_NAME =
+    process.env.R2_ORB_EXE_FILE_NAME || "ORB_Bot_Setup_V1.1.exe";
 
 // Validate R2 configuration
 const isR2Configured = !!(
@@ -49,10 +52,18 @@ export function isR2Enabled(): boolean {
 }
 
 /**
- * Get the EXE file name
+ * Get the default Telegram / STB installer object key in R2
  */
 export function getExeFileName(): string {
     return R2_EXE_FILE_NAME;
+}
+
+export function getOrbExeFileName(): string {
+    return R2_ORB_EXE_FILE_NAME;
+}
+
+export function getInstallerFileNameForProduct(productId: LicenseProductId): string {
+    return productId === "ORB_BOT" ? R2_ORB_EXE_FILE_NAME : R2_EXE_FILE_NAME;
 }
 
 /**
@@ -117,20 +128,26 @@ export async function generatePresignedDownloadUrl(
 }
 
 /**
- * Generate a download URL for the installer EXE
- * @param expiresInSeconds - URL expiration time in seconds (default: 3600 = 1 hour)
- * @returns Presigned URL for the installer
+ * Generate a presigned URL for a specific installer key in the bucket.
+ */
+export async function generateInstallerDownloadUrlForFile(
+    fileName: string,
+    expiresInSeconds: number = 3600
+): Promise<string> {
+    const exists = await verifyFileExists(fileName);
+    if (!exists) {
+        throw new Error(
+            `Installer file "${fileName}" not found in R2 bucket "${R2_BUCKET_NAME}". Please upload the file first.`
+        );
+    }
+    return generatePresignedDownloadUrl(fileName, expiresInSeconds);
+}
+
+/**
+ * Default STB/Telegram installer download URL
  */
 export async function generateInstallerDownloadUrl(
     expiresInSeconds: number = 3600
 ): Promise<string> {
-    // Verify file exists before generating URL
-    const exists = await verifyFileExists(R2_EXE_FILE_NAME);
-    if (!exists) {
-        throw new Error(
-            `Installer file "${R2_EXE_FILE_NAME}" not found in R2 bucket "${R2_BUCKET_NAME}". Please upload the file first.`
-        );
-    }
-
-    return generatePresignedDownloadUrl(R2_EXE_FILE_NAME, expiresInSeconds);
+    return generateInstallerDownloadUrlForFile(R2_EXE_FILE_NAME, expiresInSeconds);
 }

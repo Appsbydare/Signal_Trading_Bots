@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCryptoOrder, getStripeOrder } from "@/lib/orders-supabase";
-import { getDownloadTokensByEmail } from "@/lib/download-tokens";
+import { getDownloadFieldsForPaidOrder } from "@/lib/stripe-order-download-fields";
 import { getCurrentCustomer } from "@/lib/auth-server";
 
 export async function GET(
@@ -75,41 +75,20 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Get download tokens for this order's email
-    let downloadUrl = null;
-    let downloadToken = null;
-    let downloadExpired = false;
+    const orderLicenseKey =
+      (order as { licenseKey?: string; license_key?: string }).licenseKey ??
+      (order as { license_key?: string }).license_key;
 
-    try {
-      const tokens = await getDownloadTokensByEmail(order.email);
-      if (tokens && tokens.length > 0) {
-        // Get the most recent token that hasn't been used
-        const latestToken = tokens.find(t => !t.is_used) || tokens[0];
-        const now = new Date();
-        const expiresAt = new Date(latestToken.expires_at);
+    const { downloadUrl, downloadToken, downloadExpired, downloadFileName } =
+      await getDownloadFieldsForPaidOrder(order.email, orderLicenseKey, request);
 
-        if (now <= expiresAt && !latestToken.is_used) {
-          // Token is still valid and not used - return proxy URL
-          const host = request.headers.get("host") || "localhost:3000";
-          const protocol = host.includes("localhost") ? "http" : "https";
-          downloadUrl = `${protocol}://${host}/api/download/${latestToken.token}`;
-          downloadToken = latestToken.token;
-        } else {
-          downloadExpired = true;
-        }
-      }
-    } catch (err) {
-      console.error("Error fetching download tokens:", err);
-      // Don't fail the request if download token lookup fails
-    }
-
-    // Return order details with payment method and download info
     return NextResponse.json({
       ...order,
       paymentMethod,
       downloadUrl,
       downloadToken,
       downloadExpired,
+      downloadFileName,
     });
   } catch (error: any) {
     console.error("Error fetching order status:", error);

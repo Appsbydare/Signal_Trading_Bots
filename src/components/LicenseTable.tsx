@@ -15,6 +15,8 @@ interface License {
   payment_type?: string | null;
   subscription_status?: string | null;
   subscription_cancel_at_period_end?: boolean | null;
+  /** ORB vs Telegram bot — used for download action */
+  product_id?: "SIGNAL_TRADING_BOTS" | "ORB_BOT";
 }
 
 interface LicenseTableProps {
@@ -30,6 +32,8 @@ function getLicenseStatusColor(daysRemaining: number): string {
 export function LicenseTable({ licenses }: LicenseTableProps) {
   const [revealedKeys, setRevealedKeys] = useState<Set<number>>(new Set());
   const [copiedKey, setCopiedKey] = useState<number | null>(null);
+  const [downloadBusyId, setDownloadBusyId] = useState<number | null>(null);
+  const [downloadMsg, setDownloadMsg] = useState<string | null>(null);
 
   const toggleReveal = (licenseId: number) => {
     setRevealedKeys(prev => {
@@ -107,7 +111,11 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
                 (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
               ),
             );
-            const isLifetime = lic.plan.toLowerCase() === 'lifetime';
+            const planLower = lic.plan.toLowerCase();
+            const isLifetime =
+              planLower === "lifetime" || planLower === "orb_lifetime";
+            const isOrbProduct =
+              lic.product_id === "ORB_BOT" || planLower === "orb_lifetime";
             const isRevealed = revealedKeys.has(lic.id);
             const isSubscription = lic.payment_type === 'subscription';
 
@@ -227,7 +235,44 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
                   </span>
                 </td>
                 <td className="whitespace-nowrap px-3 py-3 text-right text-xs">
-                  <div className="flex justify-end gap-2">
+                  <div className="flex flex-wrap justify-end gap-2">
+                    {/* ORB: email download link (same API as portal ORB block) */}
+                    {isOrbProduct && lic.status === "active" && (
+                      <button
+                        type="button"
+                        disabled={downloadBusyId === lic.id}
+                        onClick={async () => {
+                          setDownloadMsg(null);
+                          setDownloadBusyId(lic.id);
+                          try {
+                            const res = await fetch("/api/portal/request-download", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                productId: "ORB_BOT",
+                                licenseKey: lic.license_key,
+                              }),
+                            });
+                            const data = await res.json();
+                            if (res.ok) {
+                              setDownloadMsg(
+                                data.message ||
+                                  "ORB installer link sent to your email.",
+                              );
+                            } else {
+                              setDownloadMsg(data.error || "Download request failed.");
+                            }
+                          } catch {
+                            setDownloadMsg("Network error. Try again.");
+                          } finally {
+                            setDownloadBusyId(null);
+                          }
+                        }}
+                        className="rounded-md border border-blue-500/40 bg-blue-500/15 px-2 py-1 text-[0.7rem] font-medium text-blue-200 hover:bg-blue-500/25"
+                      >
+                        {downloadBusyId === lic.id ? "Sending…" : "Download"}
+                      </button>
+                    )}
                     {/* Subscription: Manage Button (Always) */}
                     {isSubscription && lic.subscription_id && (
                       <button
@@ -271,7 +316,7 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
                       </Link>
                     )}
 
-                    {/* Non-Subscription: Upgrade/Renew Button */}
+                    {/* Non-Subscription: Upgrade/Renew (not for lifetime / orb_lifetime) */}
                     {!isSubscription && !isLifetime && (
                       <Link
                         href={(() => {
@@ -293,6 +338,9 @@ export function LicenseTable({ licenses }: LicenseTableProps) {
           })}
         </tbody>
       </table>
+      {downloadMsg && (
+        <p className="mt-3 text-center text-xs text-zinc-400">{downloadMsg}</p>
+      )}
     </div>
   );
 }

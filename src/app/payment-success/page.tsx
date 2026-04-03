@@ -16,6 +16,9 @@ function PaymentSuccessContent() {
   const [downloadStarted, setDownloadStarted] = useState(false);
 
   const sessionId = searchParams.get("session_id");
+  const licenseKeyFromQuery = searchParams.get("licenseKey");
+  const paymentIntentId =
+    searchParams.get("payment_intent") || searchParams.get("pi") || "";
 
   useEffect(() => {
     if (!orderId && !sessionId) {
@@ -27,59 +30,153 @@ function PaymentSuccessContent() {
     let pollCount = 0;
     const maxPolls = 15; // Poll for up to 30 seconds
 
-    // Fetch order details with polling
     const fetchOrderDetails = async () => {
       try {
-        let response;
         if (sessionId) {
-          response = await fetch(`/api/stripe/session-status?session_id=${sessionId}`);
-        } else {
-          response = await fetch(`/api/orders/${orderId}/status`);
+          const response = await fetch(`/api/stripe/session-status?session_id=${sessionId}`);
+          if (response.ok) {
+            const data = await response.json();
+
+            if (data.status === "paid" || data.status === "complete") {
+              setOrderDetails(data);
+              setLoading(false);
+              return;
+            }
+
+            if (data.downloadExpired && data.licenseKey) {
+              setOrderDetails(data);
+              setLoading(false);
+              return;
+            }
+
+            if (pollCount < maxPolls) {
+              pollCount++;
+              setTimeout(fetchOrderDetails, 2000);
+              return;
+            }
+
+            setOrderDetails(data);
+            setLoading(false);
+            return;
+          }
+
+          console.log("Session status check failed");
+          setOrderDetails({ orderId: orderId || sessionId, isSubscription: true });
+          setLoading(false);
+          return;
         }
+
+        if (!orderId) {
+          setLoading(false);
+          return;
+        }
+
+        // Immediate fulfillment: does not rely on Stripe webhooks (fixes long spin when webhooks fail)
+        if (paymentIntentId) {
+          try {
+            const syncRes = await fetch("/api/stripe/sync-payment-intent", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ orderId, paymentIntentId }),
+            });
+            if (syncRes.status === 403) {
+              setError(
+                "Could not verify this payment. Open this page from the same browser session you paid with, or sign in and open your order from the portal.",
+              );
+              setLoading(false);
+              return;
+            }
+            if (syncRes.ok) {
+              const synced = await syncRes.json();
+              if (synced.status === "paid" || synced.status === "complete") {
+                setOrderDetails(synced);
+                setLoading(false);
+                return;
+              }
+            }
+          } catch (syncErr) {
+            console.error("sync-payment-intent failed:", syncErr);
+          }
+        }
+
+        const response = await fetch(`/api/orders/${orderId}/status`);
 
         if (response.ok) {
           const data = await response.json();
 
-          if (data.status === 'paid' || data.status === 'complete') {
+          if (data.status === "paid" || data.status === "complete") {
             setOrderDetails(data);
             setLoading(false);
-            return true; // Stop polling
+            return;
           }
 
           if (data.downloadExpired && data.licenseKey) {
             setOrderDetails(data);
             setLoading(false);
-            return true;
+            return;
           }
 
-          // If session is still processing, keep polling
           if (pollCount < maxPolls) {
             pollCount++;
-            console.log(`Polling for status... (${pollCount}/${maxPolls})`);
             setTimeout(fetchOrderDetails, 2000);
-            return false;
+            return;
           }
 
-          setOrderDetails(data); // Show whatever we have
+          setOrderDetails(data);
           setLoading(false);
-          return true;
-        } else {
-          // Fallback
-          console.log("Status check failed");
-          setOrderDetails({ orderId: orderId || sessionId, isSubscription: true });
-          setLoading(false);
-          return true;
+          return;
         }
+
+        // Guest crypto (or unauthenticated): protected /status returns 401 — use public crypto order
+        if (response.status === 401 || response.status === 403) {
+          pollCount = 0;
+          const pollCrypto = async () => {
+            const cr = await fetch(`/api/orders/${orderId}/crypto-public`);
+            if (!cr.ok) {
+              setError(
+                "Unable to load this order. If you paid by card, sign in to view it. Crypto purchases also send your license by email."
+              );
+              setLoading(false);
+              return;
+            }
+            const d = await cr.json();
+            const merged = {
+              orderId: d.orderId,
+              plan: d.plan,
+              displayPrice: d.displayPrice,
+              status: d.status,
+              paymentMethod: "crypto",
+              licenseKey: licenseKeyFromQuery || undefined,
+            };
+            if (d.status === "paid") {
+              setOrderDetails(merged);
+              setLoading(false);
+              return;
+            }
+            if (pollCount < maxPolls) {
+              pollCount++;
+              setTimeout(pollCrypto, 2000);
+              return;
+            }
+            setOrderDetails(merged);
+            setLoading(false);
+          };
+          pollCrypto();
+          return;
+        }
+
+        console.log("Status check failed");
+        setOrderDetails({ orderId: orderId || sessionId, isSubscription: true });
+        setLoading(false);
       } catch (err) {
         console.error("Error fetching status:", err);
         setOrderDetails({ orderId: orderId || sessionId, isSubscription: true });
         setLoading(false);
-        return true;
       }
     };
 
     fetchOrderDetails();
-  }, [orderId, sessionId]);
+  }, [orderId, sessionId, licenseKeyFromQuery, paymentIntentId]);
 
   const handleResendEmail = async () => {
     if (!orderId) return;
@@ -251,6 +348,17 @@ function PaymentSuccessContent() {
     );
   }
 
+  const planLower = (orderDetails.plan || "").toLowerCase();
+  const isOrbLifetime = planLower === "orb_lifetime";
+  const isOneTimeLifetime =
+    planLower === "lifetime" || planLower === "orb_lifetime";
+  const isPaymentPending =
+    orderDetails.status === "pending_payment" ||
+    orderDetails.status === "processing";
+  const installerFileName =
+    (orderDetails.downloadFileName as string | undefined) ||
+    (isOrbLifetime ? "ORB_Bot_Setup_V1.1.exe" : "TelegramSignalBot Installer.exe");
+
   return (
     <div className="min-h-screen bg-zinc-950 py-12">
       <div className="mx-auto max-w-2xl px-6">
@@ -272,11 +380,31 @@ function PaymentSuccessContent() {
             </svg>
           </div>
           <h1 className="mb-2 text-3xl font-bold text-white">
-            Successfuly Subscribed! 🎉
+            {isPaymentPending
+              ? "Confirming your payment"
+              : isOneTimeLifetime
+                ? "Purchase complete"
+                : "Successfully subscribed"}
+            {" "}
+            {isPaymentPending ? "…" : "🎉"}
           </h1>
-          <p className="text-zinc-300">
-            Your order has been confirmed and <span className="font-semibold text-green-400">your license key has been sent to your email.</span>
-          </p>
+          {isPaymentPending ? (
+            <p className="text-zinc-300">
+              Stripe has not finished confirming yet, or your server did not receive the webhook.
+              Refresh this page in a minute, check spam for your license email, or open the{" "}
+              <Link href="/portal" className="text-blue-400 underline hover:text-blue-300">
+                customer portal
+              </Link>{" "}
+              while signed in with the same email you used at checkout.
+            </p>
+          ) : (
+            <p className="text-zinc-300">
+              Your order has been confirmed and{" "}
+              <span className="font-semibold text-green-400">
+                your license key has been sent to your email.
+              </span>
+            </p>
+          )}
         </div>
 
         {/* Order Details */}
@@ -305,7 +433,8 @@ function PaymentSuccessContent() {
                 📥 Download Your Software
               </h2>
               <p className="mb-4 text-sm text-blue-200">
-                Click the button below to download the TelegramSignalBot Installer:
+                Click the button below to download{" "}
+                <span className="font-medium text-white">{installerFileName}</span>:
               </p>
               <button
                 onClick={() => {
@@ -319,7 +448,7 @@ function PaymentSuccessContent() {
                   // Create a temporary link and trigger download
                   const link = document.createElement('a');
                   link.href = orderDetails.downloadUrl;
-                  link.download = 'TelegramSignalBot Installer.exe';
+                  link.download = installerFileName;
                   document.body.appendChild(link);
                   link.click();
                   document.body.removeChild(link);
@@ -418,8 +547,14 @@ function PaymentSuccessContent() {
               )}
               <div className="flex justify-between pt-2">
                 <span className="text-zinc-400">Status</span>
-                <span className="rounded-full bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">
-                  Paid
+                <span
+                  className={
+                    isPaymentPending
+                      ? "rounded-full bg-amber-500/20 px-3 py-1 text-xs font-medium text-amber-400"
+                      : "rounded-full bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400"
+                  }
+                >
+                  {isPaymentPending ? "Processing" : "Paid"}
                 </span>
               </div>
             </div>

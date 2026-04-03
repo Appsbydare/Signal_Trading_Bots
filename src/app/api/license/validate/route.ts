@@ -257,7 +257,6 @@ export async function POST(request: NextRequest) {
     try {
       await sendNewDeviceEmail({
         to: license.email,
-        licenseKey: license.license_key,
         deviceName: deviceId.substring(0, 16), // Partial device ID for privacy
         activatedAt: nowIso,
       });

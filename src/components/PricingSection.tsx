@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, Variants, AnimatePresence } from "framer-motion";
 import { DarkProductCard } from "./DarkProductCard";
+import { discountPercentOff, PLAN_LIST_USD, PLAN_SALE_USD } from "@/lib/plan-pricing";
 
 const staggerContainer: Variants = {
     hidden: { opacity: 0 },
@@ -281,6 +282,19 @@ export function PricingSection() {
 
                         const showPromoOffer = plan.name === "Starter" && customerLicenses.length === 0;
 
+                        const promoStarterPct = discountPercentOff(
+                            PLAN_LIST_USD.starter_yearly,
+                            PLAN_SALE_USD.starter_yearly
+                        );
+                        const promoProPct = discountPercentOff(
+                            PLAN_LIST_USD.pro_yearly,
+                            PLAN_SALE_USD.pro_yearly
+                        );
+                        const promoLifetimePct = discountPercentOff(
+                            PLAN_LIST_USD.lifetime,
+                            PLAN_SALE_USD.lifetime
+                        );
+
                         return (
                             <motion.div key={plan.name} variants={cardVariants} className="h-full">
                                 <DarkProductCard
@@ -288,10 +302,10 @@ export function PricingSection() {
                                     badge={plan.badge}
                                     price={
                                         plan.name === "Starter"
-                                            ? "$98/YEAR"
+                                            ? `$${PLAN_SALE_USD.starter_yearly}/YEAR`
                                             : plan.name === "Pro"
-                                                ? "$188/YEAR"
-                                                : "$299 ONE-TIME"
+                                                ? `$${PLAN_SALE_USD.pro_yearly}/YEAR`
+                                                : `$${PLAN_SALE_USD.lifetime} ONE-TIME`
                                     }
                                     gradientFrom={
                                         plan.name === "Starter" ? "#0a1628" :
@@ -312,8 +326,20 @@ export function PricingSection() {
                                                 ? "/payment?plan=pro_yearly"
                                                 : "/payment?plan=lifetime"
                                     }
-                                    offerBadge={plan.name === "Lifetime" ? "70% OFF" : undefined}
-                                    originalPrice={plan.name === "Lifetime" ? "$997" : undefined}
+                                    offerBadge={
+                                        plan.name === "Starter"
+                                            ? `${promoStarterPct}% OFF`
+                                            : plan.name === "Pro"
+                                                ? `${promoProPct}% OFF`
+                                                : `${promoLifetimePct}% OFF`
+                                    }
+                                    originalPrice={
+                                        plan.name === "Starter"
+                                            ? `$${PLAN_LIST_USD.starter_yearly}`
+                                            : plan.name === "Pro"
+                                                ? `$${PLAN_LIST_USD.pro_yearly}`
+                                                : `$${PLAN_LIST_USD.lifetime}`
+                                    }
                                     viewDetailsHref="/products"
                                     isCurrentPlan={isCurrentPlan}
                                     expiresAt={expiresAt}

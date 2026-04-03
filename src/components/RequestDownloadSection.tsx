@@ -2,7 +2,21 @@
 
 import { useState } from "react";
 
-export function RequestDownloadSection() {
+type PortalProductId = "SIGNAL_TRADING_BOTS" | "ORB_BOT";
+
+interface RequestDownloadSectionProps {
+    productId?: PortalProductId;
+    /** e.g. "TelegramSignalBot Installer" */
+    installerLabel: string;
+    /** Short product name for headings */
+    productTitle: string;
+}
+
+export function RequestDownloadSection({
+    productId = "SIGNAL_TRADING_BOTS",
+    installerLabel,
+    productTitle,
+}: RequestDownloadSectionProps) {
     const [requesting, setRequesting] = useState(false);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -13,6 +27,8 @@ export function RequestDownloadSection() {
         try {
             const response = await fetch("/api/portal/request-download", {
                 method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ productId }),
             });
 
             const data = await response.json();
@@ -41,9 +57,11 @@ export function RequestDownloadSection() {
     return (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 shadow-sm">
             <div className="mb-4">
-                <h2 className="text-lg font-semibold text-white">Download Software</h2>
+                <h2 className="text-lg font-semibold text-white">
+                    Download {productTitle}
+                </h2>
                 <p className="text-sm text-zinc-400">
-                    Request a secure download link for the TelegramSignalBot Installer
+                    Request a secure download link for the {installerLabel}
                 </p>
             </div>
 

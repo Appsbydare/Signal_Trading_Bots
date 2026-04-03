@@ -10,6 +10,7 @@ import { ComingSoonMessage } from "@/components/ComingSoonMessage";
 import TelegramLogo from "../../../assets/telegram.webp";
 import MT5Logo from "../../../assets/mt5.png";
 import { TrialBanner } from "@/components/TrialBanner";
+import { discountPercentOff, PLAN_LIST_USD, PLAN_SALE_USD } from "@/lib/plan-pricing";
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -107,7 +108,7 @@ const pricingPlans = [
   },
 ];
 
-type ProductId = "telegram-mt5" | "whatsapp-mt" | "ma-crossing" | "rsi-bot";
+type ProductId = "telegram-mt5" | "orb-bot" | "whatsapp-mt" | "ma-crossing" | "rsi-bot";
 
 const products = [
   {
@@ -122,6 +123,19 @@ const products = [
       "Multi‑TP, SL and risk‑based position sizing options",
       "Strategy‑level controls for prop firm style guardrails",
       "Ideal for traders who want reliable, low‑maintenance automation",
+    ],
+  },
+  {
+    id: "orb-bot" as ProductId,
+    name: "ORB Bot (Open Range Breakout)",
+    status: "Current product",
+    statusTone: "primary",
+    description:
+      "Automated Open Range Breakout strategy execution with precision and high performance.",
+    bullets: [
+      "Identifies the opening range and executes breakouts automatically",
+      "Advanced risk management and trailing stop features",
+      "Built for running on a Windows PC or VPS with low latency",
     ],
   },
   {
@@ -167,7 +181,9 @@ const products = [
 
 export function ProductsPageClient() {
   const [activeProduct, setActiveProduct] = useState<ProductId>("telegram-mt5");
-  const [customerLicenses, setCustomerLicenses] = useState<Array<{ plan: string, expires_at: string }>>([]);
+  const [customerLicenses, setCustomerLicenses] = useState<
+    Array<{ plan: string; expires_at: string; product_id?: string }>
+  >([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loadingLicenses, setLoadingLicenses] = useState(true);
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("yearly");
@@ -416,119 +432,172 @@ export function ProductsPageClient() {
                   </div>
 
                   {/* Pricing Section or Coming Soon */}
-                  {activeProduct === "telegram-mt5" ? (
+                  {activeProduct === "telegram-mt5" || activeProduct === "orb-bot" ? (
                     <div>
-                      {/* Trial Banner moved here - Only show if user has NO licenses */}
-                      {/* {!loadingLicenses && customerLicenses.length === 0 && <TrialBanner />} */}
-
-                      {/* Pricing Cards - Horizontal */}
-                      <div className="grid gap-4 md:grid-cols-3">
-                        {pricingPlans.map((plan) => {
-                          const planKey = plan.name.toLowerCase();
-                          const license = customerLicenses.find((l: any) =>
-                            l.plan.toLowerCase().startsWith(planKey)
-                          );
-                          const isCurrentPlan = !!license;
-                          const expiresAt = license?.expires_at;
-                          const daysRemaining = expiresAt
-                            ? Math.max(
-                              0,
-                              Math.ceil(
-                                (new Date(expiresAt).getTime() - new Date().getTime()) /
-                                (1000 * 60 * 60 * 24)
-                              )
-                            )
-                            : undefined;
-
-                          const showPromoOffer =
-                            plan.name === "Starter" && customerLicenses.length === 0;
-                          const isLifetime = plan.name === "Lifetime";
-
-                          const hasMonthlyPlan =
-                            license && !license.plan.toLowerCase().includes("yearly") && !isLifetime;
-                          const isViewingYearly = billingInterval === "yearly" && !isLifetime;
-                          const canUpgradeToYearly = hasMonthlyPlan && isViewingYearly;
-
-                          let proratedCredit = 0;
-                          if (canUpgradeToYearly && daysRemaining) {
-                            const monthlyPrice = plan.name === "Pro" ? 29 : 9;
-                            const dailyRate = monthlyPrice / 30;
-                            proratedCredit = Math.min(
-                              Math.ceil(dailyRate * daysRemaining),
-                              monthlyPrice
+                      {activeProduct === "telegram-mt5" ? (
+                        <div className="grid gap-4 md:grid-cols-3">
+                          {pricingPlans.map((plan) => {
+                            const planKey = plan.name.toLowerCase();
+                            const license = customerLicenses.find((l: any) =>
+                              l.plan.toLowerCase().startsWith(planKey)
                             );
-                          }
+                            const isCurrentPlan = !!license;
+                            const expiresAt = license?.expires_at;
+                            const daysRemaining = expiresAt
+                              ? Math.max(
+                                0,
+                                Math.ceil(
+                                  (new Date(expiresAt).getTime() - new Date().getTime()) /
+                                  (1000 * 60 * 60 * 24)
+                                )
+                              )
+                              : undefined;
 
-                          const hasActiveStarter = customerLicenses.some((l: any) => {
-                            const isStarter = l.plan.toLowerCase().includes('starter');
-                            const isActiveStatus = l.status?.toLowerCase() === 'active';
-                            const isNotExpired = l.expires_at ? new Date(l.expires_at) > new Date() : false;
-                            return isStarter && (isActiveStatus || isNotExpired);
-                          });
+                            const showPromoOffer =
+                              plan.name === "Starter" && customerLicenses.length === 0;
+                            const isLifetime = plan.name === "Lifetime";
 
-                          return (
-                            <DarkProductCard
-                              key={plan.name}
-                              name={plan.name}
-                              badge={plan.badge}
-                              offerBadge={plan.name === "Lifetime" ? "70% OFF" : undefined}
-                              originalPrice={plan.name === "Lifetime" ? "$997" : undefined}
-                              gradientFrom={
-                                plan.name === "Starter" ? "#0a1628" :
-                                  plan.name === "Pro" ? "#0072ff" : "#05036deb"
-                              }
-                              gradientTo={
-                                plan.name === "Starter" ? "#1e40af" :
-                                  plan.name === "Pro" ? "#00c6ff" : "#0059ffff"
-                              }
-                              price={
-                                plan.name === "Starter"
-                                  ? "$98/YEAR"
-                                  : plan.name === "Pro"
-                                    ? "$188/YEAR"
-                                    : "$299 ONE-TIME"
-                              }
-                              yearlyNote={
-                                plan.name === "Lifetime"
-                                  ? "All future versions and features included"
-                                  : billingInterval === "monthly"
-                                    ? "Save 10% with yearly billing"
-                                    : "Billed annually (10% discount applied)"
-                              }
-                              features={plan.features}
-                              featured={plan.featured}
-                              paymentLink={
-                                plan.name === "Starter"
-                                  ? `/payment?plan=${billingInterval === "monthly" ? "starter" : "starter_yearly"
-                                  }`
-                                  : plan.name === "Pro"
-                                    ? `/payment?plan=${billingInterval === "monthly" ? "pro" : "pro_yearly"
-                                    }`
-                                    : "/payment?plan=lifetime"
-                              }
-                              onViewDetailsClick={handleViewDetails}
-                              isCurrentPlan={isCurrentPlan}
-                              expiresAt={expiresAt}
-                              daysRemaining={daysRemaining}
-                              showPromoOffer={showPromoOffer}
-                              isLifetime={isLifetime}
-                              canUpgradeToYearly={canUpgradeToYearly}
-                              upgradeYearlyLink={
-                                canUpgradeToYearly
-                                  ? `/payment?plan=${plan.name.toLowerCase()}_yearly&upgrade=true&credit=${proratedCredit.toFixed(
-                                    2
-                                  )}`
-                                  : undefined
-                              }
-                              proratedCredit={proratedCredit}
-                              billingInterval={billingInterval}
-                              onBillingIntervalChange={setBillingInterval}
-                              rating={plan.rating}
-                              reviewCount={plan.reviewCount}
-                            />
-                          );
-                        })}
-                      </div>
+                            const promoStarterPct = discountPercentOff(
+                              PLAN_LIST_USD.starter_yearly,
+                              PLAN_SALE_USD.starter_yearly
+                            );
+                            const promoProPct = discountPercentOff(
+                              PLAN_LIST_USD.pro_yearly,
+                              PLAN_SALE_USD.pro_yearly
+                            );
+                            const promoLifetimePct = discountPercentOff(
+                              PLAN_LIST_USD.lifetime,
+                              PLAN_SALE_USD.lifetime
+                            );
+
+                            const hasMonthlyPlan =
+                              license && !license.plan.toLowerCase().includes("yearly") && !isLifetime;
+                            const isViewingYearly = billingInterval === "yearly" && !isLifetime;
+                            const canUpgradeToYearly = hasMonthlyPlan && isViewingYearly;
+
+                            let proratedCredit = 0;
+                            if (canUpgradeToYearly && daysRemaining) {
+                              const monthlyPrice = plan.name === "Pro" ? 29 : 9;
+                              const dailyRate = monthlyPrice / 30;
+                              proratedCredit = Math.min(
+                                Math.ceil(dailyRate * daysRemaining),
+                                monthlyPrice
+                              );
+                            }
+
+                            return (
+                              <DarkProductCard
+                                key={plan.name}
+                                name={plan.name}
+                                badge={plan.badge}
+                                offerBadge={
+                                  plan.name === "Starter"
+                                    ? `${promoStarterPct}% OFF`
+                                    : plan.name === "Pro"
+                                      ? `${promoProPct}% OFF`
+                                      : `${promoLifetimePct}% OFF`
+                                }
+                                originalPrice={
+                                  plan.name === "Starter"
+                                    ? `$${PLAN_LIST_USD.starter_yearly}`
+                                    : plan.name === "Pro"
+                                      ? `$${PLAN_LIST_USD.pro_yearly}`
+                                      : `$${PLAN_LIST_USD.lifetime}`
+                                }
+                                gradientFrom={
+                                  plan.name === "Starter" ? "#0a1628" :
+                                    plan.name === "Pro" ? "#0072ff" : "#05036deb"
+                                }
+                                gradientTo={
+                                  plan.name === "Starter" ? "#1e40af" :
+                                    plan.name === "Pro" ? "#00c6ff" : "#0059ffff"
+                                }
+                                price={
+                                  plan.name === "Starter"
+                                    ? `$${PLAN_SALE_USD.starter_yearly}/YEAR`
+                                    : plan.name === "Pro"
+                                      ? `$${PLAN_SALE_USD.pro_yearly}/YEAR`
+                                      : `$${PLAN_SALE_USD.lifetime} ONE-TIME`
+                                }
+                                yearlyNote={
+                                  plan.name === "Lifetime"
+                                    ? "All future versions and features included"
+                                    : billingInterval === "monthly"
+                                      ? "Save 10% with yearly billing"
+                                      : "Billed annually at promotional price"
+                                }
+                                features={plan.features}
+                                featured={plan.featured}
+                                paymentLink={
+                                  plan.name === "Starter"
+                                    ? `/payment?plan=${billingInterval === "monthly" ? "starter" : "starter_yearly"}&product=${activeProduct}`
+                                    : plan.name === "Pro"
+                                      ? `/payment?plan=${billingInterval === "monthly" ? "pro" : "pro_yearly"}&product=${activeProduct}`
+                                      : `/payment?plan=lifetime&product=${activeProduct}`
+                                }
+                                onViewDetailsClick={handleViewDetails}
+                                isCurrentPlan={isCurrentPlan}
+                                expiresAt={expiresAt}
+                                daysRemaining={daysRemaining}
+                                showPromoOffer={showPromoOffer}
+                                isLifetime={isLifetime}
+                                canUpgradeToYearly={canUpgradeToYearly}
+                                upgradeYearlyLink={
+                                  canUpgradeToYearly
+                                    ? `/payment?plan=${plan.name.toLowerCase()}_yearly&upgrade=true&credit=${proratedCredit.toFixed(
+                                      2
+                                    )}&product=${activeProduct}`
+                                    : undefined
+                                }
+                                proratedCredit={proratedCredit}
+                                billingInterval={billingInterval}
+                                onBillingIntervalChange={setBillingInterval}
+                                rating={plan.rating}
+                                reviewCount={plan.reviewCount}
+                              />
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="mx-auto max-w-lg">
+                          {(() => {
+                            const promoOrbPct = discountPercentOff(
+                              PLAN_LIST_USD.orb_lifetime,
+                              PLAN_SALE_USD.orb_lifetime
+                            );
+                            const orbLicense = customerLicenses.find(
+                              (l) =>
+                                l.plan?.toLowerCase() === "orb_lifetime" ||
+                                l.product_id === "ORB_BOT"
+                            );
+                            return (
+                              <DarkProductCard
+                                name="ORB Bot"
+                                badge="Lifetime — one-time"
+                                offerBadge={`${promoOrbPct}% OFF`}
+                                originalPrice={`$${PLAN_LIST_USD.orb_lifetime}`}
+                                gradientFrom="#0f172a"
+                                gradientTo="#c2410c"
+                                price={`$${PLAN_SALE_USD.orb_lifetime} ONE-TIME`}
+                                yearlyNote="All future ORB Bot updates included — no subscription"
+                                features={[
+                                  "Open Range Breakout automation on MT5",
+                                  "Risk controls, trailing & session filters",
+                                  "Windows PC / VPS installer + license key",
+                                ]}
+                                featured
+                                paymentLink="/payment?plan=orb_lifetime&product=orb-bot"
+                                onViewDetailsClick={handleViewDetails}
+                                isCurrentPlan={!!orbLicense}
+                                expiresAt={orbLicense?.expires_at}
+                                isLifetime
+                                rating={4.7}
+                                reviewCount={92}
+                              />
+                            );
+                          })()}
+                        </div>
+                      )}
 
                       {/* Help text */}
                       <div className="mt-8 text-center text-sm text-zinc-400">
@@ -550,54 +619,56 @@ export function ProductsPageClient() {
           </motion.div>
         </section>
 
-        {/* Key Features Section */}
-        <motion.section
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={staggerContainer}
-          className="py-16"
-        >
-          <motion.div variants={fadeInUp} className="text-center mb-12">
-            <h2 className="text-2xl font-bold text-white mb-3">
-              BUILT FOR REAL TELEGRAM SIGNAL WORKFLOWS
-            </h2>
-            <p className="text-sm text-zinc-400 max-w-3xl mx-auto">
-              Simple to configure, but powerful enough to handle multiple take-profits, risk-based sizing, and
-              different signal formats.
-            </p>
-          </motion.div>
+        {/* Key Features — Telegram product only (ORB has its own bullets above) */}
+        {activeProduct === "telegram-mt5" && (
+          <motion.section
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="py-16"
+          >
+            <motion.div variants={fadeInUp} className="text-center mb-12">
+              <h2 className="text-2xl font-bold text-white mb-3">
+                BUILT FOR REAL TELEGRAM SIGNAL WORKFLOWS
+              </h2>
+              <p className="text-sm text-zinc-400 max-w-3xl mx-auto">
+                Simple to configure, but powerful enough to handle multiple take-profits, risk-based sizing, and
+                different signal formats.
+              </p>
+            </motion.div>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            {[
-              {
-                title: "24/7 AUTOMATION",
-                description: "Let the bot watch your Telegram channels and execute MT5 trades around the clock.",
-              },
-              {
-                title: "MULTI-TP & SL LOGIC",
-                description: "Configure multiple take-profit levels, stop loss, and partial closes based on your strategy.",
-              },
-              {
-                title: "RISK-BASED SIZING",
-                description: "Control position size by fixed lot or percentage risk per trade on supported MT5 brokers.",
-              },
-              {
-                title: "FLEXIBLE MAPPING",
-                description: "Adapt to different Telegram signal formats with configurable mapping rules.",
-              },
-            ].map((feature, index) => (
-              <motion.div
-                key={index}
-                variants={cardVariants}
-                className="rounded-xl border border-blue-500/30 bg-gradient-to-br from-slate-900 to-black p-6 shadow-lg hover:border-blue-500/50 transition-colors"
-              >
-                <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
-                <p className="text-sm text-zinc-400 leading-relaxed">{feature.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.section>
+            <div className="grid gap-6 md:grid-cols-2">
+              {[
+                {
+                  title: "24/7 AUTOMATION",
+                  description: "Let the bot watch your Telegram channels and execute MT5 trades around the clock.",
+                },
+                {
+                  title: "MULTI-TP & SL LOGIC",
+                  description: "Configure multiple take-profit levels, stop loss, and partial closes based on your strategy.",
+                },
+                {
+                  title: "RISK-BASED SIZING",
+                  description: "Control position size by fixed lot or percentage risk per trade on supported MT5 brokers.",
+                },
+                {
+                  title: "FLEXIBLE MAPPING",
+                  description: "Adapt to different Telegram signal formats with configurable mapping rules.",
+                },
+              ].map((feature, index) => (
+                <motion.div
+                  key={index}
+                  variants={cardVariants}
+                  className="rounded-xl border border-blue-500/30 bg-gradient-to-br from-slate-900 to-black p-6 shadow-lg hover:border-blue-500/50 transition-colors"
+                >
+                  <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">{feature.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.section>
+        )}
       </div>
     </div>
   );

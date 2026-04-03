@@ -327,7 +327,7 @@ export default function Home() {
     {
       name: "Starter",
       badge: "Basic plan",
-      price: "$98/YEAR",
+      price: "$59/YEAR",
       yearlyNote: "",
       features: [
         "MT5 Auto-Execution",
@@ -342,7 +342,7 @@ export default function Home() {
       name: "Pro",
       badge: "Most popular",
       featured: true,
-      price: "$188/YEAR",
+      price: "$79/YEAR",
       yearlyNote: "",
       features: [
         "Everything in Starter",
@@ -357,7 +357,7 @@ export default function Home() {
       name: "Lifetime",
       badge: "One-time payment",
       featured: false,
-      price: "$299 ONE-TIME",
+      price: "$129 ONE-TIME",
       yearlyNote: "",
       features: [
         "Everything in Pro",

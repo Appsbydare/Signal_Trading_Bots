@@ -1,122 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyWebhookSignature, stripe, getPlanFromPrice, normalizePlanName, PLAN_RANK } from '@/lib/stripe-server';
-import { generateLicenseKey } from '@/lib/license-keys';
-import { sendStripeLicenseEmail, sendAdminNotificationEmail, sendTrialEndingEmail } from '@/lib/email-stripe';
-import { sendTelegramAdminNotification } from '@/lib/telegram';
-import { getStripeOrderByPaymentIntent, updateStripeOrderByPaymentIntent } from '@/lib/orders-supabase';
-import { createLicense, getLicensesForEmail, upgradeLicense, getLicenseByKey } from '@/lib/license-db';
-import { getCustomerByEmail, createCustomer } from '@/lib/auth-users';
+import { licenseProductIdFromPlan, type LicenseProductId } from '@/lib/license-products';
+import { sendStripeLicenseEmail, sendTrialEndingEmail } from '@/lib/email-stripe';
 import { createMagicLinkToken } from '@/lib/auth-tokens';
-import { createDownloadToken, getExeFileName } from '@/lib/download-tokens';
-import { isR2Enabled } from '@/lib/r2-client';
+import { createDownloadToken } from '@/lib/download-tokens';
+import { getInstallerFileNameForProduct, isR2Enabled } from '@/lib/r2-client';
+import { getStripeOrderByPaymentIntent, updateStripeOrderByPaymentIntent } from '@/lib/orders-supabase';
+import { createLicense, getLicenseByKey } from '@/lib/license-db';
 import { createSubscription, updateSubscriptionStatus, getSubscriptionByStripeId } from '@/lib/subscription-db';
+import { handleStripePostPurchase } from '@/lib/stripe-post-purchase';
+import { fulfillOneTimePaymentIntent } from '@/lib/stripe-one-time-fulfillment';
 import Stripe from 'stripe';
-
-// Helper to handle post-purchase actions (customer creation, emails)
-async function handlePostPurchase(
-  email: string,
-  fullName: string,
-  licenseKey: string,
-  plan: string,
-  amount: number,
-  orderId: string,
-  request: NextRequest,
-  downloadLinkEnabled: boolean = true,
-  options: { country?: string; stripeLink?: string } = {}
-) {
-  // 1. Check/Create Customer & Magic Link
-  let customer = await getCustomerByEmail(email);
-  if (!customer) {
-    try {
-      const randomPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
-      customer = await createCustomer({
-        email: email,
-        password: randomPassword,
-        name: fullName,
-      });
-      console.log("Auto-created customer for email:", email);
-    } catch (err: any) {
-      console.error("Failed to auto-create customer:", err);
-      if (err.code === '23505') {
-        customer = await getCustomerByEmail(email);
-      }
-    }
-  }
-
-  let magicLinkUrl = "https://www.signaltradingbots.com/login";
-  try {
-    const host = request.headers.get("host") || "www.signaltradingbots.com";
-    const protocol = host.includes("localhost") ? "http" : "https";
-    const token = await createMagicLinkToken(email);
-    magicLinkUrl = `${protocol}://${host}/api/auth/magic-login?token=${token}`;
-  } catch (err) {
-    console.error("Failed to generate magic link:", err);
-  }
-
-  // 2. Generate Download Link
-  let downloadUrl = "";
-  if (downloadLinkEnabled && isR2Enabled()) {
-    try {
-      const ipAddress = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "webhook";
-      const userAgent = request.headers.get("user-agent") || "stripe-webhook";
-      const downloadToken = await createDownloadToken({
-        licenseKey,
-        email: email,
-        fileName: getExeFileName(),
-        ipAddress,
-        userAgent,
-      });
-      const host = request.headers.get("host") || "www.signaltradingbots.com";
-      const protocol = host.includes("localhost") ? "http" : "https";
-      downloadUrl = `${protocol}://${host}/api/download/${downloadToken.token}`;
-    } catch (err) {
-      console.error("Failed to generate download link:", err);
-    }
-  }
-
-  // 3. Send User Email
-  try {
-    await sendStripeLicenseEmail({
-      to: email,
-      fullName: fullName,
-      licenseKey,
-      plan,
-      orderId,
-      amount,
-      magicLinkUrl,
-      downloadUrl,
-    });
-    console.log('License email sent to:', email);
-  } catch (error) {
-    console.error('Failed to send license email:', error);
-  }
-
-  // 4. Send Admin Notification (Email & Telegram)
-  try {
-    await Promise.allSettled([
-      sendAdminNotificationEmail({
-        customerEmail: email,
-        fullName: fullName,
-        licenseKey,
-        plan,
-        amount,
-        orderId,
-      }),
-      sendTelegramAdminNotification({
-        email: email,
-        fullName: fullName,
-        plan,
-        amount,
-        orderId,
-        country: options.country,
-        stripeLink: options.stripeLink,
-      })
-    ]);
-    console.log('Admin notifications sequence completed for:', email);
-  } catch (adminErr) {
-    console.error('Failed to process admin notifications:', adminErr);
-  }
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -196,6 +90,10 @@ export async function POST(request: NextRequest) {
           try {
             await createLicense({
               licenseKey,
+              productId:
+                metadata.product === "orb-bot"
+                  ? "ORB_BOT"
+                  : licenseProductIdFromPlan(plan),
               email,
               plan,
               expiresAt: subPeriodEnd,
@@ -236,7 +134,7 @@ export async function POST(request: NextRequest) {
             }
           }
 
-          await handlePostPurchase(
+          await handleStripePostPurchase(
             email,
             metadata.fullName || "Valued Customer",
             licenseKey,
@@ -247,7 +145,11 @@ export async function POST(request: NextRequest) {
             true, // downloadLinkEnabled
             {
               country: session.customer_details?.address?.country || undefined,
-              stripeLink: `https://dashboard.stripe.com/${session.livemode ? '' : 'test/'}subscriptions/${subscriptionId}`
+              stripeLink: `https://dashboard.stripe.com/${session.livemode ? '' : 'test/'}subscriptions/${subscriptionId}`,
+              licenseProductId:
+                metadata.product === "orb-bot"
+                  ? "ORB_BOT"
+                  : licenseProductIdFromPlan(plan),
             }
           );
         }
@@ -435,8 +337,14 @@ export async function POST(request: NextRequest) {
             const amountDollars = amountCents / 100;
 
             try {
+              const subLicProduct: LicenseProductId =
+                metadata.product === "orb-bot"
+                  ? "ORB_BOT"
+                  : licenseProductIdFromPlan(finalPlan || plan || "starter_yearly");
+
               await createLicense({
                 licenseKey,
+                productId: subLicProduct,
                 email: email || '',
                 plan: finalPlan || 'pro_yearly',
                 expiresAt: currentPeriodEnd,
@@ -461,7 +369,7 @@ export async function POST(request: NextRequest) {
                       const downloadToken = await createDownloadToken({
                         licenseKey,
                         email: email,
-                        fileName: getExeFileName(),
+                        fileName: getInstallerFileNameForProduct(subLicProduct),
                         ipAddress: request.headers.get("x-forwarded-for") || "webhook",
                         userAgent: "stripe-webhook-sub",
                       });
@@ -475,7 +383,7 @@ export async function POST(request: NextRequest) {
                     to: email,
                     fullName: fullName,
                     licenseKey: licenseKey,
-                    plan: plan || 'Subscription',
+                    plan: finalPlan || plan || 'starter_yearly',
                     orderId: typeof subscription.latest_invoice === 'string' ? subscription.latest_invoice : subscription.latest_invoice?.id || 'SUB-INV',
                     amount: amountDollars,
                     magicLinkUrl: magicLinkUrl,
@@ -748,104 +656,16 @@ export async function POST(request: NextRequest) {
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         console.log('PaymentIntent succeeded:', paymentIntent.id);
-        console.log('PI Invoice:', (paymentIntent as any).invoice);
 
-        // Ignore if this PI belongs to a subscription invoice (handled by checkout/invoice events)
-        if ((paymentIntent as any).invoice || paymentIntent.description?.includes("Subscription")) {
-          console.log("Skipping payment_intent.succeeded for subscription payment");
-          break;
-        }
-
-        const order = await getStripeOrderByPaymentIntent(paymentIntent.id);
-        if (!order) {
-          return NextResponse.json({ received: true });
-        }
-        if (order.status === 'paid') {
-          return NextResponse.json({ received: true, message: 'Already processed' });
-        }
-
-        const isUpgrade = paymentIntent.metadata?.isUpgrade === "true";
-        const metaUpgradeLicenseKey = paymentIntent.metadata?.upgradeLicenseKey || "";
-        let licenseKey = "";
-
-        if (isUpgrade) {
-          // Upgrade an existing active (non-lifetime) license to the new plan
-          const licenses = await getLicensesForEmail(order.email);
-          let existingLicense: any = null;
-
-          // Prefer the specific license key passed in metadata
-          if (metaUpgradeLicenseKey) {
-            existingLicense = licenses.find(l => l.license_key === metaUpgradeLicenseKey);
+        const result = await fulfillOneTimePaymentIntent(paymentIntent, request);
+        if (result.outcome === 'skipped') {
+          if (result.reason === 'no_order') {
+            return NextResponse.json({ received: true });
           }
-          // Fall back to any active non-lifetime license
-          if (!existingLicense) {
-            existingLicense = licenses.find(l =>
-              l.status === 'active' && l.plan.toLowerCase() !== 'lifetime'
-            );
-          }
-
-          if (existingLicense) {
-            licenseKey = existingLicense.license_key;
-            const expiresAt = new Date();
-            expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-
-            await upgradeLicense({
-              licenseId: existingLicense.id,
-              newPlan: order.plan,
-              newExpiresAt: expiresAt,
-              paymentId: paymentIntent.id,
-              amount: order.display_price,
-              oldPlan: existingLicense.plan,
-            });
+          if (result.reason !== 'subscription_invoice') {
+            console.log('One-time PI fulfillment skipped:', result.reason, paymentIntent.id);
           }
         }
-
-        if (!licenseKey) {
-          // New License Logic
-          licenseKey = generateLicenseKey();
-          const now = new Date();
-          const expiresAt = new Date(now);
-          const planLower = order.plan.toLowerCase();
-
-          if (planLower === "lifetime") {
-            expiresAt.setFullYear(expiresAt.getFullYear() + 100);
-          } else if (planLower.includes("yearly")) {
-            expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-          } else {
-            expiresAt.setDate(expiresAt.getDate() + 30);
-          }
-
-          const metaSubscriptionId = paymentIntent.metadata?.subscriptionId;
-
-          await createLicense({
-            licenseKey,
-            email: order.email,
-            plan: order.plan,
-            expiresAt,
-            paymentId: paymentIntent.id,
-            amount: order.display_price,
-            currency: "USD",
-            payment_type: metaSubscriptionId ? 'subscription' : 'one_time',
-            subscription_id: metaSubscriptionId || undefined,
-            subscription_status: metaSubscriptionId ? 'active' : undefined
-          });
-        }
-
-        await updateStripeOrderByPaymentIntent(paymentIntent.id, 'paid', licenseKey);
-        await handlePostPurchase(
-          order.email,
-          order.full_name || "Valued Customer",
-          licenseKey,
-          order.plan,
-          order.display_price,
-          paymentIntent.id,
-          request,
-          true, // downloadLinkEnabled
-          {
-            country: paymentIntent.shipping?.address?.country || undefined,
-            stripeLink: `https://dashboard.stripe.com/${paymentIntent.livemode ? '' : 'test/'}payments/${paymentIntent.id}`
-          }
-        );
         break;
       }
 

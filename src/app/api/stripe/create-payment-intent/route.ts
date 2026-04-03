@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createPaymentIntent, isStripeEnabled, getOrCreateStripeCustomer, createSubscription, stripe } from '@/lib/stripe-server';
 import { createStripeOrder } from '@/lib/orders-supabase';
 import { getPlanConfig, isSubscriptionPlan } from '@/lib/stripe-products';
-import { generateLicenseKey } from '@/lib/license-keys';
+import { generateLicenseKeyForProduct } from '@/lib/license-keys';
 import Stripe from 'stripe';
 
 export async function POST(request: NextRequest) {
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { plan, email, fullName, country, isUpgrade, creditAmount, upgradeLicenseKey } = body;
+    const { plan, product = "telegram-mt5", email, fullName, country, isUpgrade, creditAmount, upgradeLicenseKey } = body;
 
     // Validate required fields
     if (!plan || !email || !fullName || !country) {
@@ -53,7 +53,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Generate license key upfront
-    const licenseKey = generateLicenseKey();
+    const licenseProductId = product === "orb-bot" ? "ORB_BOT" : "SIGNAL_TRADING_BOTS";
+    const licenseKey = generateLicenseKeyForProduct(licenseProductId);
     const orderId = `ORD-STRIPE-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
     let clientSecret: string | null = null;
@@ -86,6 +87,7 @@ export async function POST(request: NextRequest) {
         priceId: planConfig.priceId,
         metadata: {
           plan: apiPlanKey,
+          product,
           email,
           fullName,
           country,
@@ -173,7 +175,7 @@ export async function POST(request: NextRequest) {
       await createStripeOrder({
         orderId,
         paymentIntentId: paymentIntent.id,
-        plan: planConfig.name,
+        plan: apiPlanKey,
         email,
         fullName,
         country,
@@ -191,7 +193,8 @@ export async function POST(request: NextRequest) {
 
       const paymentIntent = await createPaymentIntent(displayPrice, {
         orderId,
-        plan: planConfig.name,
+        plan: apiPlanKey,
+        product,
         email,
         fullName,
         country,
@@ -205,7 +208,7 @@ export async function POST(request: NextRequest) {
       await createStripeOrder({
         orderId,
         paymentIntentId: paymentIntent.id,
-        plan: planConfig.name,
+        plan: apiPlanKey,
         email,
         fullName,
         country,

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getSupabaseClient } from "./supabase-storage";
-import { generateInstallerDownloadUrl, getExeFileName } from "./r2-client";
+import { generateInstallerDownloadUrlForFile, getExeFileName } from "./r2-client";
 import { randomBytes } from "crypto";
 
 // Re-export for convenience
@@ -46,8 +46,8 @@ export async function createDownloadToken(
 ): Promise<DownloadTokenRow> {
     const client = getSupabaseClient();
 
-    // Generate R2 signed URL (1 hour expiration)
-    const signedUrl = await generateInstallerDownloadUrl(3600);
+    // Generate R2 signed URL (1 hour expiration) for the requested installer object key
+    const signedUrl = await generateInstallerDownloadUrlForFile(args.fileName, 3600);
 
     // Generate unique token
     const token = generateToken();

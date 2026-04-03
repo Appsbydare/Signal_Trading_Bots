@@ -93,23 +93,32 @@ export interface LicenseSessionRow {
   device_mac: string | null;
   created_at: string;
   last_seen_at: string;
+  /** Set when the session is deactivated; cleared when the same row is reactivated. */
+  ended_at?: string | null;
   active: boolean;
   product_id: LicenseProductId;
 }
 
+/**
+ * @param productId When set, only licenses for that product. When omitted, all products (e.g. portal shows ORB + Telegram bots).
+ */
 export async function getLicensesForEmail(
   email: string,
-  productId: LicenseProductId = "SIGNAL_TRADING_BOTS",
+  productId?: LicenseProductId,
 ): Promise<LicenseRow[]> {
   const client = getSupabaseClient();
-  const { data, error } = await client
+  let query = client
     .from("licenses")
     .select("*")
     .eq("email", email.toLowerCase())
-    .eq("product_id", productId)
-    .neq("status", "revoked") // Exclude revoked licenses
-    .order("created_at", { ascending: false })
-    .returns<LicenseRow[]>();
+    .neq("status", "revoked")
+    .order("created_at", { ascending: false });
+
+  if (productId !== undefined) {
+    query = query.eq("product_id", productId);
+  }
+
+  const { data, error } = await query.returns<LicenseRow[]>();
 
   if (error) {
     throw error;
@@ -133,6 +142,22 @@ export async function getLicenseByKey(
   }
 
   const { data, error } = await query.maybeSingle<LicenseRow>();
+
+  if (error) {
+    throw error;
+  }
+
+  return data ?? null;
+}
+
+/** One license row per successful PaymentIntent (used for idempotent fulfillment). */
+export async function getLicenseByPaymentId(paymentId: string): Promise<LicenseRow | null> {
+  const client = getSupabaseClient();
+  const { data, error } = await client
+    .from("licenses")
+    .select("*")
+    .eq("payment_id", paymentId)
+    .maybeSingle<LicenseRow>();
 
   if (error) {
     throw error;
@@ -224,11 +249,13 @@ export async function refreshSession(sessionId: string, sessionSerial?: string, 
   const gatheredUpdates: {
     last_seen_at: string;
     active: boolean;
+    ended_at: null;
     session_serial?: string;
     device_name?: string;
   } = {
     last_seen_at: new Date().toISOString(),
-    active: true
+    active: true,
+    ended_at: null,
   };
 
   if (sessionSerial) {
@@ -279,9 +306,10 @@ export async function deactivateSession(sessionId: string, notify: boolean = tru
   // 3. Deactivate session (set active = false)
   // We do NOT delete it, so we can keep history logs of past sessions!
   // Customer portal relies on filtered active=true/false lists.
+  const endedAt = new Date().toISOString();
   const { error } = await client
     .from("license_sessions")
-    .update({ active: false })
+    .update({ active: false, ended_at: endedAt })
     .eq("session_id", sessionId);
 
   if (error) {
@@ -314,11 +342,12 @@ export async function expireZombieSessions(): Promise<void> {
       console.log(`[ZombieCleanup] Found ${zombies.length} stale sessions to expire`);
 
       const sessionIds = zombies.map(s => s.session_id);
+      const endedAt = new Date().toISOString();
 
       // Mark them as inactive
       const { error: updateError } = await client
         .from("license_sessions")
-        .update({ active: false })
+        .update({ active: false, ended_at: endedAt })
         .in("session_id", sessionIds);
 
       if (updateError) throw updateError;
@@ -573,9 +602,10 @@ export async function banDevice(deviceId: string, reason?: string, adminEmail?: 
       .eq("device_id", deviceId)
       .eq("active", true);
 
+    const endedAt = new Date().toISOString();
     await client
       .from("license_sessions")
-      .update({ active: false })
+      .update({ active: false, ended_at: endedAt })
       .eq("device_id", deviceId);
 
     // Broadcast ban event to all affected licenses

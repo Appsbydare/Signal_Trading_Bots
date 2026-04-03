@@ -17,6 +17,8 @@ interface StripeCardFormProps {
   isUpgrade?: boolean;
   showDiscount?: boolean;
   originalPrice?: number;
+  /** e.g. "57% OFF" when showing a list-price discount */
+  discountLabel?: string;
 }
 
 export function StripeCardForm({
@@ -29,6 +31,7 @@ export function StripeCardForm({
   isUpgrade,
   showDiscount,
   originalPrice = 997,
+  discountLabel = "70% OFF",
 }: StripeCardFormProps) {
   const stripe = useStripe();
   const elements = useElements();
@@ -60,14 +63,14 @@ export function StripeCardForm({
 
     console.log("Starting payment confirmation...");
 
-    const successUrl = `${window.location.origin}/payment-success?orderId=${orderId}${isUpgrade ? '&isUpgrade=true' : ''}`;
+    const upgradeQs = isUpgrade ? "&isUpgrade=true" : "";
 
     try {
       // Confirm the payment
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: successUrl,
+          return_url: `${window.location.origin}/payment-success?orderId=${orderId}${upgradeQs}`,
         },
         redirect: "if_required",
       });
@@ -79,19 +82,24 @@ export function StripeCardForm({
         onError(error.message || "Payment failed");
         setIsProcessing(false);
       } else if (paymentIntent) {
+        const piQs = `&pi=${encodeURIComponent(paymentIntent.id)}`;
         if (paymentIntent.status === "succeeded") {
           // Payment succeeded
           console.log("Payment succeeded:", paymentIntent.id);
           onSuccess();
           // Use window.location.replace to prevent back button issues
-          window.location.replace(`/payment-success?orderId=${orderId}${isUpgrade ? '&isUpgrade=true' : ''}`);
+          window.location.replace(
+            `/payment-success?orderId=${orderId}${upgradeQs}${piQs}`,
+          );
         } else if (paymentIntent.status === "processing") {
           // Payment is processing
           console.log("Payment processing:", paymentIntent.id);
           setErrorMessage("Payment is processing. Please wait...");
           // Redirect anyway - webhook will handle completion
           setTimeout(() => {
-            window.location.replace(`/payment-success?orderId=${orderId}${isUpgrade ? '&isUpgrade=true' : ''}`);
+            window.location.replace(
+              `/payment-success?orderId=${orderId}${upgradeQs}${piQs}`,
+            );
           }, 2000);
         } else if (paymentIntent.status === "requires_payment_method") {
           // Payment failed - need new payment method
@@ -170,13 +178,17 @@ export function StripeCardForm({
             <span className="text-white">{plan}</span>
           </div>
           <div className="flex justify-between text-zinc-400">
-            <span>Amount</span>
-            <span className="text-white">{showDiscount ? `${originalPrice} usd` : `${amount} usd`}</span>
+            <span>{showDiscount ? "Original" : "Amount"}</span>
+            <span className={showDiscount ? "text-zinc-500 line-through" : "text-white"}>
+              {showDiscount ? `${originalPrice} usd` : `${amount} usd`}
+            </span>
           </div>
           {showDiscount && (
             <div className="flex justify-between text-zinc-400">
-              <span>Discount (70% OFF)</span>
-              <span className="text-amber-400 font-medium">-${originalPrice - amount} usd</span>
+              <span>Discount ({discountLabel})</span>
+              <span className="text-amber-400 font-medium">
+                -${Math.max(0, originalPrice - amount).toFixed(0)} usd
+              </span>
             </div>
           )}
           <div className="border-t border-zinc-700 pt-2">

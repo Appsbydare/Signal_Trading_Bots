@@ -31,6 +31,15 @@ export default async function PortalPage() {
     listTicketsForCustomer(customer.id),
   ]);
 
+  const hasActiveStbLicense = licenses.some(
+    (l) => l.status === "active" && l.product_id === "SIGNAL_TRADING_BOTS",
+  );
+  const hasActiveOrbLicense = licenses.some(
+    (l) =>
+      l.status === "active" &&
+      (l.product_id === "ORB_BOT" || l.plan.toLowerCase() === "orb_lifetime"),
+  );
+
   // Fetch active sessions for all licenses
   // Sort by last_seen_at descending (newest first)
   const sessions = await Promise.all(
@@ -151,8 +160,21 @@ export default async function PortalPage() {
       </section>
 
 
-      {/* Download Software */}
-      <RequestDownloadSection />
+      {/* Download Software — one block per product */}
+      {hasActiveStbLicense && (
+        <RequestDownloadSection
+          productId="SIGNAL_TRADING_BOTS"
+          productTitle="Telegram bot"
+          installerLabel="TelegramSignalBot Installer"
+        />
+      )}
+      {hasActiveOrbLicense && (
+        <RequestDownloadSection
+          productId="ORB_BOT"
+          productTitle="ORB Bot"
+          installerLabel="ORB Bot Windows installer (.exe)"
+        />
+      )}
 
       {/* Promotions banner */}
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 shadow-sm">

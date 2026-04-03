@@ -1,4 +1,5 @@
 import "server-only";
+import { PLAN_SALE_USD } from "@/lib/plan-pricing";
 
 const FROM_EMAIL = process.env.SUPPORT_FROM_EMAIL;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
@@ -106,32 +107,35 @@ export async function sendStripeLicenseEmail(params: {
   downloadUrl?: string; // Optional download URL for installer
 }): Promise<void> {
   if (!RESEND_API_KEY) {
-    console.warn(
-      "RESEND_API_KEY is not configured. License email will not be sent.",
-    );
-    return;
+    throw new Error("RESEND_API_KEY is not configured; license email was not sent.");
   }
 
   if (!FROM_EMAIL) {
-    console.warn(
-      "SUPPORT_FROM_EMAIL is not configured. License email will not be sent.",
-    );
-    return;
+    throw new Error("SUPPORT_FROM_EMAIL is not configured; license email was not sent.");
   }
 
   const planNames: Record<string, string> = {
-    starter_yearly: "Starter Plan ($98/year)",
-    pro_yearly: "Pro Plan ($188/year)",
-    lifetime: "Lifetime License ($299)",
+    starter_yearly: `Starter Plan ($${PLAN_SALE_USD.starter_yearly}/year)`,
+    pro_yearly: `Pro Plan ($${PLAN_SALE_USD.pro_yearly}/year)`,
+    lifetime: `Lifetime License ($${PLAN_SALE_USD.lifetime})`,
+    orb_lifetime: `ORB Bot Lifetime ($${PLAN_SALE_USD.orb_lifetime} one-time)`,
   };
 
-  const planName = planNames[params.plan.toLowerCase()] || params.plan;
-  const isLifetimePlan = params.plan.toLowerCase() === 'lifetime';
+  const planKey = params.plan.toLowerCase();
+  const planName = planNames[planKey] || params.plan;
+  const isLifetimePlan = planKey === "lifetime" || planKey === "orb_lifetime";
+  const isOrb = planKey === "orb_lifetime";
 
   const expiryDate = isLifetimePlan ? 'Never (Lifetime Access)' : 'Renews annually';
 
-  const headline = "Payment Successful";
-  const bodyText = "Thank you for your purchase! Your payment has been processed successfully and your trading bot license is ready to use.";
+  const headline = isOrb ? "ORB Bot — payment successful" : "Payment Successful";
+  const bodyText = isOrb
+    ? "Thank you for your purchase! Your payment was successful. Your <strong>ORB Bot</strong> lifetime license key is below (it starts with <strong>ORB</strong>). Use the download button when shown to get the Windows installer."
+    : "Thank you for your purchase! Your payment has been processed successfully and your trading bot license is ready to use.";
+
+  const downloadBlurb = isOrb
+    ? "Download the <strong>ORB Bot</strong> Windows setup (.exe):"
+    : "Click the button below to download the TelegramSignalBot Installer:";
 
   const html = `
 <!DOCTYPE html>
@@ -139,7 +143,7 @@ export async function sendStripeLicenseEmail(params: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Trading Bot License</title>
+  <title>${isOrb ? "Your ORB Bot License" : "Your Trading Bot License"}</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 0; background-color: #f9fafb;">
   <div style="background: #ffffff; margin: 40px 20px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
@@ -178,7 +182,7 @@ export async function sendStripeLicenseEmail(params: {
       <div style="background-color: #dbeafe; border-left: 3px solid #3b82f6; padding: 20px; margin: 24px 0; border-radius: 6px;">
         <h3 style="margin: 0 0 12px 0; color: #1e40af; font-size: 16px; font-weight: 600;">📥 Download Your Software</h3>
         <p style="margin: 0 0 16px 0; color: #1e40af; font-size: 14px;">
-          Click the button below to download the TelegramSignalBot Installer:
+          ${downloadBlurb}
         </p>
         <div style="text-align: center;">
           <a href="${params.downloadUrl}" style="background-color: #3b82f6; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 15px;">
@@ -217,11 +221,19 @@ export async function sendStripeLicenseEmail(params: {
       
       <h2 style="color: #1f2937; font-size: 18px; margin-top: 32px; margin-bottom: 16px; font-weight: 600;">Getting Started</h2>
       <ol style="padding-left: 20px; color: #374151;">
-        <li style="margin-bottom: 10px; font-size: 14px;">Download the Trading Bot application from our website</li>
+        ${
+          isOrb
+            ? `<li style="margin-bottom: 10px; font-size: 14px;">Download the ORB Bot installer using the button above (or from your payment success page)</li>
+        <li style="margin-bottom: 10px; font-size: 14px;">Install and open the app on Windows</li>
+        <li style="margin-bottom: 10px; font-size: 14px;">Enter your ORB-prefixed license key</li>
+        <li style="margin-bottom: 10px; font-size: 14px;">Connect MT5 and configure ORB session and risk settings</li>
+        <li style="margin-bottom: 10px; font-size: 14px;">Test on demo, then go live</li>`
+            : `<li style="margin-bottom: 10px; font-size: 14px;">Download the Trading Bot application from our website</li>
         <li style="margin-bottom: 10px; font-size: 14px;">Launch the application on your Windows PC or VPS</li>
         <li style="margin-bottom: 10px; font-size: 14px;">Enter your license key when prompted</li>
         <li style="margin-bottom: 10px; font-size: 14px;">Configure your MT5 and Telegram settings</li>
-        <li style="margin-bottom: 10px; font-size: 14px;">Start automating your trades</li>
+        <li style="margin-bottom: 10px; font-size: 14px;">Start automating your trades</li>`
+        }
       </ol>
       
       <div style="background-color: #fef3c7; border-left: 3px solid #f59e0b; padding: 16px; margin: 24px 0; border-radius: 4px;">
@@ -233,8 +245,11 @@ export async function sendStripeLicenseEmail(params: {
     
       <div style="background-color: #dbeafe; border-left: 3px solid #3b82f6; padding: 16px; margin: 24px 0; border-radius: 4px;">
         <p style="margin: 0; color: #1e40af; font-size: 14px;">
-          <strong>Pro Tip:</strong> Start with a demo account to test your signal configurations before going live. 
-          This helps you understand SL/TP settings and avoid costly mistakes.
+          <strong>Pro Tip:</strong> ${
+            isOrb
+              ? "Run ORB Bot on a demo account first to validate session times, range logic, and risk settings before live trading."
+              : "Start with a demo account to test your signal configurations before going live. This helps you understand SL/TP settings and avoid costly mistakes."
+          }
         </p>
       </div>
       
@@ -261,12 +276,6 @@ export async function sendStripeLicenseEmail(params: {
 </html>
   `;
 
-  // Debug logging
-  console.log("🔍 Email Debug Info:");
-  console.log("FROM_EMAIL:", FROM_EMAIL);
-  console.log("SUPPORT_FROM_EMAIL env:", process.env.SUPPORT_FROM_EMAIL);
-  console.log("RESEND_API_KEY exists:", !!RESEND_API_KEY);
-
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -276,7 +285,9 @@ export async function sendStripeLicenseEmail(params: {
     body: JSON.stringify({
       from: FROM_EMAIL,
       to: params.to,
-      subject: `Your ${planName} License Key - Signal Trading Bots`,
+      subject: isOrb
+        ? "Your ORB Bot license key — Signal Trading Bots"
+        : `Your ${planName} License Key - Signal Trading Bots`,
       html: html,
     }),
   });
@@ -301,8 +312,8 @@ export async function sendTrialEndingEmail(params: {
   if (!RESEND_API_KEY || !FROM_EMAIL) return;
 
   const planNames: Record<string, string> = {
-    starter_yearly: "Starter Plan ($98/year)",
-    pro_yearly: "Pro Plan ($188/year)",
+    starter_yearly: `Starter Plan ($${PLAN_SALE_USD.starter_yearly}/year)`,
+    pro_yearly: `Pro Plan ($${PLAN_SALE_USD.pro_yearly}/year)`,
   };
   const planName = planNames[params.plan.toLowerCase()] || params.plan;
   const endDateStr = params.trialEndDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });

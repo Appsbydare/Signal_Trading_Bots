@@ -228,7 +228,6 @@ export async function sendTicketEmail(params: {
 
 export async function sendNewDeviceEmail(params: {
   to: string;
-  licenseKey: string;
   deviceName: string;
   activatedAt: string;
 }): Promise<void> {
@@ -241,6 +240,10 @@ export async function sendNewDeviceEmail(params: {
     console.warn("SUPPORT_FROM_EMAIL is not configured. New device email will not be sent.");
     return;
   }
+
+  const portalBase =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://www.signaltradingbots.com";
+  const portalLicensesUrl = `${portalBase}/portal`;
 
   const activationDate = new Date(params.activatedAt).toLocaleString("en-US", {
     year: "numeric",
@@ -271,12 +274,8 @@ export async function sendNewDeviceEmail(params: {
     <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
-          <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>License Key:</strong></td>
-          <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right; font-family: 'Courier New', monospace;">${params.licenseKey}</td>
-        </tr>
-        <tr>
           <td style="padding: 10px 0; border-bottom: 1px solid #eee;"><strong>Device:</strong></td>
-          <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right;">${params.deviceName || 'Unknown Device'}</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right;">${params.deviceName || "Unknown Device"}</td>
         </tr>
         <tr>
           <td style="padding: 10px 0;"><strong>Activated At:</strong></td>
@@ -284,6 +283,11 @@ export async function sendNewDeviceEmail(params: {
         </tr>
       </table>
     </div>
+
+    <p style="font-size: 14px; color: #555; margin: 16px 0;">
+      For security, your license key is not included in this email. You can view it anytime in your
+      <a href="${portalLicensesUrl}" style="color: #5b21b6;">customer portal</a>.
+    </p>
     
     <div style="background-color: #e8f4f8; border-left: 4px solid #0ea5e9; padding: 15px; margin: 20px 0; border-radius: 4px;">
       <p style="margin: 0; color: #0c4a6e;">
@@ -295,7 +299,7 @@ export async function sendNewDeviceEmail(params: {
     <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0; border-radius: 4px;">
       <p style="margin: 0; color: #7f1d1d;">
         <strong>Not you?</strong><br>
-        If this wasn't you, please contact our support team immediately at <a href="mailto:${FROM_EMAIL}" style="color: #dc2626;">${FROM_EMAIL}</a>. Your license key may have been compromised.
+        If this wasn't you, contact support immediately at <a href="mailto:${FROM_EMAIL}" style="color: #dc2626;">${FROM_EMAIL}</a> so we can help secure your account.
       </p>
     </div>
     
@@ -435,6 +439,8 @@ export async function sendLicenseEmail(params: {
   expiresAt: string;
   price?: number; // Optional price parameter
   paymentMethod?: string; // Optional payment method (card or crypto)
+  /** One-time presigned proxy link (e.g. after crypto verification) */
+  downloadUrl?: string;
 }): Promise<void> {
   if (!RESEND_API_KEY) {
     console.warn(
@@ -454,10 +460,31 @@ export async function sendLicenseEmail(params: {
     monthly: "Monthly Plan",
     yearly: "Yearly Plan",
     lifetime: "Lifetime Plan",
+    orb_lifetime: "ORB Bot (Lifetime)",
     test: "Test License (30 days)",
   };
 
   const planName = planNames[params.plan] || params.plan;
+  const isOrb = params.plan.toLowerCase() === "orb_lifetime";
+  const emailDocTitle = isOrb ? "Your ORB Bot License" : "Your Trading Bot License";
+  const thankYouLead = isOrb
+    ? "Thank you for your purchase! Your <strong>ORB Bot</strong> lifetime license is ready. Your key is <strong>ORB-prefixed</strong> and unlocks the Windows installer linked below (if included)."
+    : "Thank you for your purchase! Your trading bot license is ready to use.";
+  const gettingStartedItems = isOrb
+    ? `<li style="margin-bottom: 10px;">Download the ORB Bot installer from the button in this email (when shown) or from your payment success page</li>
+      <li style="margin-bottom: 10px;">Install on your Windows PC or VPS and launch the application</li>
+      <li style="margin-bottom: 10px;">Enter your ORB license key when prompted</li>
+      <li style="margin-bottom: 10px;">Connect MT5 and configure your ORB session and risk settings</li>
+      <li style="margin-bottom: 10px;">Run the strategy on demo first, then go live when ready</li>`
+    : `<li style="margin-bottom: 10px;">Download and install the Trading Bot application</li>
+      <li style="margin-bottom: 10px;">Launch the application</li>
+      <li style="margin-bottom: 10px;">Enter your license key when prompted</li>
+      <li style="margin-bottom: 10px;">Configure your MT5 and Telegram settings</li>
+      <li style="margin-bottom: 10px;">Start trading!</li>`;
+  const downloadIntro = isOrb
+    ? "Use the button below to download the <strong>ORB Bot</strong> Windows installer:"
+    : "Use the button below to download the installer:";
+
   const expiryDate = new Date(params.expiresAt).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -470,16 +497,16 @@ export async function sendLicenseEmail(params: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Trading Bot License</title>
+  <title>${emailDocTitle}</title>
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to Signal Trading Bots!</h1>
+    <h1 style="color: white; margin: 0; font-size: 28px;">${isOrb ? "Welcome to ORB Bot!" : "Welcome to Signal Trading Bots!"}</h1>
   </div>
   
   <div style="background-color: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
     <p style="font-size: 16px; margin-bottom: 20px;">
-      Thank you for your purchase! Your trading bot license is ready to use.
+      ${thankYouLead}
     </p>
     
     <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
@@ -502,7 +529,7 @@ export async function sendLicenseEmail(params: {
       </table>
     </div>
     
-    ${params.price && params.plan.toLowerCase() !== 'lifetime' ? `
+    ${params.price && params.plan.toLowerCase() !== 'lifetime' && params.plan.toLowerCase() !== 'orb_lifetime' ? `
     <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
       <h3 style="margin: 0 0 15px 0; color: #667eea; font-size: 18px;">Purchase Summary</h3>
       <table style="width: 100%; border-collapse: collapse;">
@@ -551,15 +578,28 @@ export async function sendLicenseEmail(params: {
       `}
     </div>
     ` : ''}
-    
+
+    ${
+      params.downloadUrl
+        ? `
+    <div style="background-color: #dbeafe; border-left: 4px solid #3b82f6; padding: 20px; margin: 24px 0; border-radius: 8px;">
+      <h3 style="margin: 0 0 12px 0; color: #1e40af; font-size: 18px;">Download your installer</h3>
+      <p style="margin: 0 0 16px 0; color: #1e40af; font-size: 14px;">
+        ${downloadIntro} This link expires in about 1 hour and works once. Run the installer on your Windows PC or VPS.
+      </p>
+      <div style="text-align: center;">
+        <a href="${params.downloadUrl}" style="background-color: #2563eb; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 15px;">
+          Download installer
+        </a>
+      </div>
+    </div>
+    `
+        : ""
+    }
     
     <h2 style="color: #667eea; font-size: 20px; margin-top: 30px;">Getting Started</h2>
     <ol style="padding-left: 20px;">
-      <li style="margin-bottom: 10px;">Download and install the Trading Bot application</li>
-      <li style="margin-bottom: 10px;">Launch the application</li>
-      <li style="margin-bottom: 10px;">Enter your license key when prompted</li>
-      <li style="margin-bottom: 10px;">Configure your MT5 and Telegram settings</li>
-      <li style="margin-bottom: 10px;">Start trading!</li>
+      ${gettingStartedItems}
     </ol>
     
     <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
@@ -598,7 +638,9 @@ export async function sendLicenseEmail(params: {
     body: JSON.stringify({
       from: FROM_EMAIL,
       to: params.to,
-      subject: "Your Trading Bot License Key",
+      subject: isOrb
+        ? "Your ORB Bot license key — Signal Trading Bots"
+        : "Your Trading Bot License Key",
       html: html,
     }),
   });

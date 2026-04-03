@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getEmbeddedPrice } from "@/lib/wallets";
 import { getNextWalletFromDB } from "@/lib/wallets-supabase";
 import { createCryptoOrder } from "@/lib/orders-supabase";
+import { CRYPTO_ORDER_BASE_USD } from "@/lib/plan-pricing";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,20 +13,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const priceMap: Record<string, number> = {
-      lifetime: 299,
-      pro_yearly: 188,
-      starter_yearly: 98,
-      pro: 29,
-      starter: 9,
-    };
-
-    if (!priceMap[plan as string]) {
+    if (CRYPTO_ORDER_BASE_USD[plan as string] === undefined) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
 
     // Always derive the base price server-side — never trust client-supplied price
-    const basePrice = priceMap[plan as string];
+    const basePrice = CRYPTO_ORDER_BASE_USD[plan as string];
 
     // Proration credit for upgrades: clamp between 0 and the base price
     let displayPrice: number = basePrice;

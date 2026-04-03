@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentCustomer } from "@/lib/auth-server";
 import { getLicensesForEmail } from "@/lib/license-db";
-import { createDownloadToken, getExeFileName } from "@/lib/download-tokens";
-import { isR2Enabled } from "@/lib/r2-client";
+import { createDownloadToken } from "@/lib/download-tokens";
+import { getInstallerFileNameForProduct, isR2Enabled } from "@/lib/r2-client";
+import type { LicenseProductId } from "@/lib/license-products";
 import { getSupabaseClient } from "@/lib/supabase-storage";
 import { Resend } from "resend";
 
@@ -24,6 +25,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let body: { productId?: string; licenseKey?: string } = {};
+    try {
+      body = await request.json();
+    } catch {
+      body = {};
+    }
+
+    const productId: LicenseProductId =
+      body.productId === "ORB_BOT" ? "ORB_BOT" : "SIGNAL_TRADING_BOTS";
+
     // Check if R2 is configured
     if (!isR2Enabled()) {
       return NextResponse.json(
@@ -40,7 +51,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get customer's licenses
+    const installerFileName = getInstallerFileNameForProduct(productId);
+    const productLabel =
+      productId === "ORB_BOT" ? "ORB Bot" : "TelegramSignalBot";
+
+    // Get customer's licenses (all products)
     const licenses = await getLicensesForEmail(customer.email);
 
     if (licenses.length === 0) {
@@ -50,11 +65,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the most recent active license
-    const activeLicense = licenses.find(l => l.status === "active");
+    let activeLicense = licenses.find(
+      (l) => l.status === "active" && l.product_id === productId,
+    );
+
+    if (body.licenseKey) {
+      const keyMatch = licenses.find(
+        (l) =>
+          l.license_key === body.licenseKey &&
+          l.status === "active" &&
+          l.product_id === productId,
+      );
+      if (!keyMatch) {
+        return NextResponse.json(
+          { error: "That license is not active for this product." },
+          { status: 403 },
+        );
+      }
+      activeLicense = keyMatch;
+    }
+
     if (!activeLicense) {
       return NextResponse.json(
-        { error: "No active licenses found. Please contact support." },
+        {
+          error:
+            productId === "ORB_BOT"
+              ? "No active ORB Bot license found. Purchase ORB Bot lifetime to download."
+              : "No active licenses found. Please contact support.",
+        },
         { status: 404 }
       );
     }
@@ -65,7 +103,7 @@ export async function POST(request: NextRequest) {
       "unknown";
     const userAgent = request.headers.get("user-agent") || "unknown";
 
-    // Check if user has generated a download link in the last 24 hours
+    // One request per product installer per 24h (ORB vs Telegram tracked separately)
     const client = getSupabaseClient();
     const twentyFourHoursAgo = new Date();
     twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
@@ -74,6 +112,7 @@ export async function POST(request: NextRequest) {
       .from("download_tokens")
       .select("created_at")
       .eq("email", customer.email.toLowerCase())
+      .eq("file_name", installerFileName)
       .gte("created_at", twentyFourHoursAgo.toISOString())
       .order("created_at", { ascending: false })
       .limit(1);
@@ -99,7 +138,7 @@ export async function POST(request: NextRequest) {
     const downloadToken = await createDownloadToken({
       licenseKey: activeLicense.license_key,
       email: customer.email,
-      fileName: getExeFileName(),
+      fileName: installerFileName,
       ipAddress,
       userAgent,
     });
@@ -132,7 +171,7 @@ export async function POST(request: NextRequest) {
       </p>
       
       <p style="font-size: 16px; margin-bottom: 28px; color: #374151;">
-        You requested a download link for the TelegramSignalBot Installer. Click the button below to download:
+        You requested a download link for the <strong>${productLabel}</strong> installer (${installerFileName}). Click the button below to download:
       </p>
 
       <!-- Download Button -->
@@ -196,7 +235,10 @@ export async function POST(request: NextRequest) {
     await resend.emails.send({
       from: FROM_EMAIL,
       to: customer.email,
-      subject: "Your TelegramSignalBot Download Link",
+      subject:
+        productId === "ORB_BOT"
+          ? "Your ORB Bot download link"
+          : "Your TelegramSignalBot Download Link",
       html: emailHtml,
     });
 

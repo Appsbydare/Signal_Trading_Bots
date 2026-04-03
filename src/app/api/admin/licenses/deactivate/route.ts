@@ -33,11 +33,12 @@ export async function POST(request: NextRequest) {
   const client = getSupabaseClient();
 
   try {
+    const endedAt = new Date().toISOString();
     if (sessionId) {
       // Deactivate specific session
       const { error } = await client
         .from("license_sessions")
-        .update({ active: false })
+        .update({ active: false, ended_at: endedAt })
         .eq("session_id", sessionId)
         .eq("license_key", licenseKey);
 
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
       // Deactivate all sessions for this license
       const { error } = await client
         .from("license_sessions")
-        .update({ active: false })
+        .update({ active: false, ended_at: endedAt })
         .eq("license_key", licenseKey);
 
       if (error) {
@@ -140,9 +141,10 @@ export async function PATCH(request: NextRequest) {
 
     // If revoking, also deactivate all sessions
     if (newStatus === "revoked") {
+      const endedAt = new Date().toISOString();
       await client
         .from("license_sessions")
-        .update({ active: false })
+        .update({ active: false, ended_at: endedAt })
         .eq("license_key", licenseKey);
     }
 

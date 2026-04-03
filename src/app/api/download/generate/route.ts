@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createDownloadToken, getExeFileName } from "@/lib/download-tokens";
+import { createDownloadToken } from "@/lib/download-tokens";
 import { getLicenseByKey } from "@/lib/license-db";
-import { isR2Enabled } from "@/lib/r2-client";
+import { getInstallerFileNameForProduct, isR2Enabled } from "@/lib/r2-client";
+import { getProductByLicenseKey } from "@/lib/license-products";
 import { getCurrentCustomer } from "@/lib/auth-server";
 
 /**
@@ -94,11 +95,13 @@ export async function POST(request: NextRequest) {
             "unknown";
         const userAgent = request.headers.get("user-agent") || "unknown";
 
-        // Create download token (this generates the R2 signed URL)
+        const productId = getProductByLicenseKey(licenseKey);
+        const fileName = getInstallerFileNameForProduct(productId);
+
         const downloadToken = await createDownloadToken({
             licenseKey: licenseKey || undefined,
             email,
-            fileName: getExeFileName(),
+            fileName,
             ipAddress,
             userAgent,
         });

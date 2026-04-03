@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCryptoOrder, updateCryptoOrderStatus } from "@/lib/orders-supabase";
-import { generateLicenseKey } from "@/lib/license-keys";
+import { generateLicenseKeyForProduct } from "@/lib/license-keys";
 import { createLicense } from "@/lib/license-db";
 import { sendLicenseEmail } from "@/lib/email";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { licenseProductIdFromPlan } from "@/lib/license-products";
+import { createDownloadToken } from "@/lib/download-tokens";
+import { getInstallerFileNameForProduct, isR2Enabled } from "@/lib/r2-client";
 
 // Verify transaction by TX hash
 export async function POST(request: NextRequest) {
@@ -72,15 +75,15 @@ export async function POST(request: NextRequest) {
     }
 
     if (verified) {
-      // Generate DBOT-style license key
-      const licenseKey = generateLicenseKey();
+      const productId = licenseProductIdFromPlan(order.plan);
+      const licenseKey = generateLicenseKeyForProduct(productId);
 
       // Calculate expiry date based on plan
       const now = new Date();
       const expiresAt = new Date(now);
       const planLower = order.plan.toLowerCase();
 
-      if (planLower === "lifetime") {
+      if (planLower === "lifetime" || planLower === "orb_lifetime") {
         expiresAt.setFullYear(expiresAt.getFullYear() + 100);
       } else if (planLower.includes("yearly")) {
         // Yearly plans: starter_yearly, pro_yearly
@@ -94,6 +97,7 @@ export async function POST(request: NextRequest) {
       try {
         await createLicense({
           licenseKey,
+          productId,
           email: order.email,
           plan: order.plan,
           expiresAt,
@@ -113,6 +117,24 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      let downloadUrl: string | undefined;
+      if (isR2Enabled()) {
+        try {
+          const host = request.headers.get("host") || "www.signaltradingbots.com";
+          const protocol = host.includes("localhost") ? "http" : "https";
+          const dt = await createDownloadToken({
+            licenseKey,
+            email: order.email,
+            fileName: getInstallerFileNameForProduct(productId),
+            ipAddress: getClientIp(request),
+            userAgent: request.headers.get("user-agent") || "crypto-verify",
+          });
+          downloadUrl = `${protocol}://${host}/api/download/${dt.token}`;
+        } catch (e) {
+          console.error("Crypto verify: could not create download token:", e);
+        }
+      }
+
       // Send license key email
       try {
         await sendLicenseEmail({
@@ -120,6 +142,7 @@ export async function POST(request: NextRequest) {
           licenseKey,
           plan: order.plan,
           expiresAt: expiresAt.toISOString(),
+          downloadUrl,
         });
       } catch (emailError) {
         console.error("Failed to send license email:", emailError);

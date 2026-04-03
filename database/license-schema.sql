@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS license_sessions (
   device_mac VARCHAR(50),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  ended_at TIMESTAMPTZ NULL,
   active BOOLEAN NOT NULL DEFAULT TRUE
 );
 

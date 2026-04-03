@@ -3,6 +3,19 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 
+function formatCryptoPlanLabel(plan: string): string {
+  const p = (plan || "").toLowerCase();
+  if (p === "orb_lifetime") return "ORB Bot (Lifetime)";
+  if (p === "lifetime") return "Telegram → MT5 (Lifetime)";
+  if (p.includes("starter")) {
+    return p.includes("yearly") ? "Starter (Yearly)" : "Starter (Monthly)";
+  }
+  if (p.includes("pro")) {
+    return p.includes("yearly") ? "Pro (Yearly)" : "Pro (Monthly)";
+  }
+  return plan.replace(/_/g, " ");
+}
+
 function CryptoPayment() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -93,8 +106,8 @@ function CryptoPayment() {
   useEffect(() => {
     if (!orderId || !mounted) return;
 
-    // Fetch order details
-    fetch(`/api/orders/${orderId}/status`)
+    // Fetch order details (public — guests are not logged in)
+    fetch(`/api/orders/${orderId}/crypto-public`)
       .then((res) => {
         if (!res.ok) {
           // If 404, order might not exist yet or server restarted
@@ -138,7 +151,7 @@ function CryptoPayment() {
         } else if (data === null) {
           // Order not found, retry after a short delay
           setTimeout(() => {
-            fetch(`/api/orders/${orderId}/status`)
+            fetch(`/api/orders/${orderId}/crypto-public`)
               .then((res) => res.json())
               .then((retryData) => {
                 if (retryData && !retryData.error) {
@@ -158,7 +171,7 @@ function CryptoPayment() {
 
     // Poll status every 5 seconds
     const statusInterval = setInterval(() => {
-      fetch(`/api/orders/${orderId}/status`)
+      fetch(`/api/orders/${orderId}/crypto-public`)
         .then((res) => {
           if (!res.ok) {
             // Don't log 404 errors during polling, just skip
@@ -223,8 +236,12 @@ function CryptoPayment() {
 
       const data = await response.json();
 
-      if (data.success) {
-        router.push(`/payment-success?orderId=${orderId}`);
+      if (data.success && data.licenseKey) {
+        router.push(
+          `/payment-success?orderId=${orderId}&licenseKey=${encodeURIComponent(data.licenseKey)}&crypto=1`
+        );
+      } else if (data.success) {
+        router.push(`/payment-success?orderId=${orderId}&crypto=1`);
       } else if (data.redirectTo) {
         router.push(data.redirectTo);
       } else {
@@ -329,7 +346,7 @@ function CryptoPayment() {
             <div>
               <h1 className="text-xl font-semibold text-white">Order #{order.orderId}</h1>
               <div className="mt-1 flex items-center gap-2">
-                <p className="text-sm text-zinc-400">{order.plan} Plan</p>
+                <p className="text-sm text-zinc-400">{formatCryptoPlanLabel(order.plan)}</p>
                 <span className={`rounded border px-2 py-0.5 text-xs font-medium ${network === "TRC20" ? "bg-orange-500/20 text-orange-400 border-orange-500/30" :
                   network === "ERC20" ? "bg-blue-500/20 text-blue-400 border-blue-500/30" :
                     network === "BSC" ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" :

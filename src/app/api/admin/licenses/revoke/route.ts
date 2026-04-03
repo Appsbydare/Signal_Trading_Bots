@@ -58,10 +58,11 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        const endedAt = new Date().toISOString();
         // Deactivate all active sessions for this license
         const { error: sessionError } = await client
             .from("license_sessions")
-            .update({ active: false })
+            .update({ active: false, ended_at: endedAt })
             .eq("license_key", licenseKey)
             .eq("active", true);
 

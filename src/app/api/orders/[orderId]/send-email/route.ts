@@ -4,6 +4,10 @@ import { sendStripeLicenseEmail } from "@/lib/email-stripe";
 import { createMagicLinkToken } from "@/lib/auth-tokens";
 import { getCurrentCustomer } from "@/lib/auth-server";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { getLicenseByKey } from "@/lib/license-db";
+import { createDownloadToken } from "@/lib/download-tokens";
+import { getInstallerFileNameForProduct, isR2Enabled } from "@/lib/r2-client";
+import { licenseProductIdFromPlan } from "@/lib/license-products";
 
 export async function POST(
   request: NextRequest,
@@ -60,6 +64,26 @@ export async function POST(
       console.error("Failed to generate magic link:", err);
     }
 
+    let downloadUrl: string | undefined;
+    if (isR2Enabled() && order.license_key) {
+      try {
+        const lic = await getLicenseByKey(order.license_key);
+        const productId = lic?.product_id ?? licenseProductIdFromPlan(order.plan);
+        const host = request.headers.get("host") || "www.signaltradingbots.com";
+        const protocol = host.includes("localhost") ? "http" : "https";
+        const dt = await createDownloadToken({
+          licenseKey: order.license_key,
+          email: order.email,
+          fileName: getInstallerFileNameForProduct(productId),
+          ipAddress: getClientIp(request),
+          userAgent: request.headers.get("user-agent") || "resend-email",
+        });
+        downloadUrl = `${protocol}://${host}/api/download/${dt.token}`;
+      } catch (e) {
+        console.error("Resend email: could not create download token:", e);
+      }
+    }
+
     // Send email
     try {
       await sendStripeLicenseEmail({
@@ -70,6 +94,7 @@ export async function POST(
         orderId: order.order_id,
         amount: order.display_price,
         magicLinkUrl,
+        downloadUrl,
       });
 
       return NextResponse.json({

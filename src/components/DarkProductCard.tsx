@@ -165,7 +165,13 @@ export function DarkProductCard({
         <div className="mb-6 flex items-baseline justify-end gap-2 text-right">
           {(() => {
             if (offerBadge && originalPrice) {
-              const dealAmount = price.replace(/\D/g, "") || "299";
+              const amountMatch = price.match(/^\$[\d.]+/);
+              const dealAmount = amountMatch?.[0] ?? `$${price.replace(/\D/g, "") || "0"}`;
+              const priceSuffix = price.includes("/")
+                ? price.slice(price.indexOf("/"))
+                : price.includes("ONE-TIME")
+                  ? " ONE-TIME"
+                  : "";
               return (
                 <>
                   <span className="text-3xl font-bold text-zinc-400 line-through">{originalPrice}</span>
@@ -173,7 +179,7 @@ export function DarkProductCard({
                     {dealAmount}
                   </span>
                   <span className="text-xl font-black text-white uppercase tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" style={{ fontFamily: "var(--font-heading)" }}>
-                    usd
+                    {priceSuffix}
                   </span>
                 </>
               );

@@ -29,6 +29,7 @@ export function getPlanFromPrice(price: Stripe.Price | null | undefined, fallbac
     if (priceId === process.env.STRIPE_PRICE_PRO_YEARLY) return 'pro_yearly';
     if (priceId === process.env.STRIPE_PRICE_STARTER_YEARLY) return 'starter_yearly';
     if (priceId === process.env.STRIPE_PRICE_LIFETIME) return 'lifetime';
+    if (priceId === process.env.STRIPE_PRICE_ORB_LIFETIME) return 'orb_lifetime';
   }
 
   // Fallback: match by amount + interval
@@ -36,8 +37,13 @@ export function getPlanFromPrice(price: Stripe.Price | null | undefined, fallbac
   const interval = price.recurring?.interval;
 
   if (interval === 'year') {
-    if (amount === 18800) return 'pro_yearly';
-    if (amount === 9800) return 'starter_yearly';
+    if (amount === 7900 || amount === 18800) return 'pro_yearly';
+    if (amount === 5900 || amount === 9800) return 'starter_yearly';
+  }
+
+  if (!interval && (amount === 9900 || amount === 12900 || amount === 29900)) {
+    if (amount === 9900) return 'orb_lifetime';
+    return 'lifetime';
   }
 
   return fallbackPlan;
@@ -98,6 +104,7 @@ export async function createPaymentIntent(
     email: string;
     fullName: string;
     country: string;
+    product?: string;
     isUpgrade?: string;
     upgradeLicenseKey?: string;
     subscriptionId?: string;

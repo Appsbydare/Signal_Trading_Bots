@@ -1,5 +1,7 @@
 import "server-only";
 
+import { resolveLicenseProductId } from "@/lib/license-product-resolve";
+
 export type LicenseProductId = "SIGNAL_TRADING_BOTS" | "ORB_BOT";
 
 interface ProductSecurityConfig {
@@ -55,4 +57,9 @@ export function getProductByLicenseKey(licenseKey: string): LicenseProductId {
 
 export function normalizeProductId(productId?: string): LicenseProductId {
   return productId === "ORB_BOT" ? "ORB_BOT" : "SIGNAL_TRADING_BOTS";
+}
+
+/** Plan keys such as orb_lifetime / orb_* → ORB; otherwise STB. */
+export function licenseProductIdFromPlan(plan: string): LicenseProductId {
+  return resolveLicenseProductId({ product_id: null, plan, license_key: "" });
 }

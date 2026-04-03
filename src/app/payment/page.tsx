@@ -1,12 +1,13 @@
 "use client";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useState, Suspense, useEffect } from "react";
+import { useState, Suspense, useEffect, useMemo } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { StripeCardForm } from "@/components/StripeCardForm";
 import { EmailVerification } from "@/components/EmailVerification";
 import { CountrySelect } from "@/components/CountrySelect";
+import { discountPercentOff, saleAndListForCheckoutPlan } from "@/lib/plan-pricing";
 
 // Initialize Stripe (only if key is available)
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
@@ -15,19 +16,34 @@ const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 
 function PaymentForm() {
   const searchParams = useSearchParams();
-  const plan = searchParams.get("plan") || "starter_yearly";
-  const isLifetime = plan === "lifetime";
-  const isPro = plan.includes("pro");
+  const product = searchParams.get("product") || "telegram-mt5";
+  const plan =
+    searchParams.get("plan") ||
+    (product === "orb-bot" ? "orb_lifetime" : "starter_yearly");
+  const isOrbLifetime = plan === "orb_lifetime";
+  const isLifetime = plan === "lifetime" || isOrbLifetime;
+  const isPro = plan.includes("pro") && !isOrbLifetime;
   const isYearly = true; // Only yearly plans are supported
 
   const isUpgrade = searchParams.get("upgrade") === "true";
   const creditAmount = parseFloat(searchParams.get("credit") || "0");
 
-  let basePrice = 98;
-  if (isLifetime) basePrice = 299;
-  else if (isPro) basePrice = 188;
+  const { sale: basePrice, list: listPriceUsd } = useMemo(
+    () => saleAndListForCheckoutPlan(plan),
+    [plan]
+  );
+  const promoPercentOff = useMemo(
+    () => discountPercentOff(listPriceUsd, basePrice),
+    [listPriceUsd, basePrice]
+  );
 
-  const planName = isLifetime ? "Lifetime" : isPro ? "Pro (Yearly)" : "Starter (Yearly)";
+  const planName = isOrbLifetime
+    ? "ORB Bot (Lifetime)"
+    : isLifetime
+      ? "Lifetime"
+      : isPro
+        ? "Pro (Yearly)"
+        : "Starter (Yearly)";
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -84,7 +100,8 @@ function PaymentForm() {
             // Only select active, non-lifetime licenses (allow subscriptions)
             const eligible = data.customer.licenses.find((l: any) =>
               l.status === 'active' &&
-              l.plan.toLowerCase() !== 'lifetime'
+              l.plan.toLowerCase() !== 'lifetime' &&
+              l.plan.toLowerCase() !== 'orb_lifetime'
             );
             if (eligible) {
               setSelectedLicenseToUpgrade(eligible.license_key);
@@ -127,7 +144,9 @@ function PaymentForm() {
     const license = licenses.find((l: any) => l.license_key === selectedLicenseToUpgrade);
     if (license && license.expires_at) {
       // Check if license is active monthly
-      const isMonthly = !license.plan.toLowerCase().includes('yearly') && license.plan.toLowerCase() !== 'lifetime';
+      const pl = license.plan.toLowerCase();
+      const isMonthly =
+        !pl.includes("yearly") && pl !== "lifetime" && pl !== "orb_lifetime";
 
       if (isMonthly) {
         const daysRemaining = getDaysRemaining(license.expires_at);
@@ -195,6 +214,7 @@ function PaymentForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           plan,
+          product,
           email: formData.email,
           fullName: formData.fullName,
           country: formData.country,
@@ -272,6 +292,7 @@ function PaymentForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           plan,
+          product,
           email: formData.email,
           fullName: formData.fullName,
           country: formData.country,
@@ -315,6 +336,7 @@ function PaymentForm() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             plan,
+            product,
             email: formData.email,
             fullName: formData.fullName,
             country: formData.country,
@@ -343,10 +365,10 @@ function PaymentForm() {
   };
 
   // NEW Filter: Allow active licenses (including subscriptions), only exclude lifetime
-  const eligibleUpgradeLicenses = licenses.filter((l: any) =>
-    l.status === 'active' &&
-    l.plan.toLowerCase() !== 'lifetime'
-  );
+  const eligibleUpgradeLicenses = licenses.filter((l: any) => {
+    const pl = l.plan.toLowerCase();
+    return l.status === "active" && pl !== "lifetime" && pl !== "orb_lifetime";
+  });
 
 
 
@@ -367,7 +389,9 @@ function PaymentForm() {
         <h1 className="reveal mb-2 text-2xl font-semibold tracking-tight text-white">
           {isLifetime || finalPrice > 0 ? "Complete Your Purchase" : "COMPLETE YOUR FREE TRIAL INFORMATION"}
         </h1>
-        <p className="reveal mb-8 text-sm text-zinc-400">Telegram Trading Bot - {planName} Plan</p>
+        <p className="reveal mb-8 text-sm text-zinc-400">
+          {product === "orb-bot" ? "ORB Bot" : "Telegram Trading Bot"} — {planName} Plan
+        </p>
 
         {loadingUser ? (
           <div className="text-center py-12">
@@ -1097,7 +1121,8 @@ function PaymentForm() {
                       }}
                       isUpgrade={isUpgrade}
                       showDiscount={isLifetime}
-                      originalPrice={997}
+                      originalPrice={listPriceUsd}
+                      discountLabel={`${promoPercentOff}% OFF`}
                     />
                   </Elements>
                 ) : null}
@@ -1138,14 +1163,29 @@ function PaymentForm() {
             {!isSubscriptionDetailsUpgrade && (
               <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between text-zinc-400">
-                    <span>{isLifetime ? "Amount" : "Subtotal"}</span>
-                    <span className="text-white">{isLifetime ? "997 usd" : `${basePrice.toFixed(2)} usd`}</span>
-                  </div>
-                  {isLifetime && (
+                  {promoPercentOff > 0 ? (
+                    <>
+                      <div className="flex justify-between text-zinc-400">
+                        <span>Original</span>
+                        <span className="text-zinc-500 line-through">{listPriceUsd} usd</span>
+                      </div>
+                      <div className="flex justify-between text-zinc-400">
+                        <span>Discount ({promoPercentOff}% OFF)</span>
+                        <span className="text-amber-400 font-medium">
+                          -${Math.max(0, listPriceUsd - basePrice).toFixed(0)} usd
+                        </span>
+                      </div>
+                    </>
+                  ) : (
                     <div className="flex justify-between text-zinc-400">
-                      <span>Discount (70% OFF)</span>
-                      <span className="text-amber-400 font-medium">-${997 - finalPrice} usd</span>
+                      <span>Subtotal</span>
+                      <span className="text-white">{basePrice.toFixed(2)} usd</span>
+                    </div>
+                  )}
+                  {isUpgrade && isLifetime && dynamicCredit > 0 && (
+                    <div className="flex justify-between text-zinc-400">
+                      <span>Upgrade credit</span>
+                      <span className="text-emerald-400 font-medium">-${dynamicCredit.toFixed(2)} usd</span>
                     </div>
                   )}
                   <div className="border-t border-zinc-700 pt-2">

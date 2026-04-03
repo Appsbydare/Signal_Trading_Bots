@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe-server";
 import { getPlanConfig } from "@/lib/stripe-products";
+import { generateLicenseKeyForProduct } from "@/lib/license-keys";
 
 const VALID_PLAN_KEYS = new Set(["starter_yearly", "pro_yearly", "starter", "pro"]);
 
@@ -11,18 +12,9 @@ const PLAN_KEY_MAP: Record<string, "starter_yearly" | "pro_yearly"> = {
     pro_yearly: "pro_yearly",
 };
 
-function generateLicenseKey(): string {
-    const ts = Date.now().toString(36).toUpperCase();
-    const segments: string[] = [ts.slice(-4)];
-    for (let i = 0; i < 4; i++) {
-        segments.push(Math.random().toString(36).substring(2, 6).toUpperCase());
-    }
-    return `STB${segments.join("-")}`;
-}
-
 export async function POST(req: NextRequest) {
     try {
-        const { plan, email, fullName, country } = await req.json();
+        const { plan, product = "telegram-mt5", email, fullName, country } = await req.json();
 
         if (!plan || !email || !fullName || !country) {
             return NextResponse.json(
@@ -59,7 +51,8 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const licenseKey = generateLicenseKey();
+        const licenseProductId = product === "orb-bot" ? "ORB_BOT" : "SIGNAL_TRADING_BOTS";
+        const licenseKey = generateLicenseKeyForProduct(licenseProductId);
 
         const session = await stripe.checkout.sessions.create({
             mode: "subscription",
@@ -76,6 +69,7 @@ export async function POST(req: NextRequest) {
                     licenseKey,
                     email,
                     plan: planKey,
+                    product,
                     fullName,
                     country,
                 },
@@ -84,6 +78,7 @@ export async function POST(req: NextRequest) {
                 licenseKey,
                 email,
                 plan: planKey,
+                product,
                 fullName,
                 country,
             },
