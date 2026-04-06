@@ -1,21 +1,13 @@
 "use client";
 
 import { format } from "date-fns";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { RevokeLicenseButton } from "./RevokeLicenseButton";
 import { LicenseKeyDisplay } from "./LicenseKeyDisplay";
 import toast from "react-hot-toast";
 import { ConfirmationModal } from "@/components/ConfirmationModal";
 import { ChangePlanModal } from "@/components/ChangePlanModal";
-import { resolveLicenseProductId } from "@/lib/license-product-resolve";
-import {
-    formatSessionDurationMs,
-    sessionStintDurationMs,
-    totalSessionsDurationMs,
-    activeSessionElapsedMs,
-} from "@/lib/format-session-duration";
-import { AdminSessionUsageSummary } from "@/components/AdminSessionUsageSummary";
 
 interface LicenseSession {
     id: number;
@@ -24,7 +16,6 @@ interface LicenseSession {
     device_name: string | null;
     created_at: string;
     last_seen_at: string;
-    ended_at?: string | null;
     active: boolean;
 }
 
@@ -84,14 +75,6 @@ export function AdminLicenseRow({ license, plans }: AdminLicenseRowProps) {
     const closeConfirmModal = () => setConfirmModal(prev => ({ ...prev, isOpen: false }));
 
     const [isChangePlanModalOpen, setIsChangePlanModalOpen] = useState(false);
-
-    const hasActiveSessions = license.sessions.some((s) => s.active);
-    const [, setDurationTick] = useState(0);
-    useEffect(() => {
-        if (!hasActiveSessions) return;
-        const id = window.setInterval(() => setDurationTick((n) => n + 1), 30_000);
-        return () => window.clearInterval(id);
-    }, [hasActiveSessions]);
 
     // Get current plan name from license or plans list
     const currentPlanName = plans.find(p => p.key === license.plan || p.priceId === license.plan)?.name || license.plan;
@@ -209,8 +192,6 @@ export function AdminLicenseRow({ license, plans }: AdminLicenseRowProps) {
 
     const activeSessions = license.sessions.filter(s => s.active);
     const pastSessions = license.sessions.filter(s => !s.active).sort((a, b) => new Date(b.last_seen_at).getTime() - new Date(a.last_seen_at).getTime()).slice(0, 20);
-    const totalSessionTimeMs = totalSessionsDurationMs(license.sessions);
-    const totalSessionTimeLabel = formatSessionDurationMs(totalSessionTimeMs);
 
     const getDeviceName = (deviceId: string) => {
         const session = license.sessions.find(s => s.device_id === deviceId);
@@ -227,15 +208,9 @@ export function AdminLicenseRow({ license, plans }: AdminLicenseRowProps) {
         return "bg-zinc-500/20 text-zinc-400";
     };
 
-    const resolvedProduct = resolveLicenseProductId(license);
-    const isOrb = resolvedProduct === "ORB_BOT";
-    const productRowClass = isOrb
-        ? "border-l-[3px] border-l-amber-500/80 bg-amber-950/[0.12]"
-        : "border-l-[3px] border-l-sky-600/70 bg-sky-950/[0.08]";
-
     return (
         <>
-            <tr className={`hover:bg-zinc-800/30 ${expanded ? "bg-zinc-800/10" : ""} group ${productRowClass}`}>
+            <tr className={`hover:bg-zinc-800/30 ${expanded ? "bg-zinc-800/10" : ""} group`}>
                 <td className="px-4 py-3">
                     <LicenseKeyDisplay licenseKey={license.license_key} />
                     {isSubscription && license.subscription_id && (
@@ -247,14 +222,11 @@ export function AdminLicenseRow({ license, plans }: AdminLicenseRowProps) {
                 <td className="px-4 py-3 text-sm text-zinc-300">{license.email}</td>
                 <td className="px-4 py-3">
                     <div className="flex flex-col gap-1 items-start">
-                        <span
-                            className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${isOrb
-                                ? "border border-amber-500/40 bg-amber-500/15 text-amber-200"
-                                : "border border-sky-500/40 bg-sky-500/15 text-sky-200"
-                                }`}
-                        >
-                            {isOrb ? "ORB Bot" : "STB"}
-                        </span>
+                        {license.product_id && (
+                            <span className="text-[10px] font-medium text-zinc-400">
+                                {license.product_id === 'ORB_BOT' ? 'ORB Bot' : 'STB'}
+                            </span>
+                        )}
                         <div className="flex items-center gap-1.5">
                             <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getPlanBadgeStyle(license.plan)}`}>
                                 {currentPlanName}
@@ -317,30 +289,18 @@ export function AdminLicenseRow({ license, plans }: AdminLicenseRowProps) {
                     </div>
                 </td>
                 <td className="px-4 py-3">
-                    <div className="flex flex-col items-start gap-1">
-                        <button
-                            onClick={() => setExpanded(!expanded)}
-                            className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition ${license.active_sessions_count > 0
-                                ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
-                                : "bg-zinc-500/20 text-zinc-500 hover:bg-zinc-500/30"
-                                }`}
-                        >
-                            {license.active_sessions_count} active
-                            <svg className={`h-3 w-3 transform transition ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </button>
-                        <div className="text-[10px] leading-tight text-zinc-500">
-                            <span className="text-zinc-400">{license.sessions.length}</span> session row{license.sessions.length === 1 ? "" : "s"} ·{" "}
-                            <span
-                                className="font-medium text-zinc-300"
-                                title="Sum of login → last ping per row; expand row for full breakdown"
-                            >
-                                {totalSessionTimeLabel}
-                            </span>{" "}
-                            total connected
-                        </div>
-                    </div>
+                    <button
+                        onClick={() => setExpanded(!expanded)}
+                        className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition ${license.active_sessions_count > 0
+                            ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
+                            : "bg-zinc-500/20 text-zinc-500 hover:bg-zinc-500/30"
+                            }`}
+                    >
+                        {license.active_sessions_count} Active
+                        <svg className={`h-3 w-3 transform transition ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
                 </td>
                 <td className="px-4 py-3">
                     {license.status === 'revoked' ? (
@@ -364,10 +324,9 @@ export function AdminLicenseRow({ license, plans }: AdminLicenseRowProps) {
                 </td>
             </tr>
             {expanded && (
-                <tr className={`bg-zinc-900/40 ${productRowClass}`}>
+                <tr className="bg-zinc-900/40">
                     <td colSpan={7} className="px-6 py-4">
                         <div className="space-y-6">
-                            <AdminSessionUsageSummary sessions={license.sessions} />
 
                             {isSubscription && license.subscription_id && (
                                 <div className="rounded-md border border-blue-500/20 bg-blue-500/5 p-3 flex items-center justify-between">
@@ -412,11 +371,8 @@ export function AdminLicenseRow({ license, plans }: AdminLicenseRowProps) {
                             )}
 
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center justify-between">
                                     <h4 className="text-xs font-semibold uppercase tracking-wider text-emerald-500/80">Active Sessions</h4>
-                                    <span className="text-[10px] text-zinc-500">
-                                        Active for = time since login (updates every 30s)
-                                    </span>
                                 </div>
                                 {activeSessions.length === 0 ? (
                                     <p className="text-sm text-zinc-500 italic">No active sessions.</p>
@@ -424,8 +380,6 @@ export function AdminLicenseRow({ license, plans }: AdminLicenseRowProps) {
                                     <div className="grid gap-2">
                                         {activeSessions.map(session => {
                                             const isBanned = license.banned_devices.includes(session.device_id);
-                                            const activeForMs = activeSessionElapsedMs(session);
-                                            const activeForLabel = formatSessionDurationMs(activeForMs);
                                             return (
                                                 <div key={session.id} className="flex items-center justify-between rounded-md bg-emerald-500/10 p-3 border border-emerald-500/20">
                                                     <div className="flex items-center gap-4">
@@ -440,13 +394,10 @@ export function AdminLicenseRow({ license, plans }: AdminLicenseRowProps) {
                                                     </div>
 
                                                     <div className="flex items-center gap-4 text-xs text-zinc-400">
-                                                        <div className="flex flex-col text-right text-[10px] text-zinc-500 mr-2 min-w-[130px]">
+                                                        <div className="flex flex-col text-right text-[10px] text-zinc-500 mr-2">
                                                             {session.created_at && (
                                                                 <span>Login: {new Date(session.created_at).toLocaleString()}</span>
                                                             )}
-                                                            <span className="font-semibold text-emerald-400/90">
-                                                                Active {activeForLabel}
-                                                            </span>
                                                             <span className="text-emerald-500/70">Online</span>
                                                         </div>
                                                         <div className="flex gap-2">
@@ -544,8 +495,6 @@ export function AdminLicenseRow({ license, plans }: AdminLicenseRowProps) {
                                             <div className="grid gap-2 opacity-75 hover:opacity-100 transition-opacity pl-4">
                                                 {pastSessions.map(session => {
                                                     const isBanned = license.banned_devices.includes(session.device_id);
-                                                    const stintMs = sessionStintDurationMs(session);
-                                                    const stintLabel = formatSessionDurationMs(stintMs);
                                                     return (
                                                         <div key={session.id} className="flex items-center justify-between rounded-md bg-zinc-800/30 p-2 border border-zinc-800">
                                                             <div className="flex items-center gap-4">
@@ -564,14 +513,6 @@ export function AdminLicenseRow({ license, plans }: AdminLicenseRowProps) {
                                                                     <span>Login: {new Date(session.created_at).toLocaleString()}</span>
                                                                 )}
                                                                 <span>Seen: {new Date(session.last_seen_at).toLocaleString()}</span>
-                                                                {session.ended_at && (
-                                                                    <span className="text-amber-400/90">
-                                                                        Ended: {new Date(session.ended_at).toLocaleString()}
-                                                                    </span>
-                                                                )}
-                                                                <span className="text-zinc-400" title="Login → end of stint (ended_at or last seen)">
-                                                                    Connected {stintLabel}
-                                                                </span>
                                                             </div>
 
                                                             <div className="flex items-center gap-4 text-xs text-zinc-400">

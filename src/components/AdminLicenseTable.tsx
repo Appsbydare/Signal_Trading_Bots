@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import { AdminLicenseRow } from "./AdminLicenseRow";
-import { resolveLicenseProductId } from "@/lib/license-product-resolve";
 
 // Helper type matching the data structure from page.tsx
 interface LicenseSession {
@@ -12,7 +11,6 @@ interface LicenseSession {
     device_name: string | null;
     created_at: string;
     last_seen_at: string;
-    ended_at?: string | null;
     active: boolean;
 }
 
@@ -55,16 +53,6 @@ export function AdminLicenseTable({ licenses, plans }: AdminLicenseTableProps) {
     const [filterProduct, setFilterProduct] = useState<string>("all");
     const [searchTerm, setSearchTerm] = useState("");
 
-    const productCounts = useMemo(() => {
-        let stb = 0;
-        let orb = 0;
-        for (const l of licenses) {
-            if (resolveLicenseProductId(l) === "ORB_BOT") orb += 1;
-            else stb += 1;
-        }
-        return { stb, orb };
-    }, [licenses]);
-
     const filteredAndSortedLicenses = useMemo(() => {
         let result = [...licenses];
 
@@ -74,7 +62,9 @@ export function AdminLicenseTable({ licenses, plans }: AdminLicenseTableProps) {
         }
 
         if (filterProduct !== "all") {
-            result = result.filter(l => resolveLicenseProductId(l) === filterProduct);
+            // Null or missing product_id is historically signal_trading_bots
+            const pId = filterProduct;
+            result = result.filter(l => (l.product_id || "SIGNAL_TRADING_BOTS") === pId);
         }
 
         if (searchTerm) {
@@ -107,7 +97,7 @@ export function AdminLicenseTable({ licenses, plans }: AdminLicenseTableProps) {
         });
 
         return result;
-    }, [licenses, filterStatus, filterProduct, searchTerm]);
+    }, [licenses, filterStatus, searchTerm]);
 
     return (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 shadow-sm">
@@ -115,14 +105,6 @@ export function AdminLicenseTable({ licenses, plans }: AdminLicenseTableProps) {
                 <div>
                     <h2 className="text-lg font-semibold text-white">All Licenses</h2>
                     <p className="mt-1 text-sm text-zinc-400">Complete list of all licenses in the system</p>
-                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/35 bg-sky-500/10 px-2.5 py-1 font-medium text-sky-300">
-                            STB <span className="tabular-nums text-sky-200/90">{productCounts.stb}</span>
-                        </span>
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/35 bg-amber-500/10 px-2.5 py-1 font-medium text-amber-300">
-                            ORB <span className="tabular-nums text-amber-200/90">{productCounts.orb}</span>
-                        </span>
-                    </div>
                 </div>
 
                 {/* Filters */}
@@ -140,9 +122,9 @@ export function AdminLicenseTable({ licenses, plans }: AdminLicenseTableProps) {
                         onChange={(e) => setFilterProduct(e.target.value)}
                         className="rounded-md border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-sm text-white focus:border-blue-500 focus:outline-none"
                     >
-                        <option value="all">All products</option>
-                        <option value="SIGNAL_TRADING_BOTS">STB only (Signal Trading Bots)</option>
-                        <option value="ORB_BOT">ORB Bot only</option>
+                        <option value="all">All Products</option>
+                        <option value="SIGNAL_TRADING_BOTS">Signal Trading Bots</option>
+                        <option value="ORB_BOT">ORB Bot</option>
                     </select>
 
                     <select
@@ -177,11 +159,8 @@ export function AdminLicenseTable({ licenses, plans }: AdminLicenseTableProps) {
                             <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                                 Expires
                             </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500 min-w-[120px]">
-                                <span className="block">Sessions</span>
-                                <span className="mt-0.5 block font-normal normal-case text-[10px] text-zinc-600">
-                                    count / total time
-                                </span>
+                            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                                Sessions
                             </th>
                             <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-zinc-500 min-w-[100px]">
                                 Actions

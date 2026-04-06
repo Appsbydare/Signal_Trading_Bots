@@ -13,6 +13,7 @@ const navigation = [
     { name: "Blog Posts", href: "/admin/blog", icon: PencilSquareIcon },
     { name: "YouTube Help", href: "/admin/youtube-help", icon: VideoCameraIcon },
     { name: "Promo Images", href: "/admin/promotional-image", icon: PhotoIcon },
+    { name: "Email Campaigns", href: "/admin/email-campaigns", icon: EnvelopeIcon },
     { name: "Virtual Agents", href: "/admin/agents", icon: UserGroupIcon },
     { name: "FAQs", href: "/admin/faqs", icon: QuestionMarkCircleIcon },
     { name: "Knowledge Docs", href: "/admin/docs", icon: BookOpenIcon },
@@ -134,6 +135,14 @@ function TicketIcon(props: any) {
     return (
         <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z" />
+        </svg>
+    )
+}
+
+function EnvelopeIcon(props: any) {
+    return (
+        <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 7.5v9a2.25 2.25 0 01-2.25 2.25H4.5A2.25 2.25 0 012.25 16.5v-9m19.5 0A2.25 2.25 0 0019.5 5.25H4.5A2.25 2.25 0 002.25 7.5m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0l-7.5-4.615A2.25 2.25 0 012.25 7.743V7.5" />
         </svg>
     )
 }

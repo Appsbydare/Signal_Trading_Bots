@@ -75,6 +75,14 @@ const TOOLS_DATA: ToolData[] = [
         iconKey: "YoutubeIcon"
     },
     {
+        id: "email-campaigns",
+        title: "Email Campaigns",
+        description: "Build templates, send expired-license reminders, and manage email history.",
+        href: "/admin/email-campaigns",
+        color: "blue",
+        iconKey: "EnvelopeIcon"
+    },
+    {
         id: "agents",
         title: "Virtual Agents",
         description: "Configure support agents and their responses.",
@@ -147,6 +155,11 @@ const ICON_MAP: Record<string, React.ReactNode> = {
     TicketsIcon: (
         <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z" />
+        </svg>
+    ),
+    EnvelopeIcon: (
+        <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 7.5v9a2.25 2.25 0 01-2.25 2.25H4.5A2.25 2.25 0 012.25 16.5v-9m19.5 0A2.25 2.25 0 0019.5 5.25H4.5A2.25 2.25 0 002.25 7.5m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0l-7.5-4.615A2.25 2.25 0 012.25 7.743V7.5" />
         </svg>
     ),
     PromoIcon: (
