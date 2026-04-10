@@ -11,12 +11,16 @@ export function middleware(request: NextRequest) {
   const isAdminApi  = pathname.startsWith("/api/admin");
 
   if (isAdminPage || isAdminApi) {
+    const isAdminLoginPage = pathname === "/admin/login" || pathname.startsWith("/admin/login/");
     const adminToken = request.cookies.get(ADMIN_COOKIE)?.value;
     if (!adminToken) {
       if (isAdminApi) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-      const loginUrl = new URL("/auth/admin/login", request.url);
+      if (isAdminLoginPage) {
+        return NextResponse.next();
+      }
+      const loginUrl = new URL("/admin/login", request.url);
       loginUrl.searchParams.set("from", pathname);
       return NextResponse.redirect(loginUrl);
     }
