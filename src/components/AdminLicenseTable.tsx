@@ -11,6 +11,7 @@ interface LicenseSession {
     device_name: string | null;
     created_at: string;
     last_seen_at: string;
+    ended_at?: string | null;
     active: boolean;
 }
 
@@ -97,7 +98,7 @@ export function AdminLicenseTable({ licenses, plans }: AdminLicenseTableProps) {
         });
 
         return result;
-    }, [licenses, filterStatus, searchTerm]);
+    }, [licenses, filterStatus, filterProduct, searchTerm]);
 
     return (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 shadow-sm">
